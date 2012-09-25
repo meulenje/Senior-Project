@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+import java.util.*;
 
 /**
  *
@@ -9,17 +6,17 @@
  */
 public class Main {
     static Character c;
-    static Monster m;
+    static Monster m, n, o;
     static CombatEngine engine;
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws InterruptedException{
         engine = new CombatEngine();
         populate();
-        c = engine.combat(c, m);
+        ArrayList<Monster> array = engine.initializeEnemies(0);
+        c = engine.combat(c, array);
     }
 
     public static void populate() {
-        c = new Character("Samus", 40, 40, 5, 5, 4);
-        m = new Monster("Goblin", 10, 10, 5, 5, 4, 3);
+        c = new Character("Samus", 40, 40, 10, 5, 5);
     }
 }

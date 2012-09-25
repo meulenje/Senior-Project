@@ -8,7 +8,7 @@
  *
  * @author Jeff
  */
-public class Entity {
+public class Entity implements Comparable<Entity>{
 
     private int maxHealth;
     private int currentHealth;
@@ -16,6 +16,7 @@ public class Entity {
     private int defense;
     private int speed;
     private String name;
+    private boolean hasHeal = false;
 
     public Entity(String name, int currentHealth, int maxHealth, int attack,
             int defense, int speed) {
@@ -33,6 +34,18 @@ public class Entity {
         } else {
             return false;
         }
+    }
+    
+    public boolean getHasHeal(){
+		return hasHeal;
+	}
+    
+    public void setHasHeal(boolean val){
+    	hasHeal = val;
+    }
+    
+    public int compareTo(Entity other){
+    	return (this.speed - other.getSpeed());
     }
 
     /**
