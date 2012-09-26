@@ -1,11 +1,20 @@
 package rpg;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 /**
  * GridGUI class
@@ -13,11 +22,11 @@ import javax.swing.JPanel;
  * Used for showing the game board and using
  * the arrow keys to move the player around
  * @author Austin Delamar
- * @version 9/20/2012
+ * @version 9/25/2012
  * 
  */
 @SuppressWarnings("serial")
-public class GridGUI extends JPanel implements KeyListener {
+public class GridGUI extends JPanel implements KeyListener, ActionListener {
 
 	private GridEngine GE; // link back to Engine
 	private boolean up = false; // 38
@@ -27,21 +36,119 @@ public class GridGUI extends JPanel implements KeyListener {
 	private boolean leftShift = false; // 16
 	private boolean spaceBar = false; // 32
 	
+	// gui parts
+	private JPanel gridPanel;
+    private JPanel buttonPanel;
+    private JScrollPane scrollPanel;
+    private JProgressBar healthBar;
+    private JProgressBar magicBar;
+    private JProgressBar expBar;
+    private JButton resetButton;
+    private JButton upButton;
+    private JButton downButton;
+    private JButton leftButton;
+    private JButton rightButton;
+    private JTextField nameField;
+
+	
 	public GridGUI(GridEngine tempEngine)
 	{
 		// link back to JFramel
 		GE = tempEngine;
 		
+		// Build the Grid to hold the Objects
+        GridLayout grid = new GridLayout(GE.BROWS, GE.BCOLS, 0, 0);
+        gridPanel = new JPanel();
+        gridPanel.setLayout(grid);
+        gridPanel.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM ));
+        gridPanel.setBackground(Color.BLACK);
+        
+        // Build the ScrollPanel to allow scrolling
+        scrollPanel = new JScrollPane();
+        scrollPanel.setViewportView(gridPanel);
+        scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+       	scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM - 30 ));
+        
+        
+        // Build the button panel
+        buttonPanel = new JPanel(new GridLayout());
+        buttonPanel.setPreferredSize(new Dimension( GE.X_DIM , 50 ));
+        buttonPanel.setBackground(Color.YELLOW);
+        JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
+        JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
+
+        //JButtons and listeners
+        nameField = new JTextField("Louie");
+        nameField.setSize(20, 10);
+        resetButton = new JButton("Teleport");
+        resetButton.addActionListener(this);
+        leftButton = new JButton("<");
+        leftButton.addActionListener(this);
+        downButton = new JButton("v");
+        downButton.addActionListener(this);
+        upButton = new JButton("^");
+        upButton.addActionListener(this);
+        rightButton = new JButton(">");
+        rightButton.addActionListener(this);
+        
+        // health bar for the player
+        healthBar = new JProgressBar(0);
+        healthBar.setForeground(Color.RED);
+        healthBar.setBorderPainted(true);
+        healthBar.setValue(100);
+        
+        // magic bar for the player
+        magicBar = new JProgressBar(0);
+        magicBar.setForeground(Color.BLUE);
+        magicBar.setBorderPainted(true);
+        magicBar.setValue(88);
+        
+        // experience bar for the player
+        expBar = new JProgressBar(0);
+        expBar.setForeground(Color.GREEN);
+        expBar.setBorderPainted(true);
+        expBar.setValue(50);
+        
+        // Build Health Bar Area
+        statsPanel.add(nameField);
+        statsPanel.add(new JLabel("HP:",JLabel.RIGHT));
+        statsPanel.add(healthBar);
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel("Magic:",JLabel.RIGHT));
+        statsPanel.add(magicBar);
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel("EXP:",JLabel.RIGHT));
+        statsPanel.add(expBar);
+        
+        // Build arrow button Area
+        arrowPanel.add(new JLabel(""));
+        arrowPanel.add(upButton);
+        arrowPanel.add(new JLabel(""));
+        arrowPanel.add(leftButton);
+        arrowPanel.add(downButton);
+        arrowPanel.add(rightButton);
+        
+        // group the HUD display, with health bars, and buttons
+        buttonPanel.add(statsPanel, BorderLayout.WEST);
+        buttonPanel.add(new JPanel()); // empty panel in between
+        buttonPanel.add(arrowPanel, BorderLayout.EAST);
+        
+        
+        // group the map pieces together
+        this.add(scrollPanel, BorderLayout.NORTH);
+        this.add(buttonPanel, BorderLayout.SOUTH);
+        this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 30));
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
-		
-		// Build the JPanel
-        GridLayout grid = new GridLayout(GE.BROWS, GE.BCOLS, 0, 0);
-        this.setLayout(grid);
-        this.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM ));
-        this.setBackground(GE.holeColor);
         
+        // populate the first board
         populateRandomBoard();
+        
+        // place the player, at the bottom left
+        GE.prow = GE.BROWS-1;
+        GE.pcol = 3;
+        GE.board[GE.prow][GE.pcol].setEntity(1);
 
 	} // end of GridGUI constructor
 
@@ -82,7 +189,7 @@ public class GridGUI extends JPanel implements KeyListener {
                 	GE.board[i][j] = new GridObject(GE,temp,0);
                 }
                 
-                this.add(GE.board[i][j]); // place each location on the JPanel
+                gridPanel.add(GE.board[i][j]); // place each location on the JPanel
             }
         }
 	}
@@ -330,4 +437,39 @@ public class GridGUI extends JPanel implements KeyListener {
         return;
 	} // end of movePlayer()	
 	
+	/**
+	 * actionPerformed
+	 * Performs certain actions according to what
+	 * button was pressed.
+	 */
+	@Override
+	public void actionPerformed(ActionEvent arg0)
+	{
+		// if the user clicks on a button
+		
+        if(arg0.getSource() == null)
+        {
+        	GE.errorPrint("What did you do?!");
+        }
+        else if(arg0.getSource() == upButton)
+        {
+        	// increment the players coordinates
+        	movePlayer(-1,0);
+        }
+        else if(arg0.getSource() == downButton)
+        {
+        	// increment the players coordinates
+        	movePlayer(1,0);
+        }
+        else if(arg0.getSource() == leftButton)
+        {
+        	// increment the players coordinates
+        	movePlayer(0,-1);
+        }
+        else if(arg0.getSource() == rightButton)
+        {
+        	// increment the players coordinates
+        	movePlayer(0,1);
+        }
+	}
 } // end of GridGUI

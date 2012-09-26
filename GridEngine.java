@@ -2,9 +2,6 @@ package rpg;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.Image;
-
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -12,14 +9,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JButton;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import javax.swing.JFrame;
 
 /**
@@ -31,7 +26,7 @@ import javax.swing.JFrame;
  * @version 9/20/2012
  *
  */
-public class GridEngine implements ActionListener {
+public class GridEngine implements ActionListener, FocusListener {
 	
 	protected final int X_DIM = 600; // default window size
 	protected final int Y_DIM = 600;
@@ -39,7 +34,7 @@ public class GridEngine implements ActionListener {
     protected final int BROWS = 20; // board default row size
 	protected final int C_WIDTH = 25; // circle size
 	protected final int C_HEIGHT = 25; // circle size
-	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid pane dimensions
+	protected final int G_X_DIM = BCOLS * (C_WIDTH + 3); // grid pane dimensions
 	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid pane dimensions
     protected int prow = 0; // player's row position
     protected int pcol = 0; // player's col position
@@ -68,28 +63,31 @@ public class GridEngine implements ActionListener {
     protected String temp; // for catching input
     
     // default images
-	protected Image PlayerFront = new ImageIcon("PlayerFront.png").getImage();
-	protected Image PlayerBack = new ImageIcon("PlayerBack.png").getImage();
-	protected Image PlayerLeft = new ImageIcon("PlayerLeft.png").getImage();
-	protected Image PlayerRight = new ImageIcon("PlayerRight.png").getImage();
-	protected Image PlayerGrassFront = new ImageIcon("PlayerGrassFront.gif").getImage();
-	protected Image PlayerGrassBack = new ImageIcon("PlayerGrassBack.gif").getImage();
-	protected Image PlayerGrassLeft = new ImageIcon("PlayerGrassLeft.gif").getImage();
-	protected Image PlayerGrassRight = new ImageIcon("PlayerGrassRight.gif").getImage();
-	protected Image PlayerDirtFront = new ImageIcon("PlayerGrassFront.gif").getImage();
-	protected Image PlayerDirtBack = new ImageIcon("PlayerGrassFront.gif").getImage();
-	protected Image PlayerDirtLeft = new ImageIcon("PlayerGrassLeft.gif").getImage();
-	protected Image PlayerDirtRight = new ImageIcon("PlayerGrassRight.gif").getImage();
-	protected Image GlowingGem = new ImageIcon("GlowingGem.gif").getImage();
-	protected Image Dirt = new ImageIcon("Dirt.png").getImage();
-	protected Image Grass = new ImageIcon("Grass.png").getImage();
-	protected Image DirtRock = new ImageIcon("DirtRock.png").getImage();
-	protected Image GrassRock = new ImageIcon("GrassRock.png").getImage();
-	protected Image DirtHole = new ImageIcon("DirtHole.png").getImage();
-	protected Image GrassHole = new ImageIcon("GrassHole.png").getImage();
-	protected Image Wall = new ImageIcon("Wall.png").getImage();
-	protected Image Wall2 = new ImageIcon("Wall2.png").getImage();
-	protected Image DirtBush = new ImageIcon("DirtBush.gif").getImage();
+    protected ImageIcon Empty = new ImageIcon("Emtpy.png");
+    protected ImageIcon Player = new ImageIcon("Player.png");
+	protected ImageIcon PlayerFront = new ImageIcon("PlayerFront.png");
+	protected ImageIcon PlayerBack = new ImageIcon("PlayerBack.png");
+	protected ImageIcon PlayerLeft = new ImageIcon("PlayerLeft.png");
+	protected ImageIcon PlayerRight = new ImageIcon("PlayerRight.png");
+	protected ImageIcon PlayerGrassFront = new ImageIcon("PlayerGrassFront.gif");
+	protected ImageIcon PlayerGrassBack = new ImageIcon("PlayerGrassBack.gif");
+	protected ImageIcon PlayerGrassLeft = new ImageIcon("PlayerGrassLeft.gif");
+	protected ImageIcon PlayerGrassRight = new ImageIcon("PlayerGrassRight.gif");
+	protected ImageIcon PlayerDirtFront = new ImageIcon("PlayerGrassFront.gif");
+	protected ImageIcon PlayerDirtBack = new ImageIcon("PlayerGrassFront.gif");
+	protected ImageIcon PlayerDirtLeft = new ImageIcon("PlayerGrassLeft.gif");
+	protected ImageIcon PlayerDirtRight = new ImageIcon("PlayerGrassRight.gif");
+	protected ImageIcon GlowingGem = new ImageIcon("GlowingGem.gif");
+	protected ImageIcon Dirt = new ImageIcon("Dirt.png");
+	protected ImageIcon Grass = new ImageIcon("Grass.png");
+	protected ImageIcon Rock = new ImageIcon("Rock.png");
+	protected ImageIcon DirtRock = new ImageIcon("DirtRock.png");
+	protected ImageIcon GrassRock = new ImageIcon("GrassRock.png");
+	protected ImageIcon DirtHole = new ImageIcon("DirtHole.png");
+	protected ImageIcon GrassHole = new ImageIcon("GrassHole.png");
+	protected ImageIcon Wall = new ImageIcon("Wall.png");
+	protected ImageIcon Wall2 = new ImageIcon("Wall2.png");
+	protected ImageIcon DirtBush = new ImageIcon("DirtBush.gif");
 	
     
     // default gui parts
@@ -100,20 +98,12 @@ public class GridEngine implements ActionListener {
     private JMenuItem saveItem;
     private JMenuItem loadItem;
     protected JTabbedPane tabs;
-    private JProgressBar healthBar;
-    private JProgressBar magicBar;
-    private JProgressBar expBar;
-    private JButton resetButton;
-    private JButton upButton;
-    private JButton downButton;
-    private JButton leftButton;
-    private JButton rightButton;
-    private JTextField nameField;
-    private JPanel buttonPanel;
-    private JScrollPane scrollPanel;
-    private JPanel gridPanel;
+    protected JPanel map;
 
     
+    /**
+     * Constructor for GridEngine
+     */
     public GridEngine()
     {                 
         // Create the JWindow and Frame to hold the Grid panel
@@ -155,110 +145,30 @@ public class GridEngine implements ActionListener {
         // place the menu bar
         window.setJMenuBar(menubar);
         
-        
-        // create the button panel
-        buttonPanel = new JPanel(new GridLayout());
-        buttonPanel.setPreferredSize(new Dimension( X_DIM , 50 ));
-        buttonPanel.setBackground(Color.YELLOW);
-        JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
-        JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
-
-        //JButtons and listeners
-        nameField = new JTextField("Player1");
-        resetButton = new JButton("Teleport");
-        resetButton.addActionListener(this);
-        leftButton = new JButton("<");
-        leftButton.addActionListener(this);
-        downButton = new JButton("v");
-        downButton.addActionListener(this);
-        upButton = new JButton("^");
-        upButton.addActionListener(this);
-        rightButton = new JButton(">");
-        rightButton.addActionListener(this);
-        
-        // health bar for the player
-        healthBar = new JProgressBar(0);
-        healthBar.setForeground(Color.RED);
-        healthBar.setBorderPainted(false);
-        healthBar.setValue(100);
-        
-        // magic bar for the player
-        magicBar = new JProgressBar(0);
-        magicBar.setForeground(Color.BLUE);
-        magicBar.setBorderPainted(false);
-        magicBar.setValue(100);
-        
-        // experience bar for the player
-        expBar = new JProgressBar(0);
-        expBar.setForeground(Color.GREEN);
-        expBar.setBorderPainted(false);
-        expBar.setValue(15);
-        
-        statsPanel.add(nameField);
-        statsPanel.add(new JLabel("HP:",JLabel.RIGHT));
-        statsPanel.add(healthBar);
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel("Magic:",JLabel.RIGHT));
-        statsPanel.add(magicBar);
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel("EXP:",JLabel.RIGHT));
-        statsPanel.add(expBar);
-        
-        arrowPanel.add(new JLabel(""));
-        arrowPanel.add(upButton);
-        arrowPanel.add(new JLabel(""));
-        arrowPanel.add(leftButton);
-        arrowPanel.add(downButton);
-        arrowPanel.add(rightButton);
-        
-        buttonPanel.add(statsPanel, BorderLayout.WEST);
-        buttonPanel.add(new JPanel()); // empty panel
-        buttonPanel.add(arrowPanel, BorderLayout.EAST);
-        
-        
-        
-        // Grid Constructed by GridGUI.java
+        // --------------------------------------------------------
+        // create the grid object array
         board = new GridObject[BROWS][BCOLS];
-        gridPanel = new GridGUI(this);
-        
-        // place the player, at the bottom left
-        prow = BROWS-1;
-        pcol = 3;
-        board[prow][pcol].setEntity(1);
-        
-        // Build the ScrollPanel
-        // Scroll Pane for GridGUI
-        scrollPanel = new JScrollPane();
-        scrollPanel.setViewportView(gridPanel);
-        scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-       	scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPanel.setPreferredSize(new Dimension( X_DIM, Y_DIM - 30 ));
-        
-        // create a simple panel to group the map pieces together
-        JPanel map = new JPanel();
-        map.add(scrollPanel);
-        map.add(buttonPanel, BorderLayout.SOUTH);
-        map.setPreferredSize(new Dimension( X_DIM, Y_DIM + 35));
+
+        // create the GridGui map panel
+        map = new GridGUI(this);
+        // --------------------------------------------------------
         
         // create the TabbedPane
         tabs = new JTabbedPane();
         tabs.addTab("Map", map);
-        tabs.addTab("Inventory", new JButton("Inventory Panel"));
-        tabs.addTab("Combat", new JButton("Combat Panel"));
+        tabs.addTab("Inventory", new JLabel("Inventory Panel"));
+        tabs.addTab("Combat", new JLabel("Combat Panel"));
+        tabs.addFocusListener(this);
         
         // add the tab pane to the window
         window.add(tabs, BorderLayout.CENTER);
-      
-        // compile components into the JFrame
-        //window.add(scrollPanel);
-        //window.add(buttonPanel, BorderLayout.SOUTH);
                
         // show window in default size dimensions
         window.setSize(new Dimension( X_DIM , Y_DIM + 50));
         window.setResizable(false);
         window.pack(); 
         window.setVisible(true);
-        gridPanel.requestFocus(); // needed for key listener
+        map.requestFocusInWindow();
        
     }
 
@@ -305,7 +215,15 @@ public class GridEngine implements ActionListener {
         return JOptionPane.showConfirmDialog(window,b,"Question Message",JOptionPane.YES_NO_OPTION);
     }
 
-    
+
+	/**
+	 * A function to end the game
+	 */
+	public void endGame()
+	{
+		System.exit(1);
+	} 
+	
 	@Override
 	public void actionPerformed(ActionEvent arg0)
 	{
@@ -315,7 +233,7 @@ public class GridEngine implements ActionListener {
         {
             System.exit(0);
         }
-        else if(arg0.getSource() == resetButton || arg0.getSource() == resetItem)
+        else if(arg0.getSource() == resetItem)
         {
         	// erase the player
             board[prow][pcol].setEntity(0);
@@ -325,39 +243,26 @@ public class GridEngine implements ActionListener {
             pcol = 3;
             board[prow][pcol].setEntity(1);
         }
-        else if(arg0.getSource() == null)
-        {
-        	errorPrint("What did you do?!");
-        }
-        else if(arg0.getSource() == upButton)
-        {
-        	// increment the players coordinates
-        	((GridGUI) gridPanel).movePlayer(-1,0);
-        }
-        else if(arg0.getSource() == downButton)
-        {
-        	// increment the players coordinates
-        	((GridGUI) gridPanel).movePlayer(1,0);
-        }
-        else if(arg0.getSource() == leftButton)
-        {
-        	// increment the players coordinates
-        	((GridGUI) gridPanel).movePlayer(0,-1);
-        }
-        else if(arg0.getSource() == rightButton)
-        {
-        	// increment the players coordinates
-        	((GridGUI) gridPanel).movePlayer(0,1);
-        }
-              
-        gridPanel.requestFocus();
 	}
 
-	/**
-	 * A function to end the game
-	 */
-	public void endGame()
+	@Override
+	public void focusGained(FocusEvent e)
 	{
-		System.exit(1);
-	}  
+		if(e.getSource() == tabs)
+		{
+			int tab = tabs.getSelectedIndex();
+			if(tab == 0)
+				map.requestFocus();
+			else if(tab == 1)
+				infoPrint("Inventory Focus Gained.");
+			else if(tab == 2)
+				infoPrint("Combat Focus Gained.");
+				
+		}
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		// TODO Auto-generated method stub
+	}
 }

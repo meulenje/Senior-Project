@@ -1,10 +1,7 @@
 package rpg;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Image;
-import javax.swing.Icon;
+import java.awt.Dimension;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
@@ -14,48 +11,57 @@ import javax.swing.JLayeredPane;
  * 
  * Displays an image to represent one space on the map
  * @author Austin Delamar
- * @version 9/20/2012
+ * @version 9/25/2012
  * 
  */
 @SuppressWarnings("serial")
 public class GridObject extends JLayeredPane {
 	
 	private GridEngine GE; // link back to Engine
-    private Color color; // visual use for prototypes, before images
     private int id; // identifies what type of cell the image displays
     private int entity; // is there an object here? 0=no
-    private ImageIcon image; // visual image, for improved game looks
     
-    protected JLabel background;
-    protected JLabel foreground;
+    protected ImageIcon bgimage; // grass, dirt, floor, etc...
+    protected ImageIcon fgimage; // player, enemy, rock, etc...
+    protected JLabel background; // container to hold image
+    protected JLabel foreground; // container to hold image
     
     // GridObject Constructor
-    public GridObject(GridEngine tempEngine, int id, int p)
+    public GridObject(GridEngine tempEngine, int i, int e)
     {
     	// link to back Engine
     	GE = tempEngine;
     	
-    	// gui attributes
-    	
+    	// Lay a background and foreground JLabel
     	background = new JLabel();
-    	background.setIcon(image);
+    	background.setSize(GE.C_WIDTH, GE.C_HEIGHT);
+    	background.setLocation(0,0);
+    	foreground = new JLabel();
+    	foreground.setSize(GE.C_WIDTH, GE.C_HEIGHT);
+    	foreground.setLocation(0,0);
     	
-    	this.add(background, JLayeredPane.DEFAULT_LAYER);
+    	// set components
+    	this.add(background, JLayeredPane.DEFAULT_LAYER); // 0
+    	this.add(foreground, JLayeredPane.PALETTE_LAYER); // 1 (on top)
+    	this.setOpaque(false); // non-transparent
     	this.setLayout(new BorderLayout());
-    	this.setSize(GE.C_WIDTH, GE.C_HEIGHT);
-        //this.setBorder(BorderFactory.createMatteBorder(0,0,0,0,Color.WHITE));
-    	//this.setBorder(BorderFactory.createLineBorder(Color.WHITE));
-    	//this.setIconTextGap(0);
+    	this.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
     	
-        // set attributes
-        setID(id);
-        setEntity(p);
-    }
+    	// set variables and images
+    	setID(i);
+    	setEntity(e);
+    	
+    } // end of constructor
     
-    public void resetObject(int id, int p)
+    /**
+     * A simple way to re-construct a GridObject
+     * without having to call two functions.
+     * @param id
+     * @param p
+     */
+    public void resetObject(int i, int p)
     {
-    	this.id = id;
-    	entity = p;
+    	setID(i);
     	setEntity(p);
     }
     
@@ -70,15 +76,17 @@ public class GridObject extends JLayeredPane {
     	return (id<0 && entity==0);	
     }
     
+    /**
+     * isHole
+     * Returns true, if the location is a hole. This
+     * could be from, grass, dirt, or water.
+     * @return
+     */
     public boolean isHole()
     {
     	return (id==1 || id==2 || id==3);
     }
     
-    public boolean isWall()
-    {
-    	return (id==11 || id==10 || id==9 || id==8 || id==7 || id==6);
-    }
     
     /**
      * Places/Removes a player from the grid object by
@@ -91,87 +99,66 @@ public class GridObject extends JLayeredPane {
      */
     public void setEntity(int p)
     {    	
-        // change color according to player's position
         if(p==0)
-        {
-        	// change the terrain color/image according to id's
-        	switch(id)
-        	{
-        		case -10: color=GE.doorColor; image=GE.GlowingGem; break;
-        		case -2:  color=GE.groundColor; image=GE.Grass; break;
-        		case -1:  color=GE.groundColor; image=GE.Dirt; break;
-        		case 0: this.setVisible(false); break;
-        		case 1: color=GE.holeColor; image=GE.DirtHole; break;
-        		case 2: color=GE.holeColor; image=GE.GrassHole; break;
-        		
-        		case 4: color=GE.groundColor; image=GE.Dirt; break; // rocks are an entity
-        		case 5: color=GE.groundColor; image=GE.Grass; break; // they appear after you setEntity(-1)
-        		
-        		default: GE.errorPrint("setEntity(int id)\nerror on id="+id); break;
-        	}
+        {        	
+        	// set foreground to null
+        	fgimage = GE.Empty;
         }
         else if(p==1)
         {
         	// player 1 is on this location
-        	// depending what the player is on, it can be surrounded by grass, dirt, or other types
-        	switch(id)
-        	{
-        		case -2: color=GE.playerColor; image=GE.PlayerGrassFront; break;
-        		case -1: color=GE.playerColor; image=GE.PlayerFront; break;
-        	}
+        	fgimage = GE.Player;
         }
         else if(p==-1)
         {
-        	// move-able rock is on this location
-        	// depending where the rock is, it can be surrounded by grass, dirt, or other types
-        	switch(id)
-        	{
-    			case -2:  color=GE.rockColor; image=GE.GrassRock; break;
-    			case -1:  color=GE.rockColor; image=GE.DirtRock; break;
-    			
-    			default: GE.errorPrint("setEntity(int id)\nerror on id="+id); break;
-        	}
+        	// rock is on this location
+        	fgimage = GE.Rock;
         }
         
-        // reset (re-paint)
     	entity = p;
-    	repaint();
-        //this.setIcon(image);
-    	this.setVisible(true);
+        foreground.setIcon(fgimage);
     }
-
+    
     /**
-     * Super Paint Component for GridObject
-     * @param Graphics g
+     * Returns the id of the GridObject
+     * @return int id
      */
-    public void paintComponent(Graphics g)
-    {
-        super.paintComponent(g);
-        
-        g.drawImage(image, 0, 0, null);
-    }
-    
-    public Color getColor()
-    {
-        return color;
-    }
-    
-    public void setColor(Color c)
-    {
-        color = c;
-    }
-    
     public int getID()
     {
         return id;
     }
     
+    /**
+     * Sets the id of the GridObject
+     * @param int a
+     */
     public void setID(int a)
     {
-        id = a;
-        setEntity(entity);
+    	// set the background image
+    	switch(a) // id
+    	{
+    		case -10: bgimage=GE.GlowingGem; break;
+    		case -2: bgimage=GE.Grass; break;
+    		case -1: bgimage=GE.Dirt; break;
+    		case 0: this.setVisible(false); break;
+    		case 1: bgimage=GE.DirtHole; break;
+    		case 2: bgimage=GE.GrassHole; break;
+    		// deep water
+    		case 4: bgimage=GE.Dirt; break; // Dirt with Rock
+    		case 5: bgimage=GE.Grass; break; // Grass with Rock
+    		
+    		default: GE.errorPrint("Error!\nNo image found for id="+a); break;
+    	}
+    	
+    	id = a;
+    	background.setIcon(bgimage);
     }
     
+    /**
+     * Returns the id of the Entity
+     * that is on top of the GridObject
+     * @return int entity
+     */
     public int getEntity()
     {
         return entity;
