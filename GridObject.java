@@ -17,7 +17,7 @@ import javax.swing.JLayeredPane;
 @SuppressWarnings("serial")
 public class GridObject extends JLayeredPane {
 	
-	private GridEngine GE; // link back to Engine
+	private GameEngine GE; // link back to Engine
     private int id; // identifies what type of cell the image displays
     private int entity; // is there an object here? 0=no
     
@@ -27,7 +27,7 @@ public class GridObject extends JLayeredPane {
     protected JLabel foreground; // container to hold image
     
     // GridObject Constructor
-    public GridObject(GridEngine tempEngine, int i, int e)
+    public GridObject(GameEngine tempEngine, int i, int e)
     {
     	// link to back Engine
     	GE = tempEngine;
@@ -147,7 +147,7 @@ public class GridObject extends JLayeredPane {
     		case 4: bgimage=GE.Dirt; break; // Dirt with Rock
     		case 5: bgimage=GE.Grass; break; // Grass with Rock
     		
-    		default: GE.errorPrint("Error!\nNo image found for id="+a); break;
+    		default: GE.printError("Error!\nNo image found for id="+a); break;
     	}
     	
     	id = a;

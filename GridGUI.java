@@ -28,7 +28,7 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class GridGUI extends JPanel implements KeyListener, ActionListener {
 
-	private GridEngine GE; // link back to Engine
+	private GameEngine GE; // link back to Engine
 	private boolean up = false; // 38
 	private boolean down = false; // 40
 	private boolean left = false; // 37
@@ -51,10 +51,13 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
     private JTextField nameField;
 
 	
-	public GridGUI(GridEngine tempEngine)
+	public GridGUI(GameEngine tempEngine)
 	{
 		// link back to JFramel
 		GE = tempEngine;
+		
+		// create the board
+		GE.board = new GridObject[GE.BROWS][GE.BCOLS];
 		
 		// Build the Grid to hold the Objects
         GridLayout grid = new GridLayout(GE.BROWS, GE.BCOLS, 0, 0);
@@ -423,11 +426,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 			
 			if(GE.wins == 3)
 			{
-				String temp = GE.throwPrint("Highscore! \n\nEnter your name:");
-				GE.infoPrint("Way to go "+temp+"! You're a Laker for a Lifetime!");
+				String temp = GE.printQuestion("Highscore! \n\nEnter your name:");
+				GE.printInfo("Way to go "+temp+"! You're a Laker for a Lifetime!");
 			}
 			
-			int temp = GE.yesNoPrint("Congrats! You found the exit!"+"\n\nPlay again?");
+			int temp = GE.printYesNoQuestion("Congrats! You found the exit!"+"\n\nPlay again?");
 			
 			if(temp==0)
 				randomizeBoard();
@@ -449,7 +452,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		
         if(arg0.getSource() == null)
         {
-        	GE.errorPrint("What did you do?!");
+        	GE.printError("What did you do?!");
         }
         else if(arg0.getSource() == upButton)
         {

@@ -10,7 +10,7 @@ public class Booter {
 
 	public static void main(String args[])
 	{
-		new GridEngine(); // create the engine and begin
+		new GameEngine(); // create the engine and begin
 		
 	}
 }
