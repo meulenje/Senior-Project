@@ -2,6 +2,7 @@ package rpg;
 
 import java.awt.BorderLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -28,15 +29,14 @@ public class GameEngine implements ActionListener, FocusListener {
 	
 	protected final int X_DIM = 600; // default window size
 	protected final int Y_DIM = 600;
-    protected final int BCOLS = 40; // board default column size
-    protected final int BROWS = 40; // board default row size
+    protected final int BCOLS = 10; // board default column size
+    protected final int BROWS = 20; // board default row size
 	protected final int C_WIDTH = 25; // circle size
 	protected final int C_HEIGHT = 25; // circle size
 	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid panel dimensions
 	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
     protected int prow = 0; // player's row position
     protected int pcol = 0; // player's col position
-    protected int wins = 0;
     protected GridObject[][] board; // the maximum board size
     
     /** Reference Grid
@@ -53,6 +53,14 @@ public class GameEngine implements ActionListener, FocusListener {
      *      |-----------------------|
      */
     protected int[][] grid; // for loading maps
+    
+    // special map features
+    protected boolean fogOfWar = false;
+    protected boolean mappingEnabled = false;
+    protected int playerVisionRange = 4;
+    protected boolean warpingEnabled = false;
+    protected boolean fadeOnExit = false;
+    protected boolean clearStatsPerLevel = false;
     
     // default images
     protected ImageIcon Empty = new ImageIcon("Emtpy.png");
@@ -89,6 +97,11 @@ public class GameEngine implements ActionListener, FocusListener {
     private JMenuItem teleportItem;
     private JMenuItem statsItem;
     private JMenuItem resetStatsItem;
+    private JCheckBoxMenuItem enableFogItem;
+    private JCheckBoxMenuItem enableFadeItem;
+    private JCheckBoxMenuItem enableWarpItem;
+    private JCheckBoxMenuItem enableAutoResetStatsItem;
+    private JCheckBoxMenuItem enableMappingItem;
     private JMenuItem newItem;
     private JMenuItem saveItem;
     private JMenuItem loadItem;
@@ -114,7 +127,8 @@ public class GameEngine implements ActionListener, FocusListener {
         JMenuBar menubar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenu actionsMenu = new JMenu("Actions");
-        JMenu viewMenu = new JMenu("View");
+        JMenu settingsMenu = new JMenu("Settings");
+        
         quitItem = new JMenuItem("Quit");
         newItem = new JMenuItem("New Game");
         saveItem = new JMenuItem("Save Game");
@@ -122,6 +136,11 @@ public class GameEngine implements ActionListener, FocusListener {
         teleportItem = new JMenuItem("Teleport");
         statsItem = new JMenuItem("Report Stats");
         resetStatsItem = new JMenuItem("Reset Stats");
+        enableFogItem = new JCheckBoxMenuItem("Fog of War");
+        enableFadeItem = new JCheckBoxMenuItem("Fade Loading");
+        enableWarpItem = new JCheckBoxMenuItem("Warps");
+        enableAutoResetStatsItem = new JCheckBoxMenuItem("Auto Reset Stats");
+        enableMappingItem = new JCheckBoxMenuItem("Mapping");
         
         // add listeners
         newItem.addActionListener(this);
@@ -130,19 +149,32 @@ public class GameEngine implements ActionListener, FocusListener {
         fileMenu.add(loadItem);
         saveItem.addActionListener(this);
         fileMenu.add(saveItem);
+        fileMenu.addSeparator();
         quitItem.addActionListener(this);
         fileMenu.add(quitItem);
-        menubar.add(fileMenu);
-        menubar.add(actionsMenu);
-        menubar.add(viewMenu);
-        
+
         teleportItem.addActionListener(this);
         actionsMenu.add(teleportItem);
         statsItem.addActionListener(this);
         actionsMenu.add(statsItem);
+        actionsMenu.addSeparator();
         resetStatsItem.addActionListener(this);
         actionsMenu.add(resetStatsItem);
         
+        enableFogItem.addActionListener(this);
+        enableFadeItem.addActionListener(this);
+        enableWarpItem.addActionListener(this);
+        enableAutoResetStatsItem.addActionListener(this);
+        enableMappingItem.addActionListener(this);
+        settingsMenu.add(enableFogItem);
+        settingsMenu.add(enableFadeItem);
+        settingsMenu.add(enableWarpItem);
+        settingsMenu.add(enableAutoResetStatsItem);
+        settingsMenu.add(enableMappingItem);
+        
+        menubar.add(fileMenu);
+        menubar.add(settingsMenu);
+        menubar.add(actionsMenu); 
         // place the menu bar
         window.setJMenuBar(menubar);
 
@@ -250,27 +282,82 @@ public class GameEngine implements ActionListener, FocusListener {
 	} 
 	
 	@Override
-	public void actionPerformed(ActionEvent arg0)
+	public void actionPerformed(ActionEvent Trigger)
 	{
 		// if the user clicks on a menu button
 		
-        if(arg0.getSource() == quitItem)
+        if(Trigger.getSource() == quitItem)
         {
             endGame();
         }
-        else if(arg0.getSource() == teleportItem)
+        else if(Trigger.getSource() == teleportItem)
         {
         	((GridGUI) map).repositionPlayer();
         	((GridGUI) map).repositionScrollBar();
         }
-        else if(arg0.getSource() == statsItem)
+        else if(Trigger.getSource() == statsItem)
         {
         	printInfo(((GridGUI) map).getStatistics());
         }
-        else if(arg0.getSource() == resetStatsItem)
+        else if(Trigger.getSource() == resetStatsItem)
         {
         	((GridGUI) map).resetStatistics();
         	printInfo("Player Statistics have been deleted.");
+        }
+        else if(Trigger.getSource() == enableFogItem)
+        {
+        	if(fogOfWar)
+        	{
+        		fogOfWar = false;
+        		((GridGUI) map).removeFog();
+        	}
+        	else
+        	{
+        		fogOfWar = true;
+        		((GridGUI) map).movePlayerVision();
+        	}
+        }
+        else if(Trigger.getSource() == enableFadeItem)
+        {
+        	if(fadeOnExit)
+        		fadeOnExit = false;
+        	else
+        		fadeOnExit = true;
+        }
+        else if(Trigger.getSource() == enableWarpItem)
+        {
+        	if(warpingEnabled)
+        	{
+        		warpingEnabled = false;
+        	}
+        	else
+        	{
+        		warpingEnabled = true;
+        		printInfo("Warping will be enabled on the next level.");
+        	}
+        }
+        else if(Trigger.getSource() == enableAutoResetStatsItem)
+        {
+        	if(clearStatsPerLevel)
+        	{
+        		clearStatsPerLevel = false;
+        	}
+        	else
+        	{
+        		clearStatsPerLevel = true;
+        		printInfo("Player Statistics will be erased per level.");
+        	}
+        }
+        else if(Trigger.getSource() == enableMappingItem)
+        {	
+        	if(mappingEnabled)
+        	{
+        		mappingEnabled = false;
+        	}
+        	else
+        	{
+        		mappingEnabled = true;
+        	}
         }
 	}
 

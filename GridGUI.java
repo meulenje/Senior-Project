@@ -37,11 +37,13 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	private boolean right = false; // 39
 	private boolean leftShift = false; // 16
 	private boolean spaceBar = false; // 32
+	private int wins = 0; // # of levels beaten
 	private int hops = 0; // # of jumps taken
 	private int steps = 0; // # of steps taken
 	private int encounters = 0; // # of encounters
 	private int rocksPushed = 0; // # of rock pushes
 	private int rocksInHoles = 0; // # of rocks pushed into holes
+	private int warps = 0; // # of times they warped
 	private int keysPushed = 0; // # of keyboard buttons pushed
 	
 	// gui parts
@@ -71,6 +73,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         gridPanel = new JPanel();
         gridPanel.setLayout(new GridLayout(GE.BROWS, GE.BCOLS, 0, 0));
         gridPanel.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM ));
+        gridPanel.setBackground(Color.BLACK);
         
         // Build the Glue Panel that fills in empty space
         JPanel extraPanel = new JPanel();
@@ -167,6 +170,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         
         // position camera on player
         repositionScrollBar();
+        
+        // place fogOfWar vision range
+        movePlayerVision();
 
 	} // end of GridGUI constructor
 
@@ -215,6 +221,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 gridPanel.add(GE.board[i][j]); // place each location on the JPanel
             }
         }
+        addFog();
 	}
 	
 	public void randomizeBoard()
@@ -222,7 +229,12 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         // randomly build a testing grid with rocks and holes
         Random rand = new Random();
         boolean doorPlaced = false;
+        boolean warpAPlaced = false;
+        boolean warpBPlaced = false;
         int temp;
+        
+        if(GE.fadeOnExit)
+        	this.setVisible(false);
         
         for (int i=0; i<GE.BROWS; i++)
         {
@@ -246,6 +258,18 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 {
                 	GE.board[i][j].resetObject(7,0);
                 }
+                // place warp 'a'
+                else if(GE.warpingEnabled && !warpAPlaced && temp==8)
+                {
+                	GE.board[i][j].resetObject(-8,0);
+                	warpAPlaced = true;
+                }
+                // place warp 'b'
+                else if(GE.warpingEnabled && !warpBPlaced && temp==9 && (i >= GE.BROWS/2))
+                {
+                	GE.board[i][j].resetObject(-9,0);
+                	warpBPlaced = true;
+                }
                 // randomly place one door per map
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
                 {
@@ -260,6 +284,12 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 }
             }
         }
+        
+        if(GE.fadeOnExit)
+        	this.setVisible(true);
+        
+        addFog();
+        
         return;
 	}
 	
@@ -349,19 +379,19 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	public void movePlayer(int x, int y)
 	{
 		// this method checks if a move is valid. (ie, that there is nothing in the way)
-		int prow = GE.prow;
-		int pcol = GE.pcol;
 		boolean player_has_moved = false;
+		
+		// check for boundaries
 		boolean edgeOfMap = ( 
-				( prow==GE.BROWS-1 && x>0 ) 
-				|| ( pcol==GE.BCOLS-1 && y>0 ) 
-				|| ( prow==0 && x<0 ) 
-				|| ( pcol==0 && y<0 ) );
+				( GE.prow==GE.BROWS-1 && x>0 ) 
+				|| ( GE.pcol==GE.BCOLS-1 && y>0 ) 
+				|| ( GE.prow==0 && x<0 ) 
+				|| ( GE.pcol==0 && y<0 ) );
 		boolean nearEdgeOfMap = (
-				( prow+x==GE.BROWS-1 && x>0 ) 
-				|| ( pcol+y==GE.BCOLS-1 && y>0 )
-				|| ( prow+x==0 && x<0 )
-				|| ( pcol+y==0 && y<0 ) );
+				( GE.prow+x==GE.BROWS-1 && x>0 ) 
+				|| ( GE.pcol+y==GE.BCOLS-1 && y>0 )
+				|| ( GE.prow+x==0 && x<0 )
+				|| ( GE.pcol+y==0 && y<0 ) );
 		
 		// quick exit, if they try to move out of bounds
 		if(edgeOfMap || (nearEdgeOfMap && leftShift))
@@ -369,61 +399,39 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		
 		
 		// check if the next spot is empty, <0.
-        if(!leftShift && GE.board[prow+x][pcol+y].isEmptySpace())
+        if(!leftShift && GE.board[GE.prow+x][GE.pcol+y].isEmptySpace())
         {       	
         	// move the player
-        	GE.board[prow+x][pcol+y].setEntity(1);
-                            
-            // replace the empty spot
-            GE.board[prow][pcol].setEntity(0);
-            
-            // adjust
-            GE.prow = prow+x; 
-            GE.pcol = pcol+y;
+        	repositionPlayer(GE.prow+x,GE.pcol+y);
             player_has_moved = true;
             steps++;
         }
         // check if the next spot is a rock
-        else if(!leftShift && GE.board[prow+x][pcol+y].getEntity()==-1)
+        else if(!leftShift && GE.board[GE.prow+x][GE.pcol+y].getEntity()==-1)
         {
         	// is the next location behind the rock, an empty space?
-        	if(!nearEdgeOfMap && GE.board[prow+x+x][pcol+y+y].isEmptySpace())
+        	if(!nearEdgeOfMap && GE.board[GE.prow+x+x][GE.pcol+y+y].isEmptySpace())
         	{
         		// if so, then move the rock forward one space
-        		GE.board[prow+x+x][pcol+y+y].setEntity(-1);
+        		GE.board[GE.prow+x+x][GE.pcol+y+y].setEntity(-1);
         		
         		// replace the old rock with ground
-        		GE.board[prow+x][pcol+y].setEntity(0);
+        		GE.board[GE.prow+x][GE.pcol+y].setEntity(0);
         		
             	// move the player
-            	GE.board[prow+x][pcol+y].setEntity(1);
-                                
-                // replace the empty spot
-                GE.board[prow][pcol].setEntity(0);
-                
-                // adjust
-                GE.prow = prow+x; 
-                GE.pcol = pcol+y;
+        		repositionPlayer(GE.prow+x,GE.pcol+y);
                 player_has_moved = true;
                 steps++;
                 rocksPushed++;
         	}
         	// is the next location behind the rock, a hole?
-        	else if(!nearEdgeOfMap && GE.board[prow+x+x][pcol+y+y].isHole())
+        	else if(!nearEdgeOfMap && GE.board[GE.prow+x+x][GE.pcol+y+y].isHole())
         	{
         		// if so, then move the rock into the hole
         		// leaving just normal ground where the rock was
-        		//GE.board[prow+x][pcol+y].setEntity(0);
         		
             	// move the player
-            	GE.board[prow+x][pcol+y].setEntity(1);
-                                
-                // replace the empty spot
-                GE.board[prow][pcol].setEntity(0);
-                
-                // adjust
-                GE.prow = prow+x; 
-                GE.pcol = pcol+y;
+        		repositionPlayer(GE.prow+x,GE.pcol+y);
                 player_has_moved = true;
                 steps++;
                 rocksPushed++;
@@ -431,41 +439,36 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         	}
         }
         // check if the player can jump over spot
-        else if(leftShift && GE.board[prow+x+x][pcol+y+y].isEmptySpace()
-        		&& GE.board[prow+x][pcol+y].getID()<=3
-        		&& GE.board[prow+x][pcol+y].getEntity()==0)
+        else if(leftShift && GE.board[GE.prow+x+x][GE.pcol+y+y].isEmptySpace()
+        		&& GE.board[GE.prow+x][GE.pcol+y].getID()<=3
+        		&& GE.board[GE.prow+x][GE.pcol+y].getEntity()==0)
         {
         	// if so, we can jump over the hole or ground
-        	
         	// move the player two spaces
-        	GE.board[prow+x+x][pcol+y+y].setEntity(1);
-                            
-            // replace the empty spot
-            GE.board[prow][pcol].setEntity(0);
-            
-            // adjust
-            GE.prow = prow+x+x; 
-            GE.pcol = pcol+y+y;
+        	repositionPlayer(GE.prow+x+x,GE.pcol+y+y);
             player_has_moved = true;
             hops++;
         }
-        else // bumped or stuck
-        	;
+        else
+        	; // bumped into something
+        
         
         // reposition the "camera" if they moved
         if(player_has_moved)
         {
         	repositionScrollBar();
+			movePlayerVision();
+			steppedOnWarp();
         }
         
 		// did they stumble upon the exit door?
 		if(player_has_moved && GE.board[GE.prow][GE.pcol].getID() == -10)
 		{
-			GE.wins++;
+			wins++;
 			
-			if(GE.wins % 3 == 0) // every three wins, print stats
+			if(wins % 3 == 0) // every three wins, print stats
 			{
-				GE.printInfo("Highscore!\n\n"+getStatistics()+"\nEnter your name:");
+				GE.printInfo("Highscore!\n\n"+getStatistics());
 				GE.printInfo("Way to go "+nameField.getText()+"! You're a Laker for a Lifetime!");
 			}
 			
@@ -477,6 +480,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 				randomizeBoard();
 				repositionPlayer();
 				repositionScrollBar();
+				movePlayerVision();
 			}
 			else
 				GE.endGame();
@@ -498,6 +502,42 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		
         return;
 	} // end of movePlayer()	
+	
+	public void checkForExit()
+	{
+		// did they stumble upon the exit door?
+		if(GE.board[GE.prow][GE.pcol].getID() == -10)
+		{
+			wins++;
+			
+			if(wins % 3 == 0) // every three wins, print stats
+			{
+				GE.printInfo("Highscore!\n\n"+getStatistics());
+				GE.printInfo("Way to go "+nameField.getText()+"! You're a Laker for a Lifetime!");
+			}
+			
+			int temp = GE.printYesNoQuestion("Congrats! You found the exit!\n\nPlay again?");
+			
+			if(temp==0)
+			{
+				// start fresh again! Load a new map
+				randomizeBoard();
+				repositionPlayer();
+				repositionScrollBar();
+				movePlayerVision();
+				
+				// reset statistics if they wanted to
+				if(GE.clearStatsPerLevel)
+					resetStatistics();
+			}
+			else // 1 or -1
+			{
+				// they chose to quit
+				GE.endGame();
+			}
+		}
+		return;
+	}
 	
 	
 	/**
@@ -553,16 +593,40 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	}
 	
 	/**
+	 * Places the player to (x,y) coordinate, if possible.
+	 * @return void
+	 * Throws Exception if x and y are not valid.
+	 */
+	public void repositionPlayer(int x, int y)
+	{
+    	// erase the player
+        GE.board[GE.prow][GE.pcol].setEntity(0);
+        
+        try {
+        	// try to place the player, at the (x,y) coordinate
+        	GE.prow = x;
+        	GE.pcol = y;
+        	GE.board[GE.prow][GE.pcol].setEntity(1);
+        } catch(Exception e){
+        	GE.printError("ERROR:\n"+e.getMessage());
+        }
+        
+        return;
+	}
+	
+	/**
 	 * Resets the statistics for the player
 	 * @return void
 	 */
 	public void resetStatistics()
 	{
+		wins = 0; // # of levels beaten
 		hops = 0; // # of jumps taken
 		steps = 0; // # of steps taken
 		encounters = 0; // # of encounters
 		rocksPushed = 0; // # of rock pushes
 		rocksInHoles = 0; // # of rocks pushed into holes
+		warps = 0; // # of times they warped
 		keysPushed = 0; // # of keyboard buttons pushed
 	}
 	
@@ -574,12 +638,114 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	public String getStatistics()
 	{
 		return "Statistics for "+nameField.getText()+"\n\n"+
+				wins+" Levels Beaten\n"+
 				steps+" Steps\n"+
 				hops+" Hops\n"+
 				encounters+" Battles\n"+
 				rocksPushed+" Rocks Pushed\n"+
 				rocksInHoles+" Rocks Pushed into Holes\n"+
+				warps+" Times Warped\n"+
 				keysPushed+" Keys Pushed\n";
+	}
+	
+	/**
+	 * Sets the area around the player visible according to how
+	 * far the player's vision reaches, and if fogOfWar is enabled.
+	 * @return void
+	 */
+	public void movePlayerVision()
+	{
+		if(GE.fogOfWar)
+		{
+	        for (int i=0; i<GE.BROWS; i++)
+	        {
+	            for (int j=0; j<GE.BCOLS; j++)
+	            {
+	            	// if its inside of the player's vision range, then set visible
+	            	if(i < GE.prow + GE.playerVisionRange && i > GE.prow - GE.playerVisionRange &&
+	            			j < GE.pcol + GE.playerVisionRange && j > GE.pcol - GE.playerVisionRange)
+	            	{
+	            		GE.board[i][j].setVisible(true);
+	            	}
+	            	else if(!GE.mappingEnabled)
+	            	{
+	            		GE.board[i][j].setVisible(false);
+	            	}
+	            }
+	        }
+		}
+	}
+	
+	/**
+	 * Sets all of the map's tiles visible
+	 * @return void
+	 */
+	public void removeFog()
+	{
+        for (int i=0; i<GE.BROWS; i++)
+        {
+            for (int j=0; j<GE.BCOLS; j++)
+            {
+            	GE.board[i][j].setVisible(true);
+            }
+        }
+	}
+	
+	/**
+	 * Sets all of the map's tiles to black
+	 * @return void
+	 */
+	public void addFog()
+	{
+		if(GE.fogOfWar)
+		{
+	        for (int i=0; i<GE.BROWS; i++)
+	        {
+	            for (int j=0; j<GE.BCOLS; j++)
+	            {
+	            	GE.board[i][j].setVisible(false);
+	            }
+	        }
+		}
+	}
+	
+	/**
+	 * Warps the player's position to the twin warp on the map.
+	 * -8 and -9 represent the two warps. Entering either warp,
+	 * will send the player to the other end. (Two-Way)
+	 * 
+	 */
+	public void steppedOnWarp()
+	{
+		int a = GE.board[GE.prow][GE.pcol].getID();
+		
+		if(GE.warpingEnabled==true && (a==-9 || a==-8))
+		{
+			// -8 and -9 are entrance and exit warps.
+			// We must find the other warp, according to our current warp id
+			int b = -8;
+			if(a == -8)
+				b = -9;
+			
+	        for (int i=0; i<GE.BROWS; i++)
+	        {
+	            for (int j=0; j<GE.BCOLS; j++)
+	            {
+	            	// find the other warp
+	            	if(GE.board[i][j].getID() == b)
+	            	{
+	            		// warp the player
+	            		// delay here
+	            		repositionPlayer(i,j);
+	            		repositionScrollBar();
+	            		movePlayerVision();
+	            		warps++;
+	            		break;
+	            	}
+	            }
+	        }
+		}
+		return;
 	}
 	
 	/**

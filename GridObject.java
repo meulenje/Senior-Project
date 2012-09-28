@@ -47,6 +47,7 @@ public class GridObject extends JLayeredPane {
     	this.add(foreground, JLayeredPane.PALETTE_LAYER); // 1 (on top)
     	this.setOpaque(false); // non-transparent
     	this.setLayout(new BorderLayout());
+    	this.setBackground(Color.BLACK);
     	this.setBorder(BorderFactory.createLineBorder(Color.WHITE));
     	this.setSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
     	
@@ -151,6 +152,8 @@ public class GridObject extends JLayeredPane {
     	switch(a) // id
     	{
     		case -10: bgimage=GE.GlowingGem; break;
+    		case -9: bgimage=GE.Wall; break;
+    		case -8: bgimage=GE.Wall; break;
     		case -2: bgimage=GE.Grass; break;
     		case -1: bgimage=GE.Dirt; break;
     		case 0: this.setVisible(false); break;
