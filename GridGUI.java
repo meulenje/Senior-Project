@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -35,6 +37,12 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	private boolean right = false; // 39
 	private boolean leftShift = false; // 16
 	private boolean spaceBar = false; // 32
+	private int hops = 0; // # of jumps taken
+	private int steps = 0; // # of steps taken
+	private int encounters = 0; // # of encounters
+	private int rocksPushed = 0; // # of rock pushes
+	private int rocksInHoles = 0; // # of rocks pushed into holes
+	private int keysPushed = 0; // # of keyboard buttons pushed
 	
 	// gui parts
 	private JPanel gridPanel;
@@ -60,24 +68,30 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		GE.board = new GridObject[GE.BROWS][GE.BCOLS];
 		
 		// Build the Grid to hold the Objects
-        GridLayout grid = new GridLayout(GE.BROWS, GE.BCOLS, 0, 0);
         gridPanel = new JPanel();
-        gridPanel.setLayout(grid);
+        gridPanel.setLayout(new GridLayout(GE.BROWS, GE.BCOLS, 0, 0));
         gridPanel.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM ));
-        gridPanel.setBackground(Color.BLACK);
+        
+        // Build the Glue Panel that fills in empty space
+        JPanel extraPanel = new JPanel();
+        extraPanel.setBorder(BorderFactory.createEmptyBorder());
+        extraPanel.setBackground(Color.BLACK);
+        extraPanel.add(Box.createHorizontalGlue());
+        extraPanel.add(gridPanel);
+        extraPanel.add(Box.createHorizontalGlue());
         
         // Build the ScrollPanel to allow scrolling
         scrollPanel = new JScrollPane();
-        scrollPanel.setViewportView(gridPanel);
+        scrollPanel.setViewportView(extraPanel);
         scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
        	scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM - 30 ));
+        scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM - 30));
         
         
         // Build the button panel
         buttonPanel = new JPanel(new GridLayout());
         buttonPanel.setPreferredSize(new Dimension( GE.X_DIM , 50 ));
-        buttonPanel.setBackground(Color.YELLOW);
+        buttonPanel.setBackground(Color.RED);
         JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
         JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
 
@@ -105,7 +119,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         magicBar = new JProgressBar(0);
         magicBar.setForeground(Color.BLUE);
         magicBar.setBorderPainted(true);
-        magicBar.setValue(88);
+        magicBar.setValue(90);
         
         // experience bar for the player
         expBar = new JProgressBar(0);
@@ -149,9 +163,10 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         populateRandomBoard();
         
         // place the player, at the bottom left
-        GE.prow = GE.BROWS-1;
-        GE.pcol = 3;
-        GE.board[GE.prow][GE.pcol].setEntity(1);
+        repositionPlayer();
+        
+        // position camera on player
+        repositionScrollBar();
 
 	} // end of GridGUI constructor
 
@@ -179,6 +194,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 else if(temp==4 || temp==5)
                 {
                 	GE.board[i][j] = new GridObject(GE,temp-6,-1);
+                }
+                // randomly make "traps"
+                else if(temp==7)
+                {
+                	GE.board[i][j] = new GridObject(GE,7,0);
                 }
                 // randomly place one door per map
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
@@ -221,6 +241,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 {
                 	GE.board[i][j].resetObject(temp,-1);
                 }
+                // randomly make "traps"
+                else if(temp==7)
+                {
+                	GE.board[i][j].resetObject(7,0);
+                }
                 // randomly place one door per map
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
                 {
@@ -235,11 +260,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 }
             }
         }
-        
-        // replace the player, at the bottom left
-        GE.prow = GE.BROWS-1;
-        GE.pcol = 0;
-        GE.board[GE.prow][GE.pcol].setEntity(1);
+        return;
 	}
 	
 	
@@ -286,7 +307,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 			right = true;
 			movePlayer(0,1);
 		}
-
+        keysPushed++;
 	}
 
 	@Override
@@ -330,6 +351,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		// this method checks if a move is valid. (ie, that there is nothing in the way)
 		int prow = GE.prow;
 		int pcol = GE.pcol;
+		boolean player_has_moved = false;
 		boolean edgeOfMap = ( 
 				( prow==GE.BROWS-1 && x>0 ) 
 				|| ( pcol==GE.BCOLS-1 && y>0 ) 
@@ -358,6 +380,8 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
             // adjust
             GE.prow = prow+x; 
             GE.pcol = pcol+y;
+            player_has_moved = true;
+            steps++;
         }
         // check if the next spot is a rock
         else if(!leftShift && GE.board[prow+x][pcol+y].getEntity()==-1)
@@ -380,6 +404,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 // adjust
                 GE.prow = prow+x; 
                 GE.pcol = pcol+y;
+                player_has_moved = true;
+                steps++;
+                rocksPushed++;
         	}
         	// is the next location behind the rock, a hole?
         	else if(!nearEdgeOfMap && GE.board[prow+x+x][pcol+y+y].isHole())
@@ -397,6 +424,10 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 // adjust
                 GE.prow = prow+x; 
                 GE.pcol = pcol+y;
+                player_has_moved = true;
+                steps++;
+                rocksPushed++;
+                rocksInHoles++;
         	}
         }
         // check if the player can jump over spot
@@ -415,30 +446,141 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
             // adjust
             GE.prow = prow+x+x; 
             GE.pcol = pcol+y+y;
+            player_has_moved = true;
+            hops++;
         }
         else // bumped or stuck
         	;
         
+        // reposition the "camera" if they moved
+        if(player_has_moved)
+        {
+        	repositionScrollBar();
+        }
+        
 		// did they stumble upon the exit door?
-		if(GE.board[GE.prow][GE.pcol].getID() == -10)
+		if(player_has_moved && GE.board[GE.prow][GE.pcol].getID() == -10)
 		{
 			GE.wins++;
 			
-			if(GE.wins == 3)
+			if(GE.wins % 3 == 0) // every three wins, print stats
 			{
-				String temp = GE.printQuestion("Highscore! \n\nEnter your name:");
-				GE.printInfo("Way to go "+temp+"! You're a Laker for a Lifetime!");
+				GE.printInfo("Highscore!\n\n"+getStatistics()+"\nEnter your name:");
+				GE.printInfo("Way to go "+nameField.getText()+"! You're a Laker for a Lifetime!");
 			}
 			
-			int temp = GE.printYesNoQuestion("Congrats! You found the exit!"+"\n\nPlay again?");
+			int temp = GE.printYesNoQuestion("Congrats! You found the exit!\n\nPlay again?");
 			
 			if(temp==0)
+			{
+				// start fresh again!
 				randomizeBoard();
+				repositionPlayer();
+				repositionScrollBar();
+			}
 			else
 				GE.endGame();
 		}
+		
+		// did they stumble upon a monster/enemy?
+		if(player_has_moved && checkForEnemies())
+		{
+			Object[] options = {"Fight!", "Flee!"};
+			int answer= GE.printCustomQuestion("What will you do?", options);
+			if(answer==0)
+			{
+				// go to combat tab
+				GE.tabs.setSelectedIndex(2);
+			}
+			else
+				GE.tabs.setSelectedIndex(0);
+		}
+		
         return;
 	} // end of movePlayer()	
+	
+	
+	/**
+	 * check for enemies
+	 * Scans the four surrounding locations, NSWE, for a monster.
+	 * @return boolean
+	 */
+	public boolean checkForEnemies()
+	{
+		int monsterCount = 0;
+		
+		if(GE.prow!=GE.BROWS-1 && GE.board[GE.prow+1][GE.pcol].isMonster())
+			monsterCount++;
+		else if(GE.prow!=0 && GE.board[GE.prow-1][GE.pcol].isMonster())
+			monsterCount++;
+		else if(GE.pcol!=GE.BCOLS-1 && GE.board[GE.prow][GE.pcol+1].isMonster())
+			monsterCount++;
+		else if(GE.pcol!=0 && GE.board[GE.prow][GE.pcol-1].isMonster())
+			monsterCount++;
+		
+		encounters += monsterCount;
+		
+		return (monsterCount>0);
+	}
+	
+	/**
+	 * Resets the scroll bars back to the position of the player.
+	 * @return void
+	 */
+	public void repositionScrollBar()
+	{
+		scrollPanel.getHorizontalScrollBar().setValue((GE.pcol * GE.C_WIDTH) -250);
+		scrollPanel.getVerticalScrollBar().setValue((GE.prow * GE.C_HEIGHT) -250);
+	
+		return;
+	}
+	
+	/**
+	 * Resets the player back to the bottom left corner.
+	 * @return void
+	 */
+	public void repositionPlayer()
+	{
+    	// erase the player
+        GE.board[GE.prow][GE.pcol].setEntity(0);
+                	
+        // place the player, at the bottom middle of the board
+        GE.prow = GE.BROWS-1;
+        GE.pcol = 0;
+        GE.board[GE.prow][GE.pcol].setEntity(1);
+        
+        return;
+	}
+	
+	/**
+	 * Resets the statistics for the player
+	 * @return void
+	 */
+	public void resetStatistics()
+	{
+		hops = 0; // # of jumps taken
+		steps = 0; // # of steps taken
+		encounters = 0; // # of encounters
+		rocksPushed = 0; // # of rock pushes
+		rocksInHoles = 0; // # of rocks pushed into holes
+		keysPushed = 0; // # of keyboard buttons pushed
+	}
+	
+	
+	/**
+	 * Returns the current statistics for the player
+	 * @return String
+	 */
+	public String getStatistics()
+	{
+		return "Statistics for "+nameField.getText()+"\n\n"+
+				steps+" Steps\n"+
+				hops+" Hops\n"+
+				encounters+" Battles\n"+
+				rocksPushed+" Rocks Pushed\n"+
+				rocksInHoles+" Rocks Pushed into Holes\n"+
+				keysPushed+" Keys Pushed\n";
+	}
 	
 	/**
 	 * actionPerformed

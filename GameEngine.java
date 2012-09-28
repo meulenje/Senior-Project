@@ -1,9 +1,7 @@
 package rpg;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -30,12 +28,12 @@ public class GameEngine implements ActionListener, FocusListener {
 	
 	protected final int X_DIM = 600; // default window size
 	protected final int Y_DIM = 600;
-    protected final int BCOLS = 30; // board default column size
-    protected final int BROWS = 20; // board default row size
+    protected final int BCOLS = 40; // board default column size
+    protected final int BROWS = 40; // board default row size
 	protected final int C_WIDTH = 25; // circle size
 	protected final int C_HEIGHT = 25; // circle size
-	protected final int G_X_DIM = BCOLS * (C_WIDTH + 3); // grid pane dimensions
-	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid pane dimensions
+	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid panel dimensions
+	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
     protected int prow = 0; // player's row position
     protected int pcol = 0; // player's col position
     protected int wins = 0;
@@ -55,12 +53,6 @@ public class GameEngine implements ActionListener, FocusListener {
      *      |-----------------------|
      */
     protected int[][] grid; // for loading maps
-    protected Color playerColor = Color.RED;
-    protected Color groundColor = Color.GREEN;
-    protected Color holeColor = Color.BLACK;
-    protected Color rockColor = Color.GRAY;
-    protected Color doorColor = Color.YELLOW;
-    protected String temp; // for catching input
     
     // default images
     protected ImageIcon Empty = new ImageIcon("Emtpy.png");
@@ -78,6 +70,7 @@ public class GameEngine implements ActionListener, FocusListener {
 	protected ImageIcon PlayerDirtLeft = new ImageIcon("PlayerGrassLeft.gif");
 	protected ImageIcon PlayerDirtRight = new ImageIcon("PlayerGrassRight.gif");
 	protected ImageIcon GlowingGem = new ImageIcon("GlowingGem.gif");
+	protected ImageIcon LavaMonster = new ImageIcon("LavaMonster.gif");
 	protected ImageIcon Dirt = new ImageIcon("Dirt.png");
 	protected ImageIcon Grass = new ImageIcon("Grass.png");
 	protected ImageIcon Rock = new ImageIcon("Rock.png");
@@ -93,13 +86,16 @@ public class GameEngine implements ActionListener, FocusListener {
     // default gui parts
     private JFrame window;
     private JMenuItem quitItem;
-    private JMenuItem resetItem;
+    private JMenuItem teleportItem;
+    private JMenuItem statsItem;
+    private JMenuItem resetStatsItem;
     private JMenuItem newItem;
     private JMenuItem saveItem;
     private JMenuItem loadItem;
     protected JTabbedPane tabs;
     protected JPanel map;
     protected JPanel combat;
+    protected JPanel inventory;
 
     
     /**
@@ -120,10 +116,12 @@ public class GameEngine implements ActionListener, FocusListener {
         JMenu actionsMenu = new JMenu("Actions");
         JMenu viewMenu = new JMenu("View");
         quitItem = new JMenuItem("Quit");
-        resetItem = new JMenuItem("Teleport");
         newItem = new JMenuItem("New Game");
         saveItem = new JMenuItem("Save Game");
         loadItem = new JMenuItem("Load Game");
+        teleportItem = new JMenuItem("Teleport");
+        statsItem = new JMenuItem("Report Stats");
+        resetStatsItem = new JMenuItem("Reset Stats");
         
         // add listeners
         newItem.addActionListener(this);
@@ -134,11 +132,16 @@ public class GameEngine implements ActionListener, FocusListener {
         fileMenu.add(saveItem);
         quitItem.addActionListener(this);
         fileMenu.add(quitItem);
-        resetItem.addActionListener(this);
-        actionsMenu.add(resetItem);
         menubar.add(fileMenu);
         menubar.add(actionsMenu);
         menubar.add(viewMenu);
+        
+        teleportItem.addActionListener(this);
+        actionsMenu.add(teleportItem);
+        statsItem.addActionListener(this);
+        actionsMenu.add(statsItem);
+        resetStatsItem.addActionListener(this);
+        actionsMenu.add(resetStatsItem);
         
         // place the menu bar
         window.setJMenuBar(menubar);
@@ -150,18 +153,18 @@ public class GameEngine implements ActionListener, FocusListener {
         
         // --------------------------------------------------------
         // create the CombatGUI combat panel
-        //combat = new CombatGUI(this);
+        combat = new JPanel();
         // --------------------------------------------------------
 
         // --------------------------------------------------------
         // create the InventoryGUI inventory panel
-        // inventory = new InventoryGUI(this);
+        inventory = new JPanel();
         // --------------------------------------------------------
         
         // create the TabbedPane
         tabs = new JTabbedPane();
         tabs.addTab("Map", map);
-        tabs.addTab("Inventory", new JLabel("Inventory Panel"));
+        tabs.addTab("Inventory", inventory);
         tabs.addTab("Combat", combat);
         tabs.addFocusListener(this);
         // focus is needed to detect if a JPanel is active (in view) or not.
@@ -186,7 +189,7 @@ public class GameEngine implements ActionListener, FocusListener {
     public void printError(String e)
     {
         // found an error and is printing it according to the view
-    	JOptionPane.showMessageDialog(window,e,"Error Message",JOptionPane.ERROR_MESSAGE);
+    	JOptionPane.showMessageDialog(window,e,"Error",JOptionPane.ERROR_MESSAGE);
     }
     
 	/**
@@ -196,7 +199,7 @@ public class GameEngine implements ActionListener, FocusListener {
     public void printInfo(String s)
     {
         // found some information to print
-    	JOptionPane.showMessageDialog(window,s,"Information Message",JOptionPane.INFORMATION_MESSAGE);
+    	JOptionPane.showMessageDialog(window,s,"Information",JOptionPane.INFORMATION_MESSAGE);
     }
     
     /**
@@ -206,7 +209,7 @@ public class GameEngine implements ActionListener, FocusListener {
      */
     public String printQuestion(String t)
     {
-        return JOptionPane.showInputDialog(window,t,"Input Message");
+        return JOptionPane.showInputDialog(window,t,"Question",JOptionPane.QUESTION_MESSAGE);
     }
     
     /**
@@ -219,7 +222,22 @@ public class GameEngine implements ActionListener, FocusListener {
      */
     public int printYesNoQuestion(String b)
     {
-        return JOptionPane.showConfirmDialog(window,b,"Question Message",JOptionPane.YES_NO_OPTION);
+        return JOptionPane.showConfirmDialog(window,b,"Question",JOptionPane.YES_NO_OPTION);
+    }
+    
+    
+    /**
+     * Prompt a Custom Question
+     * @param String question
+     * @param Object[] choices
+     * @return int
+     *  0 means YES
+     *  1 means NO
+     *  -1 means they clicked "X" close
+     */
+    public int printCustomQuestion(String question, Object[] choices)
+    {
+    	return JOptionPane.showOptionDialog(window,question,"Question",JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,choices,choices[1]);
     }
 
 
@@ -240,15 +258,19 @@ public class GameEngine implements ActionListener, FocusListener {
         {
             endGame();
         }
-        else if(arg0.getSource() == resetItem)
+        else if(arg0.getSource() == teleportItem)
         {
-        	// erase the player
-            board[prow][pcol].setEntity(0);
-                    	
-            // place the player, at the bottom middle of the board
-            prow = BROWS-1;
-            pcol = 3;
-            board[prow][pcol].setEntity(1);
+        	((GridGUI) map).repositionPlayer();
+        	((GridGUI) map).repositionScrollBar();
+        }
+        else if(arg0.getSource() == statsItem)
+        {
+        	printInfo(((GridGUI) map).getStatistics());
+        }
+        else if(arg0.getSource() == resetStatsItem)
+        {
+        	((GridGUI) map).resetStatistics();
+        	printInfo("Player Statistics have been deleted.");
         }
 	}
 
@@ -261,9 +283,9 @@ public class GameEngine implements ActionListener, FocusListener {
 			if(tab == 0)
 				map.requestFocus();
 			else if(tab == 1)
-				printInfo("Inventory Focus Gained.");
+				inventory.requestFocus();
 			else if(tab == 2)
-				printInfo("Combat Focus Gained.");
+				combat.requestFocus();
 				
 		}
 	}

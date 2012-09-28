@@ -1,7 +1,9 @@
 package rpg;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
@@ -45,7 +47,8 @@ public class GridObject extends JLayeredPane {
     	this.add(foreground, JLayeredPane.PALETTE_LAYER); // 1 (on top)
     	this.setOpaque(false); // non-transparent
     	this.setLayout(new BorderLayout());
-    	this.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
+    	this.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+    	this.setSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
     	
     	// set variables and images
     	setID(i);
@@ -85,6 +88,16 @@ public class GridObject extends JLayeredPane {
     public boolean isHole()
     {
     	return (id==1 || id==2 || id==3);
+    }
+    
+    /**
+     * isMonster
+     * Returns true if the location is a monster
+     * @return boolean
+     */
+    public boolean isMonster()
+    {
+    	return (id==7);
     }
     
     
@@ -146,6 +159,7 @@ public class GridObject extends JLayeredPane {
     		// deep water
     		case 4: bgimage=GE.Dirt; break; // Dirt with Rock
     		case 5: bgimage=GE.Grass; break; // Grass with Rock
+    		case 7: bgimage=GE.LavaMonster; break;
     		
     		default: GE.printError("Error!\nNo image found for id="+a); break;
     	}
