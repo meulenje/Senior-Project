@@ -28,7 +28,7 @@ import javax.swing.JTextField;
  * 
  */
 @SuppressWarnings("serial")
-public class GridGUI extends JPanel implements KeyListener, ActionListener {
+public class GridGUI extends JPanel implements KeyListener, ActionListener, ClockListener {
 
 	private GameEngine GE; // link back to Engine
 	private boolean up = false; // 38
@@ -46,6 +46,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	private int warps = 0; // # of times they warped
 	private int keysPushed = 0; // # of keyboard buttons pushed
 	
+	// counters for Grid's sake
+	private int numOfMonsters = 0; // keep track of how many monsters there are
+
 	// gui parts
 	private JPanel gridPanel;
     private JPanel buttonPanel;
@@ -189,7 +192,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
             for (int j=0; j<GE.BCOLS; j++)
             {
             	// randomly place circles
-                temp = rand.nextInt(21); // random 0-20
+                temp = rand.nextInt(51); // random 0-50
                 
                 // randomly scatter "holes"
                 if(temp==1 || temp==2)
@@ -201,10 +204,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 {
                 	GE.board[i][j] = new GridObject(GE,temp-6,-1);
                 }
-                // randomly make "traps"
+                // randomly make "monsters"
                 else if(temp==7)
                 {
                 	GE.board[i][j] = new GridObject(GE,7,0);
+                	numOfMonsters++;
                 }
                 // randomly place one door per map
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
@@ -214,8 +218,8 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 }
                 else
                 {
-                	temp = rand.nextInt(2) - 2;
-                	GE.board[i][j] = new GridObject(GE,temp,0);
+                	// everything else is Grass
+                	GE.board[i][j] = new GridObject(GE,-2,0);
                 }
                 
                 gridPanel.add(GE.board[i][j]); // place each location on the JPanel
@@ -232,6 +236,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         boolean warpAPlaced = false;
         boolean warpBPlaced = false;
         int temp;
+        numOfMonsters = 0;
         
         if(GE.fadeOnExit)
         	this.setVisible(false);
@@ -241,7 +246,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
             for (int j=0; j<GE.BCOLS; j++)
             {
             	// randomly place circles
-                temp = rand.nextInt(21) - 2; // random -2 to 18
+                temp = rand.nextInt(51) - 2; // random -2 to 48
                 
                 // randomly scatter "holes"
                 if(temp==1 || temp==2 )
@@ -253,10 +258,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 {
                 	GE.board[i][j].resetObject(temp,-1);
                 }
-                // randomly make "traps"
+                // randomly make "monsters"
                 else if(temp==7)
                 {
                 	GE.board[i][j].resetObject(7,0);
+                	numOfMonsters++;
                 }
                 // place warp 'a'
                 else if(GE.warpingEnabled && !warpAPlaced && temp==8)
@@ -278,9 +284,8 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
                 }
                 else
                 {
-                	// 50/50 dirt or grass
-                	temp = rand.nextInt(2) - 2;
-                	GE.board[i][j].resetObject(temp,0);
+                	// everything else is Grass
+                	GE.board[i][j].resetObject(-2,0);
                 }
             }
         }
@@ -459,46 +464,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         	repositionScrollBar();
 			movePlayerVision();
 			steppedOnWarp();
-        }
-        
-		// did they stumble upon the exit door?
-		if(player_has_moved && GE.board[GE.prow][GE.pcol].getID() == -10)
-		{
-			wins++;
-			
-			if(wins % 3 == 0) // every three wins, print stats
-			{
-				GE.printInfo("Highscore!\n\n"+getStatistics());
-				GE.printInfo("Way to go "+nameField.getText()+"! You're a Laker for a Lifetime!");
-			}
-			
-			int temp = GE.printYesNoQuestion("Congrats! You found the exit!\n\nPlay again?");
-			
-			if(temp==0)
-			{
-				// start fresh again!
-				randomizeBoard();
-				repositionPlayer();
-				repositionScrollBar();
-				movePlayerVision();
-			}
-			else
-				GE.endGame();
-		}
-		
-		// did they stumble upon a monster/enemy?
-		if(player_has_moved && checkForEnemies())
-		{
-			Object[] options = {"Fight!", "Flee!"};
-			int answer= GE.printCustomQuestion("What will you do?", options);
-			if(answer==0)
-			{
-				// go to combat tab
-				GE.tabs.setSelectedIndex(2);
-			}
-			else
-				GE.tabs.setSelectedIndex(0);
-		}
+			checkForExit();
+			checkForEnemies();
+        }		
 		
         return;
 	} // end of movePlayer()	
@@ -545,7 +513,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	 * Scans the four surrounding locations, NSWE, for a monster.
 	 * @return boolean
 	 */
-	public boolean checkForEnemies()
+	public void checkForEnemies()
 	{
 		int monsterCount = 0;
 		
@@ -560,7 +528,20 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		
 		encounters += monsterCount;
 		
-		return (monsterCount>0);
+		if(monsterCount>0)
+		{
+			Object[] options = {"Fight!", "Flee!"};
+			int answer= GE.printCustomQuestion("What will you do?", options);
+			if(answer==0)
+			{
+				// go to combat tab
+				GE.tabs.setSelectedIndex(2);
+			}
+			else
+				GE.tabs.setSelectedIndex(0);
+		}
+		
+		return;
 	}
 	
 	/**
@@ -628,6 +609,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		rocksInHoles = 0; // # of rocks pushed into holes
 		warps = 0; // # of times they warped
 		keysPushed = 0; // # of keyboard buttons pushed
+		
+		// reset the clock
+		GE.klok.pause();
+		GE.klok.currentTime = 0;
+		GE.klok.run(Clock.FOREVER);
 	}
 	
 	
@@ -782,5 +768,42 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         	// increment the players coordinates
         	movePlayer(0,1);
         }
+	}
+
+
+	@Override
+	public boolean event(int tick) 
+	{
+		// This function will be called, every clock tick.
+		
+		// Scan for monsters, if you find one, make him move.
+		if(numOfMonsters > 0 && GE.klok.currentTime % GE.monsterGridSpeed == 0)
+		{
+	        for (int i=0; i<GE.BROWS; i++)
+	        {
+	            for (int j=0; j<GE.BCOLS; j++)
+	            {
+	            	// find a monster
+	            	if(GE.board[i][j].getID() == 7)
+	            	{
+	            		// move the monster left, if possible
+	            		if(j!=0 && GE.board[i][j-1].isEmptySpace())
+	            		{
+	            			// move left
+	            			GE.board[i][j-1].setID(7);
+	            			GE.board[i][j].setID(-1); // burn the Grass into Dirt
+	            		}
+	            		else if(i!=GE.BROWS-1 && GE.board[i+1][j].isEmptySpace())
+	            		{
+	            			// move down
+	            			GE.board[i+1][j].setID(7);
+	            			GE.board[i][j].setID(-1); // burn the Grass into Dirt
+	            		}
+	            	}
+	            }
+	        }
+	        return true;
+		}
+		return false;
 	}
 } // end of GridGUI

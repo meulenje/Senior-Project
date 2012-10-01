@@ -22,7 +22,7 @@ public class GridObject extends JLayeredPane {
 	private GameEngine GE; // link back to Engine
     private int id; // identifies what type of cell the image displays
     private int entity; // is there an object here? 0=no
-    
+    protected boolean hasMoved = false;
     protected ImageIcon bgimage; // grass, dirt, floor, etc...
     protected ImageIcon fgimage; // player, enemy, rock, etc...
     protected JLabel background; // container to hold image

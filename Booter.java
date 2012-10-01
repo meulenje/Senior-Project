@@ -11,6 +11,5 @@ public class Booter {
 	public static void main(String args[])
 	{
 		new GameEngine(); // create the engine and begin
-		
 	}
 }
