@@ -125,7 +125,7 @@ public class Clock implements ActionListener
         /*
          * To allow adding new ClockListener objects when the clock is
          * "ticking" (i.e. when step() has not yet returned)
-         * we have have to use keep two lists (new and current).
+         * we have have to use two lists (new and current).
          */
         currListeners.addAll(newListeners);
         newListeners.clear();

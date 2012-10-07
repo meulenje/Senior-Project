@@ -1,6 +1,8 @@
 package rpg;
 
 /**
+ * Booter class
+ * 
  * Program Entry Point
  * @author Austin Delamar
  * @version 8/30/2012
