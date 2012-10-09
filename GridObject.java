@@ -72,13 +72,14 @@ public class GridObject extends JLayeredPane {
     /**
      * A simple way to re-construct a GridObject
      * without having to call multiple functions.
-     * @param id
-     * @param p
+     * @param int id
+     * @param int entity
+     * @param int accessory
      */
-    public void resetObject(int i, int p, int a)
+    public void resetObject(int i, int e, int a)
     {
     	setID(i);
-    	setEntity(p);
+    	setEntity(e);
     	setAccessory(a);
     }
     
@@ -95,8 +96,7 @@ public class GridObject extends JLayeredPane {
     
     /**
      * isHole
-     * Returns true, if the location is a hole. This
-     * could be from, grass, dirt, or water.
+     * Returns true, if the location is a hole.
      * @return boolean
      */
     public boolean isHole()
@@ -131,33 +131,56 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isExit()
     {
-    	return (accessory==2);
+    	return (accessory==GE.ExitID);
+    }
+    
+    /**
+     * isEncountersEnabled
+     * Returns true if the location has a chance of
+     * spawning a random encounter with a monster.
+     * (Eg. Tall Grass can produce surprise attacks)
+     * @return
+     */
+    public boolean isEncountersEnabled()
+    {
+    	return (accessory==GE.TallGrassID);
     }
     
     
     /**
-     * Places/Removes a player from the grid object by
-     * using the player id as a placeholder for its image.
-     * If 0 (zero) is passed, it effectively removes the
-     * image of the player, and defaults back to normal.
-     * If -1 is passed, it identifies a special object, like
-     * a rock, which is move-able over terrain
+     * Sets the id of the entity layer and adjusts
+     * the image accordingly
      * @param int p
      */
     public void setEntity(int p)
     {    	
     	// set the foreground image
-    	switch(p) // entity
+    	if(p == GE.EmptyID)
     	{
-    		case 0: entityImage=GE.Empty; break;
-    		case 1: entityImage=GE.Player; break;
-    		case 2: entityImage=GE.Rock; break;
-    		case 3: entityImage=GE.Hole; break;
-    		case 4: entityImage=GE.LavaMonster; break;
-    		case 5: entityImage=GE.Pirate; break;
-    		
-    		default: GE.printError("Error!\nNo image found for entity id="+p); break;
+    		entityImage=GE.Empty;
     	}
+    	else if(p == GE.PlayerID)
+    	{
+    		entityImage=GE.Player;
+    	}
+    	else if(p == GE.RockID)
+    	{
+    		entityImage=GE.Rock;
+    	}
+    	else if(p == GE.HoleID)
+    	{
+    		entityImage=GE.Hole;
+    	}
+    	else if(p == GE.LavaMonsterID)
+    	{
+    		entityImage=GE.LavaMonster;
+    	}
+    	else if(p == GE.PirateID)
+    	{
+    		entityImage=GE.Pirate;
+    	}
+    	else
+    		GE.printError("Error!\nNo image found for entity id="+p);
         
     	entity = p;
         foreground.setIcon(entityImage);
@@ -166,24 +189,35 @@ public class GridObject extends JLayeredPane {
     /**
      * Sets the id of the terrain layer and adjusts
      * the image accordingly.
-     * @param int a
+     * @param int i
      */
-    public void setID(int a)
+    public void setID(int i)
     {
     	// set the background image
-    	switch(a) // id
+    	if(i == GE.EmptyID)
     	{
-    		case -9: terrainImage=GE.XSpace; break;
-    		case -8: terrainImage=GE.XSpace; break;
-    		case -3: terrainImage=GE.Water; break;
-    		case -2: terrainImage=GE.Grass; break;
-    		case -1: terrainImage=GE.Dirt; break;
-    		case 0: this.setVisible(false); break;
-    		
-    		default: GE.printError("Error!\nNo image found for terrain id="+a); break;
+    		this.setVisible(false);
     	}
+    	else if(i == GE.WarpAID || i == GE.WarpBID)
+    	{
+    		terrainImage=GE.XSpace;
+    	}
+    	else if(i == GE.WaterID)
+    	{
+    		terrainImage=GE.Water;
+    	}
+    	else if(i == GE.GrassID)
+    	{
+    		terrainImage=GE.Grass;
+    	}
+    	else if(i == GE.DirtID)
+    	{
+    		terrainImage=GE.Dirt;
+    	}
+    	else
+    		GE.printError("Error!\nNo image found for terrain id="+i);
     	
-    	id = a;
+    	id = i;
     	background.setIcon(terrainImage);
     }
     
@@ -195,19 +229,29 @@ public class GridObject extends JLayeredPane {
     public void setAccessory(int a)
     {    	
     	// set the highground image
-    	switch(a) // id
-    	{ 
-    		case 0: accessoryImage=GE.Empty; break;
-    		case 1: accessoryImage=GE.TallGrass; break;
-    		case 2: accessoryImage=GE.Hideout; break;
-    		
-    		default: GE.printError("Error!\nNo image found for accessory id="+a); break;
+    	if(a == GE.EmptyID)
+    	{
+    		accessoryImage=GE.Empty;
     	}
+    	else if(a == GE.TallGrassID)
+    	{
+    		accessoryImage=GE.TallGrass;
+    	}
+    	else if(a == GE.ExitID)
+    	{
+    		accessoryImage=GE.Hideout;
+    	}
+    	else	
+    		GE.printError("Error!\nNo image found for accessory id="+a);
         
     	accessory = a;
         highground.setIcon(accessoryImage);
     }
     
+    /**
+     * Determines what fog piece is displayed on the fourth layer
+     * @param f
+     */
     public void setFog(int f)
     {
     	if(f==GE.FogCenterID)
@@ -230,8 +274,12 @@ public class GridObject extends JLayeredPane {
     	{
     		fogImage = GE.FogRight;
     	}
-    	else
+    	else if(f==GE.EmptyID)
+    	{
     		fogImage = GE.Empty;
+    	}
+    	else
+    		GE.printError("Error!\nNo image found for fog id="+f);
     	
     	fog = f;
     	fogLayer.setIcon(fogImage);

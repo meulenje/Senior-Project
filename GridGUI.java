@@ -168,8 +168,8 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         // populate the first board
         populateBoard();
         
-        // place the player, at the bottom left
-        repositionPlayer();
+        // place the player, at the start position
+        repositionPlayer(GE.prowStart,GE.pcolStart);
         
         // position camera on player
         repositionScrollBar();
@@ -268,87 +268,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         return;
 	}
 	
-	
-	@Override
-	public void keyPressed(KeyEvent k)
-	{
-		int key = k.getKeyCode();
-		
-		// if they hit "I" go to Inventory etc
-		
-        if (key == 16 ) // left shift
-        	leftShift = true;
-        
-        if (key == 32 ) // space bar
-        	spaceBar = true;
-
-        if (key == 73 ) // 'i'
-        {
-        	// shortcut to "Inventory Tab"
-        	GE.tabs.setSelectedIndex(1);
-        }
-        else if (key == 67 ) // 'c'
-        {
-        	// shortcut to "Combat Tab"
-        	GE.tabs.setSelectedIndex(2);
-        }
-        else if (key == 40 || key == 83) // arrow down or 's'
-		{
-			down = true;
-			movePlayer(1,0);
-		}
-		else if (key == 38 || key == 87) // arrow up or 'w'
-		{
-			up = true;
-			movePlayer(-1,0);
-		}
-		else if (key == 37 || key == 65) // arrow left or 'a'
-		{
-			left = true;
-			movePlayer(0,-1);
-		}
-		else if (key == 39 || key == 68) // arrow right or 'd'
-		{
-			right = true;
-			movePlayer(0,1);
-		}
-        keysPushed++;
-	}
-
-	@Override
-	public void keyReleased(KeyEvent k)
-	{
-		int key = k.getKeyCode();
-		
-        if (key == 16 ) // left shift
-        	leftShift = false;
-        
-        if (key == 32 ) // space bar
-        	spaceBar = false;
-        
-		if (key == 40 || key == 83) // arrow down or 's'
-		{
-			down = false;
-		}
-		else if (key == 38 || key == 87) // arrow up or 'w'
-		{
-			up = false;
-		}
-		else if (key == 37 || key == 65) // arrow left or 'a'
-		{
-			left = false;
-		}
-		else if (key == 39 || key == 68) // arrow right or 'd'
-		{
-			right = false;
-		}
-	}
-
-	@Override
-	public void keyTyped(KeyEvent k) {
-		// a key was typed
-    }
-	
 	// internal function to move the player's position
 	// according to the new coordinate increments.
 	public void movePlayer(int x, int y)
@@ -370,8 +289,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 		
 		// quick exit, if they try to move out of bounds
 		if(edgeOfMap || (nearEdgeOfMap && leftShift))
+		{
+			if(GE.showHintsEnabled) // show popup hint
+				GE.printInfo("If you're stuck, you can teleport back\nto the start by Actions -> Teleport.");
 			return;
-		
+		}
 		
 		// check if the next spot is empty, <0.
         if(!leftShift && GE.board[GE.prow+x][GE.pcol+y].isEmptySpace())
@@ -430,6 +352,10 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         	// reply by playing a sound file
         	GE.playSound("Hit.wav");
         	checkForEnemies();
+        	
+        	// show hint if they bumped a hole
+        	if(GE.showHintsEnabled && GE.board[GE.prow+x][GE.pcol+y].isHole())
+        		GE.printInfo("You can hop over holes by\nholding down the left-shift key.");
         }
         	
         
@@ -466,13 +392,16 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 			{
 				// start fresh again! Load a new map
 				randomizeBoard();
-				repositionPlayer();
+				repositionPlayer(GE.prowStart,GE.pcolStart);
 				repositionScrollBar();
 				movePlayerVision();
 				
 				// reset statistics if they wanted to
 				if(GE.clearStatsPerLevel)
 					resetStatistics();
+				
+				// add new quest to messageGUI
+				GE.addQuest(GE.Hideout,"Find the Exit","Try to find the exit in this level.");
 			}
 			else // 1 or -1
 			{
@@ -487,6 +416,8 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	/**
 	 * check for enemies
 	 * Scans the four surrounding locations, NSWE, for a monster.
+	 * Also checks if the location the player is on, has a chance
+	 * of spawning a random encounter. (Eg. Tall Grass)
 	 * @return boolean
 	 */
 	public void checkForEnemies()
@@ -502,6 +433,19 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 			monsterCount++;
 		else if(GE.pcol!=0 && GE.board[GE.prow][GE.pcol-1].isMonster())
 			monsterCount++;
+		
+		// check for chance of random encounter on certain terrain (Eg. Tall Grass)
+		if(GE.board[GE.prow][GE.pcol].isEncountersEnabled())
+		{
+			Random rand = new Random();
+			double r = rand.nextDouble(); // 0.0 to 1.0
+			if(r <= GE.percentChanceOfEncounter) // % chance of random encounter
+			{
+				// A surprise encounter happens!
+				monsterCount++;
+				GE.playSound("Hit.wav");
+			}
+		}
 		
 		encounters += monsterCount; // count the number
 		
@@ -534,24 +478,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	}
 	
 	/**
-	 * Resets the player back to the bottom left corner.
-	 * @return void
-	 */
-	public void repositionPlayer()
-	{
-    	// erase the player
-        GE.board[GE.prow][GE.pcol].setEntity(GE.EmptyID);
-                	
-        // place the player, at the bottom middle of the board
-        GE.prow = GE.BROWS-1;
-        GE.pcol = 0;
-        GE.board[GE.prow][GE.pcol].setEntity(GE.PlayerID);
-        
-        return;
-	}
-	
-	/**
-	 * Places the player to (x,y) coordinate, if possible.
+	 * Places the player to (x,y) (Row,Col) coordinate, if possible.
 	 * @return void
 	 * Throws Exception if x and y are not valid.
 	 */
@@ -560,13 +487,16 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
     	// erase the player
         GE.board[GE.prow][GE.pcol].setEntity(GE.EmptyID);
         
-        try {
+        try
+        {
         	// try to place the player, at the (x,y) coordinate
         	GE.prow = x;
         	GE.pcol = y;
         	GE.board[GE.prow][GE.pcol].setEntity(GE.PlayerID);
-        } catch(Exception e){
-        	GE.printError("ERROR:\n"+e.getMessage());
+        }
+        catch(Exception e)
+        {
+        	GE.printError("Whoops!\n\n"+e.getMessage());
         }
         
         return;
@@ -760,36 +690,121 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 		return;
 	}
 	
+	@Override
+	public void keyPressed(KeyEvent k)
+	{
+		int key = k.getKeyCode();
+		
+		// if they hit "I" go to Inventory etc
+		
+        if (key == 16 ) // left shift
+        	leftShift = true;
+        
+        if (key == 32 ) // space bar
+        	spaceBar = true;
+
+        if (key == 73 ) // 'i'
+        {
+        	// shortcut to "Inventory Tab"
+        	GE.tabs.setSelectedIndex(1);
+        }
+        else if (key == 67 ) // 'c'
+        {
+        	// shortcut to "Combat Tab"
+        	GE.tabs.setSelectedIndex(2);
+        }
+        else if (key == 81) // 'q'
+        {
+        	// shortcut to "Quest Tab"
+        	GE.tabs.setSelectedIndex(3);
+        }
+        else if (key == 40 || key == 83) // arrow down or 's'
+		{
+			down = true;
+			movePlayer(1,0);
+		}
+		else if (key == 38 || key == 87) // arrow up or 'w'
+		{
+			up = true;
+			movePlayer(-1,0);
+		}
+		else if (key == 37 || key == 65) // arrow left or 'a'
+		{
+			left = true;
+			movePlayer(0,-1);
+		}
+		else if (key == 39 || key == 68) // arrow right or 'd'
+		{
+			right = true;
+			movePlayer(0,1);
+		}
+        keysPushed++;
+	}
+
+	@Override
+	public void keyReleased(KeyEvent k)
+	{
+		int key = k.getKeyCode();
+		
+        if (key == 16 ) // left shift
+        	leftShift = false;
+        
+        if (key == 32 ) // space bar
+        	spaceBar = false;
+        
+		if (key == 40 || key == 83) // arrow down or 's'
+		{
+			down = false;
+		}
+		else if (key == 38 || key == 87) // arrow up or 'w'
+		{
+			up = false;
+		}
+		else if (key == 37 || key == 65) // arrow left or 'a'
+		{
+			left = false;
+		}
+		else if (key == 39 || key == 68) // arrow right or 'd'
+		{
+			right = false;
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent k) {
+		// a key was typed
+    }
+	
 	/**
 	 * actionPerformed
 	 * Performs certain actions according to what
 	 * button was pressed.
 	 */
 	@Override
-	public void actionPerformed(ActionEvent arg0)
+	public void actionPerformed(ActionEvent ae)
 	{
 		// if the user clicks on a button
 		
-        if(arg0.getSource() == null)
+        if(ae.getSource() == null)
         {
         	GE.printError("What did you do?!");
         }
-        else if(arg0.getSource() == upButton)
+        else if(ae.getSource() == upButton)
         {
         	// increment the players coordinates
         	movePlayer(-1,0);
         }
-        else if(arg0.getSource() == downButton)
+        else if(ae.getSource() == downButton)
         {
         	// increment the players coordinates
         	movePlayer(1,0);
         }
-        else if(arg0.getSource() == leftButton)
+        else if(ae.getSource() == leftButton)
         {
         	// increment the players coordinates
         	movePlayer(0,-1);
         }
-        else if(arg0.getSource() == rightButton)
+        else if(ae.getSource() == rightButton)
         {
         	// increment the players coordinates
         	movePlayer(0,1);
