@@ -134,10 +134,10 @@ public class CombatEngine {
 		else {
 			Ability activeAbility = actor.getAbilityByName(action);
 			if (activeAbility.friendly()) {
-				event = executeAbility(actor, 0, enemies, characters,
+				event = executeAbility(actor, gui.targets.getSelectedIndex(), enemies, characters,
 						activeAbility);
 			} else {
-				event = executeAbility(actor, 0, enemies, characters,
+				event = executeAbility(actor, gui.targets.getSelectedIndex(), enemies, characters,
 						activeAbility);
 			}
 		}

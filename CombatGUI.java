@@ -130,6 +130,7 @@ public class CombatGUI implements ActionListener {
 
 	public void update() {
 		//update gui components
+		updateActions(engine.turnStack.peek());
 		
 	}
 
