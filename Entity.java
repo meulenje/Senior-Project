@@ -1,4 +1,4 @@
-
+import java.util.*;
 /*
 * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -17,6 +17,7 @@ public class Entity implements Comparable<Entity>{
     private int speed;
     private String name;
     private boolean hasHeal = false;
+    ArrayList<Ability> abilities = new ArrayList<Ability>();
 
     public Entity(String name, int currentHealth, int maxHealth, int attack,
             int defense, int speed) {
@@ -130,5 +131,16 @@ public class Entity implements Comparable<Entity>{
      */
     public void setCurrentHealth(int currentHealth) {
         this.currentHealth = currentHealth;
+    }
+    
+    public Ability getAbilityByName(String name){
+    	Ability returnVal = null;
+    	for(Ability a : abilities){
+    		if (a.getName().equals(name)){
+    			returnVal = a;
+    		}
+    	}
+    	return returnVal;
+    	
     }
 }
