@@ -49,7 +49,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     protected int prowStart = BROWS-1; // initial start position
     protected int pcolStart = 0; // initial start position
     protected GridObject[][] board; // the maximum board size
-    protected ArrayList<Quest> quests; // list of quest messages
+    protected ArrayList<QuestGUI> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
     protected int clockSpeed = 1000; // time between ticks in milliseconds
     
@@ -99,7 +99,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     protected boolean blinkOnExit = false;
     protected boolean clearStatsPerLevel = false;
     protected int monsterGridSpeed = 6; // monster moves after X seconds
-    protected double percentChanceOfEncounter = 0.10; // when entering a Encounterable space, there is a small chance the player will run into a monster
+    protected double percentChanceOfEncounter = 0.05; // when entering a Encounterable space, there is a small chance the player will run into a monster
     
     // default images
     protected ImageIcon Empty = new ImageIcon("Emtpy.png");
@@ -286,7 +286,14 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         klok.register((GridGUI) map); // the Grid listens to the Clock
         klok.setRate(clockSpeed); // time passes per tick by this speed in milliseconds
         klok.run(Clock.FOREVER);
-       
+    }
+    
+    /**
+     * Sets up a new Game 
+     */
+    public void newGame()
+    {
+    	// TODO
     }
 
 	/**
@@ -401,14 +408,23 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 	public void addQuest(ImageIcon i, String t, String m)
 	{
 		// create new jpanel to add to array list
-		Quest q = new Quest(i,t,m);
+		QuestGUI q = new QuestGUI(this,i,t,m);
 		quests.add(q);
+		
+		// add new quest to MessageGUI
 		((MessageGUI) questPanel).addQuest(q);
+		
+		// notify listening objects of a change
 		fireIntervalAdded(this, quests.size()-1, quests.size() - 1);
 		
 		// popup a hint for the player if they need a reminder
 		if(showHintsEnabled)
 			printInfo("New Quest:\n\n"+t+"\n\nDisable hints in the Options Menu.");
+	}
+	
+	public void updateQuestStatus(int id, String s, Color c)
+	{
+		quests.get(id).setStatus(s,c);
 	}
 	
 	/**
@@ -430,7 +446,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 
 	@Override
 	public JPanel getElementAt(int arg0) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 		return null;
 	}
 
@@ -604,7 +620,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 
 	@Override
 	public void focusLost(FocusEvent e) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	@Override

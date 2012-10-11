@@ -186,7 +186,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         {
             for (int j=0; j<GE.BCOLS; j++)
             {
-            	GE.board[i][j] = new GridObject(GE,GE.WaterID,0,0);
+            	GE.board[i][j] = new GridObject(GE,GE.GrassID,0,GE.TallGrassID);
                 gridPanel.add(GE.board[i][j]); // place each location on the JPanel
             }
         }
@@ -399,6 +399,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 				// reset statistics if they wanted to
 				if(GE.clearStatsPerLevel)
 					resetStatistics();
+				
+				// update the old quest status
+				GE.updateQuestStatus(wins-1, "Complete!", Color.BLUE);
 				
 				// add new quest to messageGUI
 				GE.addQuest(GE.Hideout,"Find the Exit","Try to find the exit in this level.");

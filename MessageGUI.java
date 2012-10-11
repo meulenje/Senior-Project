@@ -31,7 +31,7 @@ public class MessageGUI extends JPanel implements KeyListener {
 	private int numberOfQuests = 0;
 	
 	// gui parts
-	private JPanel list;
+	private JPanel listPanel;
 	private JScrollPane scrollPanel;
 	
 	/**
@@ -43,18 +43,18 @@ public class MessageGUI extends JPanel implements KeyListener {
 		GE = tempEngine; // link back to engine
 		
 		// create list of quests
-		GE.quests = new ArrayList<Quest>();
+		GE.quests = new ArrayList<QuestGUI>();
 		
 		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 30));
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
         
-        list = new JPanel(); // create place holders for quest messages
-        list.setLayout(new GridLayout(10,0));
-        list.setBackground(Color.GRAY);
+        listPanel = new JPanel(); // create place holders for quest messages
+        listPanel.setLayout(new GridLayout(10,0));
+        listPanel.setBackground(Color.GRAY);
         
 		scrollPanel = new JScrollPane();
-		scrollPanel.setViewportView(list);
+		scrollPanel.setViewportView(listPanel);
 		scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM + 30));
@@ -64,45 +64,23 @@ public class MessageGUI extends JPanel implements KeyListener {
 		this.setVisible(true);
 	}
 	
-	public void addQuest(Quest q)
+	public void addQuest(QuestGUI q)
 	{
-		// create a new panel with the contents of Quest
+		// Take the Quest and add it to the GUI to display its information
 		
-		JPanel temp = new JPanel();
-		temp.setLayout(new BorderLayout());
-		temp.setPreferredSize(new Dimension(GE.X_DIM - 60, 100));
-		//TitledBorder border = new TitledBorder("Quest #"+(++numberOfQuests));
-		//border.setTitleColor(Color.LIGHT_GRAY);
-		//border.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-		//temp.setBorder(border);
-		temp.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-		temp.setBackground(Color.WHITE);
+		// add a number to it, to keep track
+		q.setTitle("Quest #"+(++numberOfQuests)+" - "+q.title);
 		
-		JPanel imagPanel = new JPanel();
-		imagPanel.setLayout(new BorderLayout());
-		imagPanel.setBackground(Color.LIGHT_GRAY);
-		JLabel image = new JLabel("#"+(++numberOfQuests)+" - "+q.title);
-		image.setIcon(q.image);
-		image.setSize(GE.C_WIDTH, GE.C_HEIGHT);
-		image.setLocation(0,0);
-		imagPanel.add(image, BorderLayout.NORTH);
-		temp.add(imagPanel, BorderLayout.NORTH);
-		
-		JTextArea text = new JTextArea(q.message);
-		text.setEditable(false);
-		text.setWrapStyleWord(true);
-		text.setLineWrap(true);
-		text.setFont(new Font("sansserif",Font.ITALIC,12));
-		temp.add(text, BorderLayout.CENTER);
-		
-		list.add(temp); // update display of quests
+		listPanel.add(((JPanel) q)); // update display of quests
 		this.validate();
 		this.repaint();
 	}
 	
-	public void removeQuest()
+	public void removeQuest(int id)
 	{
-		// TODO	
+		// remove quest from panel and arrayList
+		listPanel.remove(id);
+		GE.quests.remove(id);
 	}
 
 	@Override
@@ -125,33 +103,17 @@ public class MessageGUI extends JPanel implements KeyListener {
         	// shortcut to "Map Tab"
         	GE.tabs.setSelectedIndex(0);
         }
-        else if (key == 40 || key == 83) // arrow down or 's'
-		{
-			
-		}
-		else if (key == 38 || key == 87) // arrow up or 'w'
-		{
-			
-		}
-		else if (key == 37 || key == 65) // arrow left or 'a'
-		{
-			
-		}
-		else if (key == 39 || key == 68) // arrow right or 'd'
-		{
-			
-		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent k) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 		
 	}
 
 	@Override
 	public void keyTyped(KeyEvent k) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 		
 	}
 } // end of MessageGUI
