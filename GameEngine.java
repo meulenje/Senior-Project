@@ -4,11 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.swing.AbstractListModel;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -22,24 +22,25 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Random;
 import javax.swing.JFrame;
 
 /**
- * Grid Engine class
+ * Game Engine class
  * 
- * Holds the default attributes and loads
- * the default images/colors for the map.
+ * The brains behind the game's functionality and features.
+ * 
  * @author Austin Delamar
- * @version 10/1/2012
+ * @version 10/11/2012
  *
  */
-public class GameEngine extends AbstractListModel<JPanel> implements ActionListener, FocusListener, ClockListener {
+public class GameEngine implements ActionListener, FocusListener, ClockListener {
 	
-	private static final long serialVersionUID = 1L;
+	protected final int MAXIMUMSIZE = 100; // Max board size for rows and columns
 	protected final int X_DIM = 600; // default window size
 	protected final int Y_DIM = 600;
-    protected final int BCOLS = 25; // board default column size
-    protected final int BROWS = 25; // board default row size
+    protected int BCOLS = 25; // board default column size
+    protected int BROWS = 25; // board default row size
 	protected final int C_WIDTH = 25; // circle size
 	protected final int C_HEIGHT = 25; // circle size
 	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid panel dimensions
@@ -101,6 +102,22 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     protected int monsterGridSpeed = 6; // monster moves after X seconds
     protected double percentChanceOfEncounter = 0.05; // when entering a Encounterable space, there is a small chance the player will run into a monster
     
+    // special Grid variables
+	protected int hops = 0; // # of jumps taken
+	protected int steps = 0; // # of steps taken
+	protected int encounters = 0; // # of encounters
+	protected int objectsPushed = 0; // # of rock pushes
+	protected int objectsPushedInHoles = 0; // # of rocks pushed into holes
+	protected int warps = 0; // # of times they warped
+	protected int keysPushed = 0; // # of keyboard buttons pushed
+	protected int numOfMonsters = 0; // keep track of how many monsters there are
+	
+	// special Quest variables
+	protected int questsCompleted = 0;
+	protected int questsActive = 0;
+	protected int questsFailed = 0;
+	protected int questsTotal = 0;
+    
     // default images
     protected ImageIcon Empty = new ImageIcon("Emtpy.png");
     protected ImageIcon FogCenter = new ImageIcon("Fog.png");
@@ -108,11 +125,8 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     protected ImageIcon FogTop = new ImageIcon("FogTop.png");
     protected ImageIcon FogRight = new ImageIcon("FogRight.png");
     protected ImageIcon FogBottom = new ImageIcon("FogBottom.png");
-    protected ImageIcon Player = new ImageIcon("Player.png");
-	protected ImageIcon PlayerFront = new ImageIcon("PlayerFront.png");
-	protected ImageIcon PlayerBack = new ImageIcon("PlayerBack.png");
-	protected ImageIcon PlayerLeft = new ImageIcon("PlayerLeft.png");
-	protected ImageIcon PlayerRight = new ImageIcon("PlayerRight.png");
+    protected ImageIcon Player = new ImageIcon("PlayerFront.gif");
+    protected ImageIcon PlayerOutline = new ImageIcon("PlayerOutline.png");
 	protected ImageIcon GlowingGem = new ImageIcon("Gem.gif");
 	protected ImageIcon LavaMonster = new ImageIcon("LavaMonster.gif");
 	protected ImageIcon Pirate = new ImageIcon("Pirate.gif");
@@ -143,11 +157,21 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     private JCheckBoxMenuItem enableWarpItem;
     private JCheckBoxMenuItem enableAutoResetStatsItem;
     private JCheckBoxMenuItem enableMappingItem;
+    private JLayeredPane layers;
     protected JTabbedPane tabs;
+    protected JPanel mainmenu;
     protected JPanel map;
     protected JPanel combat;
     protected JPanel inventory;
     protected JPanel questPanel;
+    
+	// keep track of keyboard keys being held down
+	protected boolean up = false; // 38
+	protected boolean down = false; // 40
+	protected boolean left = false; // 37
+	protected boolean right = false; // 39
+	protected boolean leftShift = false; // 16
+	protected boolean spaceBar = false; // 32
 
     
     /**
@@ -160,7 +184,6 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         // program window
         window = new JFrame("GVSU RPG Senior Project");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.isAlwaysOnTop();
 
         // First menu contains "Quit" and "Reset"
         menubar = new JMenuBar();
@@ -235,6 +258,10 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         menubar.add(time);
         // place the menu bar
         window.setJMenuBar(menubar);
+        
+        
+        
+        
 
         // --------------------------------------------------------       
         // create the GridGui map panel
@@ -264,19 +291,34 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         tabs.addTab("Combat", combat);
         tabs.addTab("Quests", questPanel);
         tabs.addFocusListener(this);
+        tabs.setLocation(0,0);
+        tabs.setSize(X_DIM,Y_DIM);
         
-        // focus is needed to detect if a JPanel is active (in view) or not.
-        // that way, the KeyListener can function properly for certain JPanels.
+        // --------------------------------------------------------
+        // make the main menu gui
+        mainmenu = new MainMenuGUI(this);
+        mainmenu.setLocation(0,0);
+        mainmenu.setSize(X_DIM,Y_DIM);
+        // --------------------------------------------------------
+
+        // create two layers
+        // 0 -- is for the GamePanels (Grid, Combat, etc)
+        // 100 -- is for the MainMenu
+        layers = new JLayeredPane();
+        layers.setLayout(new BorderLayout());
+        layers.setSize(new Dimension( X_DIM , Y_DIM));
+        layers.add(tabs, 0);
+        layers.add(mainmenu, 100);
+        layers.setLayer(tabs, 0);
         
-        // add the tab pane to the window
-        window.add(tabs, BorderLayout.CENTER);
+        // add the layers to the window
+        window.add(layers, BorderLayout.CENTER);
         
         // show window in default size dimensions
         window.setSize(new Dimension( X_DIM , Y_DIM));
         window.setResizable(false);
         window.pack(); 
         window.setVisible(true);
-        map.requestFocusInWindow();
  
         // create the clock  and clock status bar at the bottom
         // listen to the timer,
@@ -285,16 +327,112 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         klok.register(this); // The Engine listens to the Clock
         klok.register((GridGUI) map); // the Grid listens to the Clock
         klok.setRate(clockSpeed); // time passes per tick by this speed in milliseconds
-        klok.run(Clock.FOREVER);
     }
     
     /**
-     * Sets up a new Game 
+     * Creates each GridObject according to the number of 
+     * rows and columns in BROWS and BCOLS.
+     */
+	public void createGridObjects()
+	{
+		// create the board
+		board = new GridObject[BROWS][BCOLS];
+		
+        for (int i=0; i<BROWS; i++)
+        {
+            for (int j=0; j<BCOLS; j++)
+            {
+            	board[i][j] = new GridObject(this,GrassID,0,TallGrassID);
+            	((GridGUI) map).addGridObject(i,j); // place on grid panel
+            }
+        }
+	}
+	
+	/**
+	 * Deletes each GridObject, in order to restart a new board.
+	 */
+	public void deleteGridObjects()
+	{
+		board = null;
+		// remove each GridObject reference from the grid panel
+		((GridGUI) map).removeAllGridObjects();
+	}
+	
+	/**
+	 * Creates a list of empty quests
+	 */
+	public void createQuestList()
+	{
+		// create list of quests
+		quests = new ArrayList<QuestGUI>();
+	}
+	
+	/**
+	 * Deletes the list of quests
+	 */
+	public void deleteQuestList()
+	{
+		quests = null;
+		// remove each of the quests
+		((MessageGUI) questPanel).removeAllQuests();
+	}
+    
+    /**
+     * A function to start a new game
      */
     public void newGame()
     {
+    	// choose player
     	// TODO
+    	
+    	// delete old map and make a new empty one
+    	deleteGridObjects();
+    	createGridObjects();
+    	
+    	// delete old quests and make a new empty one
+    	deleteQuestList();
+    	createQuestList();
+    	
+		// load a new map
+    	loadMap();
+    	
+		// reset clock
+		klok.pause();
+		klok.currentTime = 0;
     }
+    
+	/**
+	 * A function to end the game
+	 */
+	public void endGame()
+	{
+		// reset klok
+		klok.pause();
+		
+		// delete board, quests
+		deleteGridObjects();
+		deleteQuestList();
+		resetStatistics();
+		questsCompleted=0;
+		questsTotal=0;
+		questsActive=0;
+		questsFailed=0;
+		
+		// go to Main Menu
+		viewMainMenu();
+	}
+	
+	/**
+	 * WARNING!
+	 * Closes this Java Application!
+	 * This is the same as clicking "X" on the
+	 * program when its running.
+	 */
+	public void quitProgram()
+	{
+		// gracefully exit the entire game
+		System.exit(1);
+	}
 
 	/**
      * Display an error
@@ -303,9 +441,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     public void printError(String e)
     {
         // found an error and is printing it according to the view
-    	klok.pause();
-    	JOptionPane.showMessageDialog(window,e,"Error",JOptionPane.ERROR_MESSAGE);
-    	klok.run(Clock.FOREVER);
+    	JOptionPane.showMessageDialog(window,e,"ERROR",JOptionPane.ERROR_MESSAGE);
     }
     
 	/**
@@ -315,10 +451,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
     public void printInfo(String s)
     {
         // found some information to print
-    	klok.pause();
     	JOptionPane.showMessageDialog(window,s,"Information",JOptionPane.INFORMATION_MESSAGE);
-    	
-    	klok.run(Clock.FOREVER);
     }
     
     /**
@@ -328,26 +461,20 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
      */
     public String printQuestion(String t)
     {
-    	klok.pause();
-        String result = JOptionPane.showInputDialog(window,t,"Question",JOptionPane.QUESTION_MESSAGE);
-        klok.run(Clock.FOREVER);
-        return result;
+        return JOptionPane.showInputDialog(window,t,"Question",JOptionPane.QUESTION_MESSAGE);
     }
     
     /**
      * Prompt a Yes/No Question
-     * @param b
+     * @param String b
      * @return int
-     *  0 means YES
-     *  1 means NO
+     *  0 means YES,
+     *  1 means NO,
      *  -1 means they clicked "X" close
      */
     public int printYesNoQuestion(String b)
     {
-    	klok.pause();
-        int result = JOptionPane.showConfirmDialog(window,b,"Question",JOptionPane.YES_NO_OPTION);
-        klok.run(Clock.FOREVER);
-        return result;
+        return JOptionPane.showConfirmDialog(window,b,"Question",JOptionPane.YES_NO_OPTION);
     }
     
     
@@ -356,75 +483,135 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
      * @param String question
      * @param Object[] choices
      * @return int
-     *  0 means YES
-     *  1 means NO
+     *  0 means YES,
+     *  1 means NO,
      *  -1 means they clicked "X" close
      */
     public int printCustomQuestion(String question, Object[] choices)
     {
-    	klok.pause();
-    	int result = JOptionPane.showOptionDialog(window,question,"Question",JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,choices,choices[1]);
-    	klok.run(Clock.FOREVER);
-    	return result;
+    	return JOptionPane.showOptionDialog(window,question,"Question",JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,choices,choices[1]);
     }
     
     /**
      * Forces player to view Quests
      */
-    public void showQuestPanel()
+    public void viewQuestPanel()
     {  	
-    	// force the player to see Message
     	tabs.setSelectedIndex(3);
+    	klok.pause();
     }
     
     /**
      * Forces player to view Combat
      */
-    public void showCombatPanel()
+    public void viewCombatPanel()
     {
     	tabs.setSelectedIndex(2);
+    	klok.pause();
     }
     
     /**
      * Forces player to view Inventory
      */
-    public void showInventoryPanel()
+    public void viewInventoryPanel()
     {
     	tabs.setSelectedIndex(1);
+    	klok.pause();
     }
     
     /**
      * Forces player to view Map
      */
-    public void showMapPanel()
+    public void viewMapPanel()
     {
     	tabs.setSelectedIndex(0);
+    	klok.run(Clock.FOREVER);
+    }
+    
+    /**
+     * Forces player to view the Main Menu
+     */
+    public void viewMainMenu()
+    {
+    	layers.setLayer(mainmenu, 100);
+    	mainmenu.setVisible(true);
     }
     
 	/**
-	 * Add another quest message
+	 * Resets the statistics for the player
 	 * @return void
 	 */
-	public void addQuest(ImageIcon i, String t, String m)
+	public void resetStatistics()
 	{
+		questsCompleted = 0; // # of quests completed
+		hops = 0; // # of jumps taken
+		steps = 0; // # of steps taken
+		encounters = 0; // # of encounters
+		objectsPushed = 0; // # of rock pushes
+		objectsPushedInHoles = 0; // # of rocks pushed into holes
+		warps = 0; // # of times they warped
+		keysPushed = 0; // # of keyboard buttons pushed
+	}
+	
+	/**
+	 * Returns the current statistics for the player
+	 * @return String
+	 */
+	public String getStatistics()
+	{
+		return "Statistics \n\n"+
+				questsCompleted+" Quests Completed\n"+
+				steps+" Steps\n"+
+				hops+" Hops\n"+
+				encounters+" Battles\n"+
+				objectsPushed+" Objects Pushed\n"+
+				objectsPushedInHoles+" Objects Pushed into Holes\n"+
+				warps+" Times Warped\n"+
+				keysPushed+" Keys Pushed\n";
+	}
+    
+	/**
+	 * Add another quest message to the MessageGUI
+	 * unique id number
+	 * imageicon name
+	 * title
+	 * message description (list of tasks)
+	 * status description (started or complete)
+	 * @return void
+	 */
+	public void addQuest(int id, ImageIcon i, String t, String m, String s)
+	{
+		questsActive++;
+		
 		// create new jpanel to add to array list
-		QuestGUI q = new QuestGUI(this,i,t,m);
+		QuestGUI q = new QuestGUI(this,id,i,t,m,s);
 		quests.add(q);
 		
 		// add new quest to MessageGUI
 		((MessageGUI) questPanel).addQuest(q);
 		
-		// notify listening objects of a change
-		fireIntervalAdded(this, quests.size()-1, quests.size() - 1);
-		
 		// popup a hint for the player if they need a reminder
 		if(showHintsEnabled)
-			printInfo("New Quest:\n\n"+t+"\n\nDisable hints in the Options Menu.");
+		{
+			Object options[] = {"View Now","Close"};
+			int result = printCustomQuestion("New Quest available!",options);
+			if(result == 0)
+				viewQuestPanel();
+		}
 	}
 	
+	/**
+	 * Updates the status of a Quest by its id. The color is optional, so
+	 * you could make the letters appear BLUE when the quest is completed,
+	 * or just make the letters appear BLACK if its not important.
+	 * @param id
+	 * @param s
+	 * @param c
+	 */
 	public void updateQuestStatus(int id, String s, Color c)
 	{
 		quests.get(id).setStatus(s,c);
+		quests.get(id).setStatistics("This Quests statistics:\n\n"+getStatistics());
 	}
 	
 	/**
@@ -436,82 +623,513 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 		try
 		{	
 			quests.remove(id);
-			fireIntervalRemoved(this, quests.size(), quests.size());
+			((MessageGUI) questPanel).removeQuest(id);
 		}
 		catch(Exception e)
 		{
 			printError("Whoops!\n\n"+e.getMessage());
 		}
 	}
-
-	@Override
-	public JPanel getElementAt(int arg0) {
-		// Auto-generated method stub
-		return null;
+	
+	/**
+	 * Removes all warps from the map, and replaces them grass
+	 * @return void
+	 */
+	public void removeWarps()
+	{
+		// We must find the other warp, according to our current warp id
+        for (int i=0; i<BROWS; i++)
+        {
+            for (int j=0; j<BCOLS; j++)
+            {
+            	// find the other warp
+            	if(board[i][j].getTerrain() == WarpAID 
+            			|| board[i][j].getTerrain() == WarpBID)
+            	{
+            		// replace with grass
+            		board[i][j].setTerrain(GrassID);
+            	}
+            }
+        }
+		return;
 	}
-
-	@Override
-	public int getSize() {
-		return quests.size();
-	} 
+	
+	/**
+	 * Check if the player's current position is over the
+	 * exit portal for the level. If true, then they beat the level!
+	 */
+	public void checkForExit()
+	{
+		// did they stumble upon the exit door?
+		if(board[prow][pcol].isExit())
+		{
+			questsCompleted++;
+			
+			if(questsCompleted % 3 == 0) // every three wins, print stats
+			{
+				printInfo("Highscore!\n\n"+getStatistics());
+				printInfo("Way to go! You're a Laker for a Lifetime!");
+			}
+			
+			int temp = printYesNoQuestion("Congrats! You found the exit!\n\nPlay again?");
+			
+			if(temp==0)
+			{
+				// start fresh again! Load a new map
+				loadMap();
+			}
+			else // 1 or -1
+			{
+				// they chose to quit
+				endGame();
+			}
+		}
+		return;
+	}
+	
+	/**
+	 * check for enemies
+	 * Scans the four surrounding locations, NSWE, for a monster.
+	 * Also checks if the location the player is on, has a chance
+	 * of spawning a random encounter. (Eg. Tall Grass)
+	 * @return boolean
+	 */
+	public void checkForEnemies()
+	{
+		int monsterCount = 0;
+		
+		// check NSWE of player position for enemies
+		if(prow!=BROWS-1 && board[prow+1][pcol].isMonster())
+			monsterCount++;
+		else if(prow!=0 && board[prow-1][pcol].isMonster())
+			monsterCount++;
+		else if(pcol!=BCOLS-1 && board[prow][pcol+1].isMonster())
+			monsterCount++;
+		else if(pcol!=0 && board[prow][pcol-1].isMonster())
+			monsterCount++;
+		
+		// check for chance of random encounter on certain terrain (Eg. Tall Grass)
+		if(board[prow][pcol].isEncountersEnabled())
+		{
+			Random rand = new Random();
+			double r = rand.nextDouble(); // 0.0 to 1.0
+			if(r <= percentChanceOfEncounter) // % chance of random encounter
+			{
+				// A surprise encounter happens!
+				monsterCount++;
+				playSound("Hit.wav");
+			}
+		}
+		
+		encounters += monsterCount; // count the number
+		
+		if(monsterCount>0)
+		{
+			Object[] options = {"Fight!", "Flee!"};
+			int answer= printCustomQuestion("What will you do?", options);
+			if(answer==0)
+			{
+				// go to combat tab
+				viewCombatPanel();
+			}
+			else
+			{
+				// stay on the Map tab
+				viewMapPanel();
+			}
+		}
+		
+		return;
+	}
+	
+	/**
+	 * Warps the player's position to the twin warp on the map.
+	 * -8 and -9 represent the two warps. Entering either warp,
+	 * will send the player to the other end. (Two-Way)
+	 * 
+	 */
+	public void steppedOnWarp()
+	{
+		int a = board[prow][pcol].getTerrain();
+		
+		if(warpingEnabled==true && (a==WarpAID || a==WarpBID))
+		{
+			// We must find the other warp, according to our current warp id
+			int b = WarpAID;
+			if(a == WarpAID)
+				b = WarpBID;
+			
+	        for (int i=0; i<BROWS; i++)
+	        {
+	            for (int j=0; j<BCOLS; j++)
+	            {
+	            	// find the other warp
+	            	if(board[i][j].getTerrain() == b)
+	            	{
+	            		// warp the player
+	            		// delay here
+	            		repositionPlayer(i,j);
+	            		((GridGUI) map).repositionScrollBarsToPlayer();
+	            		movePlayerVision();
+	            		warps++;
+	            		break;
+	            	}
+	            }
+	        }
+		}
+		return;
+	}
+	
+	/**
+	 * Places the player to (x,y) (Row,Col) coordinate, and overwrites
+	 * whatever is in the way.
+	 * 
+	 * This function is best used, for warping, or quick setting the
+	 * player's position. It does not check for valid moves, according
+	 * to the style of the game.
+	 * 
+	 * Use movePlayer(x,y) to perform logical, game style movement.
+	 * 
+	 * @return void
+	 * Throws Exception if x and y are not valid locations.
+	 */
+	public void repositionPlayer(int x, int y)
+	{
+    	// erase the player
+        board[prow][pcol].setEntity(EmptyID);
+        
+        try
+        {
+        	// try to place the player, at the (x,y) coordinate
+        	prow = x;
+        	pcol = y;
+        	board[prow][pcol].setEntity(PlayerID);
+        }
+        catch(Exception e)
+        {
+        	printError("Whoops!\n\n"+e.getMessage());
+        }
+        
+        return;
+	}
+	
+	/**
+	 * Moves the player to the (x,y) coordinate, if possible. This
+	 * function will follow game-style logic when moving the player,
+	 * and will not just "warp" the player to the x,y coordinate.
+	 * 
+	 * Use repositionPlayer(x,y) if you need to immediately move
+	 * the player, and replace whatever object is in the way.
+	 * @param x
+	 * @param y
+	 */
+	public void movePlayer(int x, int y)
+	{
+		boolean player_has_moved = false;
+		
+		// check for boundaries
+		boolean edgeOfMap = ( 
+				( prow==BROWS-1 && x>0 ) 
+				|| ( pcol==BCOLS-1 && y>0 ) 
+				|| ( prow==0 && x<0 ) 
+				|| ( pcol==0 && y<0 ) );
+		boolean nearEdgeOfMap = (
+				( prow+x==BROWS-1 && x>0 ) 
+				|| ( pcol+y==BCOLS-1 && y>0 )
+				|| ( prow+x==0 && x<0 )
+				|| ( pcol+y==0 && y<0 ) );
+		
+		// quick exit, if they try to move out of bounds
+		if(edgeOfMap || (nearEdgeOfMap && leftShift))
+		{
+			if(showHintsEnabled) // show popup hint
+				printInfo("You cannot move off the map!");
+			return;
+		}
+		
+		// check if the next spot is empty, <0.
+        if(!leftShift && board[prow+x][pcol+y].isEmptySpace())
+        {       	
+        	// move the player
+        	repositionPlayer(prow+x,pcol+y);
+            player_has_moved = true;
+            steps++;
+        }
+        // check if the next spot is pushable like a rock
+        else if(!leftShift && board[prow+x][pcol+y].isPushable())
+        {
+        	// is the next location behind the rock, an empty space?
+        	if(!nearEdgeOfMap && board[prow+x+x][pcol+y+y].isEmptySpace())
+        	{
+        		// if so, then move the pushable object forward one space
+        		board[prow+x+x][pcol+y+y].setEntity(board[prow+x][pcol+y].getEntity());
+        		
+        		// remove the old rock
+        		board[prow+x][pcol+y].setEntity(EmptyID);
+        		
+            	// move the player
+        		repositionPlayer(prow+x,pcol+y);
+                player_has_moved = true;
+                steps++;
+                objectsPushed++;
+        	}
+        	// is the next location behind the rock, a hole?
+        	else if(!nearEdgeOfMap && board[prow+x+x][pcol+y+y].isHole())
+        	{
+        		// if so, then move the rock into the hole
+        		// leaving just normal ground where the rock was
+        		
+            	// move the player
+        		repositionPlayer(prow+x,pcol+y);
+                player_has_moved = true;
+                steps++;
+                objectsPushed++;
+                objectsPushedInHoles++;
+        	}
+        }
+        // check if the player can jump over spot
+        else if(leftShift && board[prow+x+x][pcol+y+y].isEmptySpace()
+        		&& ( board[prow+x][pcol+y].isHole()
+        		|| board[prow+x][pcol+y].isEmptySpace()))
+        {
+        	// if so, we can jump over the hole or ground
+        	// move the player two spaces
+        	repositionPlayer(prow+x+x,pcol+y+y);
+            player_has_moved = true;
+            hops++;
+        }
+        
+        
+        // reposition the "camera" if they moved
+        if(player_has_moved)
+        {
+        	((GridGUI) map).repositionScrollBarsToPlayer();
+			movePlayerVision();
+			steppedOnWarp();
+			checkForExit();
+			checkForEnemies();
+        } 
+        else
+        {
+        	// bumped into something
+        	// reply by playing a sound file
+        	playSound("Hit.wav");
+        	checkForEnemies();
+        	
+        	// show hint if they bumped a hole
+        	if(showHintsEnabled && board[prow+x][pcol+y].isHole())
+        		printInfo("You can hop over holes by\nholding down the left-shift key.");
+        }
+		
+        return;
+	} // end of movePlayer()
+	
+	/**
+	 * Sets the area around the player visible according to how
+	 * far the player's vision reaches, and if fogOfWar is enabled.
+	 * @return void
+	 */
+	public void movePlayerVision()
+	{
+		if(fogOfWar)
+		{
+	        for (int i=0; i<BROWS; i++)
+	        {
+	            for (int j=0; j<BCOLS; j++)
+	            {
+	            	// if its inside of the player's vision range, then set visible
+	            	if(i < prow + playerVisionRange && i > prow - playerVisionRange &&
+	            			j < pcol + playerVisionRange && j > pcol - playerVisionRange)
+	            	{
+	            		// inside vision range
+	            		board[i][j].setFog(EmptyID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else if(i == prow + playerVisionRange
+	            			&& j < pcol + playerVisionRange
+	            			&& j > pcol - playerVisionRange)
+	            	{
+	            		// edge of lower vision
+	            		board[i][j].setFog(FogBottomID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else if(i == prow - playerVisionRange
+	            			&& j < pcol + playerVisionRange
+	            			&& j > pcol - playerVisionRange)
+	            	{
+	            		// edge of upper vision
+	            		board[i][j].setFog(FogTopID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else if(j == pcol + playerVisionRange
+	            			&& i < prow + playerVisionRange
+	            			&& i > prow - playerVisionRange)
+	            	{
+	            		// edge of right-side vision
+	            		board[i][j].setFog(FogRightID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else if(j == pcol - playerVisionRange
+	            			&& i < prow + playerVisionRange
+	            			&& i > prow - playerVisionRange)
+	            	{
+	            		// edge of left-side vision
+	            		board[i][j].setFog(FogLeftID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else if(mappingEnabled && board[i][j].isVisible())
+	            	{
+	            		// was previously seen, but now out of range
+	            		board[i][j].setFog(FogCenterID);
+	            		board[i][j].setVisible(true);
+	            	}
+	            	else // out of vision range
+	            	{
+	            		board[i][j].setFog(EmptyID);
+	            		board[i][j].setVisible(false);
+	            	}
+	            }
+	        }
+		}
+	}
+	
+	/**
+	 * Sets all of the map's tiles visible or invisible
+	 * @return void
+	 */
+	public void setFog(boolean f)
+	{
+		if(fogOfWar)
+		{
+	        for (int i=0; i<BROWS; i++)
+	        {
+	            for (int j=0; j<BCOLS; j++)
+	            {
+	            	board[i][j].setVisible(!f);
+	            	board[i][j].setFog(0);
+	            }
+	        }
+		}
+	}
+	
+	/**
+	 * Randomizes the current board with new images and ids
+	 */
+	public void randomizeBoard()
+	{
+        // randomly build a testing grid with rocks and holes
+        Random rand = new Random();
+        boolean doorPlaced = false;
+        boolean warpAPlaced = false;
+        boolean warpBPlaced = false;
+        int temp;
+        numOfMonsters = 0;
+        
+        if(blinkOnExit) // turn off display briefly
+        	((GridGUI) map).setVisible(false);
+        
+        for (int i=0; i<BROWS; i++)
+        {
+            for (int j=0; j<BCOLS; j++)
+            {
+            	// randomly place circles
+                temp = rand.nextInt(51) - 2; // random -2 to 48
+                
+                // randomly scatter "holes"
+                if(temp==1)
+                {
+                	board[i][j].resetObject(DirtID,HoleID,EmptyID);
+                }
+                // randomly scatter "rocks"
+                else if(temp==-1 || temp==-2)
+                {
+                	board[i][j].resetObject(DirtID,RockID,EmptyID);
+                }
+                // randomly make "monsters"
+                else if(temp==7)
+                {
+                	board[i][j].resetObject(DirtID,PirateID,EmptyID);
+                	numOfMonsters++;
+                }
+                // place warp 'a'
+                else if(warpingEnabled && !warpAPlaced && temp==8)
+                {
+                	board[i][j].resetObject(WarpAID,EmptyID,EmptyID);
+                	warpAPlaced = true;
+                }
+                // place warp 'b'
+                else if(warpingEnabled && !warpBPlaced && temp==9 && (i >= BROWS/2))
+                {
+                	board[i][j].resetObject(WarpBID,EmptyID,EmptyID);
+                	warpBPlaced = true;
+                }
+                // randomly place one door per map
+                else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
+                {
+                	board[i][j].resetObject(GrassID,EmptyID,ExitID);
+                	doorPlaced = true;
+                }
+                else
+                {
+                	// everything else is dirt, grass, or tall grass
+                	temp = rand.nextInt(6); // 0 - 5
+                	if(temp>=4)
+                		board[i][j].resetObject(GrassID,EmptyID,TallGrassID);
+                	else if(temp==3)
+                		board[i][j].resetObject(DirtID,EmptyID,EmptyID);
+                	else
+                		board[i][j].resetObject(GrassID,EmptyID,EmptyID);
+                }
+            }
+        }
+        
+        if(blinkOnExit) // show display
+        	((GridGUI) map).setVisible(true);
+        
+        if(fogOfWar)
+        	setFog(true);
+        
+        return;
+	}
 	
 	@Override
 	public void actionPerformed(ActionEvent Trigger)
 	{
 		// if the user clicks on a menu button
-		klok.pause();
 		
 		if(Trigger.getSource() == newItem)
 		{
 			int answer = printYesNoQuestion("Are you sure you want\nto start a new map?");
 			if(answer==0)
-			{
-				// load a new map
-				((GridGUI) map).randomizeBoard();
-				((GridGUI) map).repositionPlayer(prowStart,pcolStart);
-				((GridGUI) map).repositionScrollBar();
-				((GridGUI) map).movePlayerVision();
-				
-				// reset statistics if they wanted to
-				if(clearStatsPerLevel)
-					((GridGUI) map).resetStatistics();
-				
-				// add new quest to messageGUI
-				addQuest(Hideout,"Find the Exit","Try to find the exit in this level.");
-				
-				// reset clock
-				klok.pause();
-				klok.currentTime = 0;
-				klok.run(Clock.FOREVER);
-			}
+				newGame();
 		}
 		else if(Trigger.getSource() == saveItem)
 		{
 			// save the game
-			printInfo("Save successful.");
+			printError("Save unsuccessful!");
 		}
 		else if(Trigger.getSource() == quitItem)
         {
-			int answer = printYesNoQuestion("Are you sure you want\nto quit?");
+			int answer = printYesNoQuestion("Are you sure you want\nto quit? Any progress made\nbe lost.");
 			if(answer==0)
 				endGame();
         }
         else if(Trigger.getSource() == teleportItem)
         {
-        	((GridGUI) map).repositionPlayer(prowStart,pcolStart);
-        	((GridGUI) map).repositionScrollBar();
-        	((GridGUI) map).movePlayerVision();
+        	repositionPlayer(prowStart,pcolStart);
+        	((GridGUI) map).repositionScrollBarsToPlayer();
+        	movePlayerVision();
         }
         else if(Trigger.getSource() == statsItem)
         {
-        	printInfo(((GridGUI) map).getStatistics());
+        	printInfo(getStatistics());
         }
         else if(Trigger.getSource() == resetStatsItem)
         {
         	int answer = printYesNoQuestion("Are you sure you want\nto clear your progress?");
         	if(answer==0)
         	{
-        		((GridGUI) map).resetStatistics();
+        		resetStatistics();
         		printInfo("Player Statistics have been deleted.");
         	}
         }
@@ -519,16 +1137,16 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         {
         	if(fogOfWar)
         	{
-        		((GridGUI) map).setFog(false);
+        		setFog(false);
         		fogOfWar = false;
         		mappingEnabled = false; // mapping is useless without fog
         		enableMappingItem.setEnabled(false);
         	}
         	else
         	{
-        		((GridGUI) map).setFog(true);
+        		setFog(true);
         		fogOfWar = true;
-        		((GridGUI) map).movePlayerVision();
+        		movePlayerVision();
         		enableMappingItem.setEnabled(true);
         	}
         }
@@ -544,7 +1162,7 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         	if(warpingEnabled)
         	{
         		warpingEnabled = false;
-        		((GridGUI) map).removeWarps();
+        		removeWarps();
         	}
         	else
         	{
@@ -567,26 +1185,17 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
         else if(Trigger.getSource() == enableMappingItem)
         {	
         	if(mappingEnabled)
-        	{
         		mappingEnabled = false;
-        	}
         	else
-        	{
         		mappingEnabled = true;
-        	}
         }
         else if(Trigger.getSource() == enableHintsItem)
         {
         	if(showHintsEnabled)
-        	{
         		showHintsEnabled = false;
-        	}
         	else
-        	{
         		showHintsEnabled = true;
-        	}
         }
-        klok.run(Clock.FOREVER);
 	}
 
 	@Override
@@ -616,6 +1225,8 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 				questPanel.requestFocus();
 			}
 		}
+		else
+			klok.pause();
 	}
 
 	@Override
@@ -650,13 +1261,72 @@ public class GameEngine extends AbstractListModel<JPanel> implements ActionListe
 		}).start();
 	}
 	
-
 	/**
-	 * A function to end the game
+	 * Resets the current board size.
+	 * 
+	 * WARNING! You should clear the current board with
+	 * deleteGridObjects() before you use this function!
+	 * 
+	 * @param rows
+	 * @param columns
 	 */
-	public void endGame()
+	public void setBoardSize(int rows, int columns)
 	{
-		klok.pause();
-		System.exit(1);
+		if(rows>1 && columns>1 && rows<MAXIMUMSIZE && columns < MAXIMUMSIZE)
+		{
+			BROWS = rows;
+			BCOLS = columns;
+		}
+		else
+			printError("Oops!\n\nsetBoardSize(x,y) cannot take values\nlower than 2 or greater than "+MAXIMUMSIZE+"!");
 	}
+	
+	/**
+	 * Saves to file, the current game in progress.
+	 */
+	public void saveGame()
+	{
+		// TODO
+	}
+	
+	/**
+	 * Loads from file, a game in progress.
+	 */
+	public void loadGame()
+	{
+		// TODO
+	}
+	
+	/**
+	 * Loads from file, the next map for this game.
+	 */
+	public void loadMap()
+	{
+    	// delete old map and make a new empty one
+    	deleteGridObjects();
+    	createGridObjects();
+    	
+		// load a new map
+		randomizeBoard();
+		repositionPlayer(prowStart,pcolStart);
+		((GridGUI) map).repositionScrollBarsToPlayer();
+		movePlayerVision(); // for fog, if enabled
+		
+		// reset statistics if they wanted to
+		if(clearStatsPerLevel)
+			resetStatistics();
+		
+		// update the old quest status, if there was one
+		if(questsCompleted!=0)
+		{
+			updateQuestStatus(questsTotal-1, "Complete!", Color.BLUE);
+		}
+
+		// add new quest to messageGUI
+		addQuest(questsTotal,Hideout,"Find the Exit","Try to find the exit in this level.","Started");
+		
+		questsTotal++;
+	}
+	
 } // end of GameEngine
+// --------------------

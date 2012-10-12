@@ -11,7 +11,7 @@ import javax.swing.JLayeredPane;
  * 
  * Displays an image to represent one space on the map
  * @author Austin Delamar
- * @version 10/1/2012
+ * @version 10/11/2012
  * 
  */
 @SuppressWarnings("serial")
@@ -19,7 +19,7 @@ public class GridObject extends JLayeredPane {
 	
 	private GameEngine GE; // link back to Engine
 	
-    private int id; // identifies what type of cell the image displays
+    private int terrain; // identifies what type of cell the image displays
     private int entity; // is there an object here? 0=no
     private int accessory; // identifies what extra layer is on top
     private int fog;
@@ -33,7 +33,7 @@ public class GridObject extends JLayeredPane {
     protected JLabel fogLayer; // only holds fog for blurry vision
     
     // GridObject Constructor
-    public GridObject(GameEngine tempEngine, int i, int e, int a)
+    public GridObject(GameEngine tempEngine, int t, int e, int a)
     {
     	// link to back Engine
     	GE = tempEngine;
@@ -62,7 +62,7 @@ public class GridObject extends JLayeredPane {
     	this.setSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
     	
     	// set variables and images
-    	setID(i);
+    	setTerrain(t);
     	setEntity(e);
     	setAccessory(a);
     	setFog(GE.EmptyID);
@@ -76,9 +76,9 @@ public class GridObject extends JLayeredPane {
      * @param int entity
      * @param int accessory
      */
-    public void resetObject(int i, int e, int a)
+    public void resetObject(int t, int e, int a)
     {
-    	setID(i);
+    	setTerrain(t);
     	setEntity(e);
     	setAccessory(a);
     }
@@ -91,7 +91,7 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isEmptySpace()
     {
-    	return (id<0 && entity==GE.EmptyID);	
+    	return (terrain<0 && entity==GE.EmptyID);	
     }
     
     /**
@@ -105,13 +105,22 @@ public class GridObject extends JLayeredPane {
     }
     
     /**
-     * isRock
-     * Returns true, if the location is a rock.
+     * Returns true, if the location is pushable, like a rock.
      * @return boolean
      */
-    public boolean isRock()
+    public boolean isPushable()
     {
     	return (entity==GE.RockID);
+    }
+    
+    /**
+     * Returns true, if the location has a consumable object
+     * on it. Like food, coins, or points.
+     * @return
+     */
+    public boolean isConsumable()
+    {
+    	return false;
     }
     
     /**
@@ -191,7 +200,7 @@ public class GridObject extends JLayeredPane {
      * the image accordingly.
      * @param int i
      */
-    public void setID(int i)
+    public void setTerrain(int i)
     {
     	// set the background image
     	if(i == GE.EmptyID)
@@ -217,7 +226,7 @@ public class GridObject extends JLayeredPane {
     	else
     		GE.printError("Error!\nNo image found for terrain id="+i);
     	
-    	id = i;
+    	terrain = i;
     	background.setIcon(terrainImage);
     }
     
@@ -298,11 +307,11 @@ public class GridObject extends JLayeredPane {
     /**
      * Returns the id of the GridOjbect
      * that is the lowest layer of the GridObject
-     * @return int id
+     * @return int terrain
      */
-    public int getID()
+    public int getTerrain()
     {
-        return id;
+        return terrain;
     }
     
     /**
