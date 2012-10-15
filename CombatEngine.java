@@ -13,16 +13,16 @@ public class CombatEngine {
 	private Random randomNumberGenerator = new Random();
 	int accumulatedExp = 0;
 	Entity actor;
-	ArrayList<Monster> enemies;
+	ArrayList<Entity> enemies;
 	String event;
 	boolean combatOver;
 	Stack<Entity> turnStack;
 	int combatResult;
 	ArrayList<Entity> combatants;
-	ArrayList<Character> characters;
+	ArrayList<Entity> characters;
 	CombatGUI gui;
 
-	public CombatEngine(ArrayList<Character> charactersIn) {
+	public CombatEngine(ArrayList<Entity> charactersIn) {
 		characters = charactersIn;
 		enemies = initializeEnemies(0);
 		actor = null;
@@ -32,10 +32,10 @@ public class CombatEngine {
 		combatResult = 0;
 		combatants = new ArrayList<Entity>();
 
-		for (Character c : characters) {
+		for (Entity c : characters) {
 			combatants.add(c);
 		}
-		for (Monster m : enemies) {
+		for (Entity m : enemies) {
 			combatants.add(m);
 		}
 
@@ -51,7 +51,7 @@ public class CombatEngine {
 
 	}
 
-	public void endTurn() {
+	public void endTurn() throws InterruptedException{
 		System.out.println(event);
 		gui.info.setText(event);
 
@@ -89,10 +89,10 @@ public class CombatEngine {
 		gui.update();
 	}
 
-	public void monsterTurn (Monster m) throws InterruptedException {
+	public void monsterTurn (Entity m) throws InterruptedException {
 		
 		Thread.sleep(1000);
-		String action = m.takeTurn();
+		String action = m.monsterTurn();
 		if (action.equals("attack")) {
 			event = executeAttack(m, characters.get(0));
 		} else {
@@ -104,9 +104,9 @@ public class CombatEngine {
 		endTurn();
 	}
 
-	public void playerTurn() {
+	public void playerTurn() throws InterruptedException{
 		String action = gui.attacks.getSelectedItem().toString();
-		int target = gui.targets.getSelectedIndex();
+		int target = gui.targets.getSelectedIndex();;
 
 		actor = turnStack.pop();
 
@@ -122,7 +122,7 @@ public class CombatEngine {
 		}
 
 		else if (action.equals("Flee")) {
-			if (attemptToFlee(characters.get(0))) {
+			if (attemptToFlee()) {
 				event = "You fled successfully!";
 				combatOver = true;
 				combatResult = 0;
@@ -149,71 +149,20 @@ public class CombatEngine {
 	public void combat() throws InterruptedException{
 		while (!combatOver) {
 			Entity a = turnStack.peek();
-			if (a instanceof Character) {
-				;
+			if (a.isPlayer) {
+				gui.targets.setEnabled(true);
+				gui.attacks.setEnabled(true);
+				gui.action.setEnabled(true);
 			}
-			if (a instanceof Monster) {
-				monsterTurn((Monster) a);
+			
+			else if(!a.isPlayer) {
+				gui.action.setEnabled(false);
+				gui.targets.setEnabled(false);
+				gui.attacks.setEnabled(false);
+				monsterTurn(a);
 			}
 		}
 	}
-
-	/**
-	 * public ArrayList<Character> combat() throws InterruptedException {
-	 * 
-	 * String action = null;
-	 * 
-	 * // while (!combatOver) {
-	 * 
-	 * // display health messages System.out.println(); for (Entity e :
-	 * combatants) { System.out.println(e.getName() + "'s health: " +
-	 * e.getCurrentHealth() + "/" + e.getMaxHealth()); }
-	 * 
-	 * actor = turnStack.pop();
-	 * 
-	 * // start character turn if (actor instanceof Character) { action =
-	 * ((Character) actor).takeTurn();
-	 * 
-	 * // actions for character if (action.equals("attack")) { event =
-	 * executeAttack(actor, enemies.get(0)); }
-	 * 
-	 * else if (action.equals("wait")) { event = actor.getName() + " waits."; }
-	 * 
-	 * else if (action.equals("flee")) { if (attemptToFlee(characters.get(0))) {
-	 * event = "You fled successfully!"; combatOver = true; combatResult = 0; }
-	 * else { event = "Your attempt to flee failed!"; } }
-	 * 
-	 * else { Ability activeAbility = actor.getAbilityByName(action); if
-	 * (activeAbility.friendly()) { event = executeAbility(actor, 0, enemies,
-	 * characters, activeAbility); } else { event = executeAbility(actor, 0,
-	 * enemies, characters, activeAbility); } } // end character turn
-	 * 
-	 * // start monster turn } else if (actor instanceof Monster) { action =
-	 * ((Monster) actor).takeTurn(); if (action.equals("attack")) { event =
-	 * executeAttack(actor, characters.get(0)); } else { event =
-	 * executeAbility(actor, 0, enemies, characters, actor.abilities.get(0)); }
-	 * }
-	 * 
-	 * // end monster turn
-	 * 
-	 * System.out.println(event);
-	 * 
-	 * // clean out dead combatants characters = cleanCharacterList(characters);
-	 * enemies = cleanMonsterList(enemies); combatants =
-	 * mergeCombatantArrays(enemies, characters);
-	 * 
-	 * if (enemies.size() < 1) { combatOver = true; combatResult = 1; }
-	 * 
-	 * if (characters.size() < 1) { combatOver = true; combatResult = -1; } //
-	 * peek at next Entity in stack to make sure they are alive if
-	 * (!turnStack.empty() && !turnStack.peek().alive()) { turnStack.pop(); }
-	 * 
-	 * // if stack is empty, refill it if (turnStack.empty()) { for (Entity e :
-	 * combatants) { turnStack.push(e); } } // }
-	 * 
-	 * if (combatOver) { endCombat(characters, accumulatedExp, combatResult);
-	 * System.out.println("Combat Over"); } return characters; }
-	 **/
 
 	public String executeAttack(Entity source, Entity target) {
 		int calculatedDamage = 0;
@@ -322,7 +271,7 @@ public class CombatEngine {
 
 	}
 
-	public boolean attemptToFlee(Character character) {
+	public boolean attemptToFlee() {
 		boolean result;
 
 		int roll = randomNumberGenerator.nextInt(3);
@@ -342,31 +291,34 @@ public class CombatEngine {
 		return combatants;
 	}
 
-	public ArrayList<Monster> initializeEnemies(int zoneID) {
-		ArrayList<Monster> monsterArray = new ArrayList<Monster>();
+	public ArrayList<Entity> initializeEnemies(int zoneID) {
+		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
 		int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
-		Monster m;
+		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Monster("Koopa Troopa", 10, 10, 5, 5, 1, 3);
+			m = new Entity("Koopa Troopa", false, 10, 10, 5, 5, 1);
 			Ability cure = new Ability("heal", 1, 0, 0);
 			m.abilities.add(cure);
-			m.setCombatID(i);
 			m.setName(m.getName() + " " + i);
 			monsterArray.add(m);
 		}
 		return monsterArray;
 	}
 
-	private boolean endCombat(ArrayList<Character> characters, int experience,
-			int result) {
+	private boolean endCombat(ArrayList<Entity> characters, int experience,
+			int result) throws InterruptedException{
+		gui.targets.setEnabled(false);
+		gui.attacks.setEnabled(false);
+		gui.action.setEnabled(false);
 		if (result == 0) {
 			// code to handle running away (nothing happens)
 			return true;
 		} else {
 			if (result == 1) {
 				System.out.println("Victory!\n");
-				for (Character character : characters) {
+				gui.info.setText("Victory!\n");
+				for (Entity character : characters) {
 					character.setExp(character.getExp() + experience);
 					System.out.println(character.getName() + " has earned "
 							+ experience + " experience!");
@@ -375,34 +327,39 @@ public class CombatEngine {
 				return true;
 			} else {
 				System.out.println("Defeat!");
+				gui.info.setText("Defeat!\n");
+				Thread.sleep(1000);
 				return false;
 			}
 		}
 	}
 
-	private ArrayList<Monster> cleanMonsterList(ArrayList<Monster> entities) {
-		ArrayList<Monster> newArray = new ArrayList<Monster>();
+	private ArrayList<Entity> cleanMonsterList(ArrayList<Entity> entities) throws InterruptedException{
+		ArrayList<Entity> newArray = new ArrayList<Entity>();
 
-		for (Monster e : entities) {
+		for (Entity e : entities) {
 			if (e.getCurrentHealth() > 0) {
 				newArray.add(e);
 			} else {
 				System.out.println(e.getName() + " was slain!");
-				accumulatedExp += e.getExpValue();
+				gui.info.setText(e.getName() + " was slain!");
+				Thread.sleep(1000);
+				accumulatedExp += e.getExp();
 			}
 		}
 		return newArray;
 	}
 
-	private ArrayList<Character> cleanCharacterList(
-			ArrayList<Character> entities) {
-		ArrayList<Character> newArray = new ArrayList<Character>();
+	private ArrayList<Entity> cleanCharacterList(
+			ArrayList<Entity> entities) {
+		ArrayList<Entity> newArray = new ArrayList<Entity>();
 
-		for (Character e : entities) {
+		for (Entity e : entities) {
 			if (e.getCurrentHealth() > 0) {
 				newArray.add(e);
 			} else {
 				System.out.println(e.getName() + " was slain!");
+				gui.info.setText(e.getName() + " was slain!");
 			}
 		}
 		return newArray;

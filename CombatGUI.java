@@ -125,12 +125,16 @@ public class CombatGUI implements ActionListener {
 		combat.setSize(new Dimension(600, 600));
 		combat.pack();
 		combat.setVisible(true);
+		
+		targets.setEnabled(false);
+		attacks.setEnabled(false);
+		action.setEnabled(false);
 
 	}
 
 	public void update() {
 		//update gui components
-		updateActions(engine.turnStack.peek());
+		//updateActions(engine.turnStack.peek());
 		
 	}
 
@@ -145,9 +149,13 @@ public class CombatGUI implements ActionListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e){
-		if (engine.turnStack.peek() instanceof Character){
-			engine.playerTurn();
+	public void actionPerformed(ActionEvent e) {
+		if (engine.turnStack.peek().isPlayer){
+			try{
+				engine.playerTurn();
+			}catch(Exception ex){
+				System.out.println();
+			}
 		}
 	}
 }

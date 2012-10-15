@@ -16,10 +16,14 @@ public class Entity implements Comparable<Entity>{
     private int defense;
     private int speed;
     private String name;
-    private boolean hasHeal = false;
+    private Random RNG = new Random();
+    //is this entity object a player
+    public boolean isPlayer = false;
+    //experience value for monsters, accumulated experience for players
+    private int exp;
     ArrayList<Ability> abilities = new ArrayList<Ability>();
 
-    public Entity(String name, int currentHealth, int maxHealth, int attack,
+    public Entity(String name, boolean isPlayer, int currentHealth, int maxHealth, int attack,
             int defense, int speed) {
         this.maxHealth = maxHealth;
         this.currentHealth = currentHealth;
@@ -27,22 +31,37 @@ public class Entity implements Comparable<Entity>{
         this.defense = defense;
         this.speed = speed;
         this.name = name;
+        this.isPlayer = isPlayer;
     }
 
+    //monster combat AI.
+    public String monsterTurn(){
+     	if (this.hasHealingAbility()==true && this.getCurrentHealth() < (this.getMaxHealth()*.5) && RNG.nextInt(10) > 7){
+ 			return "heal";
+ 		}
+     	else{
+     		return "attack";
+     	}
+     }
+    
+    private boolean hasHealingAbility(){
+    	boolean returnVal = false;
+    	if(!this.abilities.isEmpty()){
+    		for(Ability a : this.abilities){
+    			if (a.getType() == 1){
+    				returnVal = true;
+    			}
+    		}
+    	}
+    	return returnVal;
+    }
+    
     public boolean alive() {
         if (this.getCurrentHealth() > 0) {
             return true;
         } else {
             return false;
         }
-    }
-    
-    public boolean getHasHeal(){
-		return hasHeal;
-	}
-    
-    public void setHasHeal(boolean val){
-    	hasHeal = val;
     }
     
     public int compareTo(Entity other){
@@ -143,4 +162,12 @@ public class Entity implements Comparable<Entity>{
     	return returnVal;
     	
     }
+
+	public int getExp() {
+		return exp;
+	}
+
+	public void setExp(int exp) {
+		this.exp = exp;
+	}
 }

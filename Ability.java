@@ -2,7 +2,11 @@
 public class Ability {
 	
 	private String name;
+	
+	//0=damage, 1=heal
 	private int type;
+	
+	//0=single target, 1=splash
 	private int scope;
 	private int modifier;
 
