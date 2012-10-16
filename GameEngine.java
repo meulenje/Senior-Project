@@ -36,20 +36,13 @@ import javax.swing.JFrame;
  */
 public class GameEngine implements ActionListener, FocusListener, ClockListener {
 	
+	// Game Engine specific variables
 	protected final int MAXIMUMSIZE = 100; // Max board size for rows and columns
-	protected final int X_DIM = 600; // default window size
+	protected final int X_DIM = 600; // default frame window size
 	protected final int Y_DIM = 600;
-    protected int BCOLS = 25; // board default column size
-    protected int BROWS = 25; // board default row size
-	protected final int C_WIDTH = 25; // circle size
-	protected final int C_HEIGHT = 25; // circle size
-	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid panel dimensions
-	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
-    protected int prow = 0; // player's row position
-    protected int pcol = 0; // player's col position
-    protected int prowStart = BROWS-1; // initial start position
-    protected int pcolStart = 0; // initial start position
-    protected GridObject[][] board; // the maximum board size
+	protected final int C_WIDTH = 25; // object image size
+	protected final int C_HEIGHT = 25; // object image size
+    protected Entity[][] board; // the maximum board size
     protected ArrayList<QuestGUI> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
     protected int clockSpeed = 1000; // time between ticks in milliseconds
@@ -67,6 +60,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      *      |                       |
      *      |-----------------------|
      */
+    // GridGUI specific variables
+    protected int BCOLS = 25; // board default column size
+    protected int BROWS = 25; // board default row size
+	protected final int G_X_DIM = BCOLS * (C_WIDTH ); // grid panel dimensions
+	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
+    protected int prow = 0; // player's row position
+    protected int pcol = 0; // player's col position
+    protected int prowStart = BROWS-1; // initial start position
+    protected int pcolStart = 0; // initial start position
     protected int[][] gridLayer1; // Terrain layer
     protected int[][] gridLayer2; // Entity Layer
     protected int[][] gridLayer3; // Accessory Layer
@@ -90,6 +92,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected int GrassID = -2;
     protected int TallGrassID = 1;
     protected int WaterID = -3;
+    
+    // special Frame features
+    protected boolean windowResizeable = false;
     
     // special map features
     protected boolean showHintsEnabled = true;
@@ -146,7 +151,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     private JMenuItem quitItem;
     private JMenuItem teleportItem;
     private JMenuItem statsItem;
-    private JMenuItem resetStatsItem;
     private JMenuItem newItem;
     private JMenuItem saveItem;
     private JMenuItem loadItem;
@@ -155,7 +159,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     private JCheckBoxMenuItem enableFogItem;
     private JCheckBoxMenuItem enableBlinkItem;
     private JCheckBoxMenuItem enableWarpItem;
-    private JCheckBoxMenuItem enableAutoResetStatsItem;
     private JCheckBoxMenuItem enableMappingItem;
     private JLayeredPane layers;
     protected JTabbedPane tabs;
@@ -197,13 +200,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         loadItem = new JMenuItem("Load Game");
         teleportItem = new JMenuItem("Teleport to Start");
         statsItem = new JMenuItem("Report Stats");
-        resetStatsItem = new JMenuItem("Reset Stats");
         enableHintsItem = new JCheckBoxMenuItem("Show Hints");
         enableFogItem = new JCheckBoxMenuItem("Fog of War");
         enableMappingItem = new JCheckBoxMenuItem("Show Visited");
         enableBlinkItem = new JCheckBoxMenuItem("Blink Loading");
         enableWarpItem = new JCheckBoxMenuItem("Warps");
-        enableAutoResetStatsItem = new JCheckBoxMenuItem("Auto Reset Stats");
         
         // add listeners
         newItem.addActionListener(this);
@@ -220,27 +221,21 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         actionsMenu.add(teleportItem);
         statsItem.addActionListener(this);
         actionsMenu.add(statsItem);
-        actionsMenu.addSeparator();
-        resetStatsItem.addActionListener(this);
-        actionsMenu.add(resetStatsItem);
         
         enableHintsItem.addActionListener(this);
         enableFogItem.addActionListener(this);
         enableBlinkItem.addActionListener(this);
         enableWarpItem.addActionListener(this);
-        enableAutoResetStatsItem.addActionListener(this);
         enableMappingItem.addActionListener(this);
         optionsMenu.add(enableHintsItem);
         optionsMenu.add(enableFogItem);
         optionsMenu.add(enableMappingItem);
         optionsMenu.add(enableBlinkItem);
         optionsMenu.add(enableWarpItem);
-        optionsMenu.add(enableAutoResetStatsItem);
         
         enableHintsItem.setState(showHintsEnabled);
         enableFogItem.setState(fogOfWar);
         enableBlinkItem.setState(blinkOnExit);
-        enableAutoResetStatsItem.setState(clearStatsPerLevel);
         enableWarpItem.setState(warpingEnabled);
         enableMappingItem.setState(mappingEnabled); 
         // disable unnecessary options
@@ -271,12 +266,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // --------------------------------------------------------
         // create the CombatGUI combat panel
         combat = new JPanel();
-        combat.add(new JLabel("Hello Jeff."));
+        combat.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
         // --------------------------------------------------------
 
         // --------------------------------------------------------
         // create the InventoryGUI inventory panel
         inventory = new JPanel();
+        inventory.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
         // --------------------------------------------------------
         
         // --------------------------------------------------------
@@ -292,13 +288,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         tabs.addTab("Quests", questPanel);
         tabs.addFocusListener(this);
         tabs.setLocation(0,0);
-        tabs.setSize(X_DIM,Y_DIM);
+        tabs.setSize(X_DIM,Y_DIM + 60);
         
         // --------------------------------------------------------
         // make the main menu gui
         mainmenu = new MainMenuGUI(this);
         mainmenu.setLocation(0,0);
-        mainmenu.setSize(X_DIM,Y_DIM);
+        mainmenu.setSize(X_DIM,Y_DIM + 60);
         // --------------------------------------------------------
 
         // create two layers
@@ -306,17 +302,17 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // 100 -- is for the MainMenu
         layers = new JLayeredPane();
         layers.setLayout(new BorderLayout());
-        layers.setSize(new Dimension( X_DIM , Y_DIM));
-        layers.add(tabs, 0);
-        layers.add(mainmenu, 100);
+        layers.add(tabs);
+        layers.add(mainmenu);
         layers.setLayer(tabs, 0);
+        layers.setLayer(mainmenu, 100);
         
         // add the layers to the window
         window.add(layers, BorderLayout.CENTER);
         
         // show window in default size dimensions
         window.setSize(new Dimension( X_DIM , Y_DIM));
-        window.setResizable(false);
+        window.setResizable(windowResizeable);
         window.pack(); 
         window.setVisible(true);
  
@@ -336,13 +332,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	public void createGridObjects()
 	{
 		// create the board
-		board = new GridObject[BROWS][BCOLS];
+		board = new Entity[BROWS][BCOLS];
 		
         for (int i=0; i<BROWS; i++)
         {
             for (int j=0; j<BCOLS; j++)
             {
-            	board[i][j] = new GridObject(this,GrassID,0,TallGrassID);
+            	board[i][j] = new Entity(this,GrassID,EmptyID,EmptyID,"",false,0,0,0,0,0);
             	((GridGUI) map).addGridObject(i,j); // place on grid panel
             }
         }
@@ -378,7 +374,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
     
     /**
-     * A function to start a new game
+     * A function to start a new game. This is not the function
+     * to start the next level!
      */
     public void newGame()
     {
@@ -392,7 +389,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	// delete old quests and make a new empty one
     	deleteQuestList();
     	createQuestList();
-    	
+    	    	
+    	// clear game variables
+    	resetStatistics();
+		questsCompleted=0;
+		questsTotal=0;
+		questsActive=0;
+		questsFailed=0;
+		
 		// load a new map
     	loadMap();
     	
@@ -402,16 +406,19 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     }
     
 	/**
-	 * A function to end the game
+	 * A function to end the game. This is not the function
+	 * to end the current level!
 	 */
 	public void endGame()
 	{
-		// reset klok
+		// reset clock
 		klok.pause();
 		
 		// delete board, quests
 		deleteGridObjects();
 		deleteQuestList();
+		
+		// clear game variables
 		resetStatistics();
 		questsCompleted=0;
 		questsTotal=0;
@@ -533,7 +540,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewMainMenu()
     {
-    	layers.setLayer(mainmenu, 100);
     	mainmenu.setVisible(true);
     }
     
@@ -543,7 +549,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 */
 	public void resetStatistics()
 	{
-		questsCompleted = 0; // # of quests completed
 		hops = 0; // # of jumps taken
 		steps = 0; // # of steps taken
 		encounters = 0; // # of encounters
@@ -559,8 +564,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 */
 	public String getStatistics()
 	{
-		return "Statistics \n\n"+
-				questsCompleted+" Quests Completed\n"+
+		return  questsCompleted+" Quests Completed\n"+
 				steps+" Steps\n"+
 				hops+" Hops\n"+
 				encounters+" Battles\n"+
@@ -926,12 +930,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	
 	/**
 	 * Sets the area around the player visible according to how
-	 * far the player's vision reaches, and if fogOfWar is enabled.
+	 * far the player's vision reaches, if fogOfWar is enabled.
 	 * @return void
 	 */
 	public void movePlayerVision()
 	{
-		if(fogOfWar)
+		if(fogOfWar) // only works on if fog is enabled
 		{
 	        for (int i=0; i<BROWS; i++)
 	        {
@@ -1048,7 +1052,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 // randomly make "monsters"
                 else if(temp==7)
                 {
-                	board[i][j].resetObject(DirtID,PirateID,EmptyID);
+                	board[i][j].resetObject(DirtID,LavaMonsterID,EmptyID);
                 	numOfMonsters++;
                 }
                 // place warp 'a'
@@ -1124,15 +1128,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         {
         	printInfo(getStatistics());
         }
-        else if(Trigger.getSource() == resetStatsItem)
-        {
-        	int answer = printYesNoQuestion("Are you sure you want\nto clear your progress?");
-        	if(answer==0)
-        	{
-        		resetStatistics();
-        		printInfo("Player Statistics have been deleted.");
-        	}
-        }
         else if(Trigger.getSource() == enableFogItem)
         {
         	if(fogOfWar)
@@ -1168,18 +1163,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         	{
         		warpingEnabled = true;
         		printInfo("Warping will be enabled on the next level.");
-        	}
-        }
-        else if(Trigger.getSource() == enableAutoResetStatsItem)
-        {
-        	if(clearStatsPerLevel)
-        	{
-        		clearStatsPerLevel = false;
-        	}
-        	else
-        	{
-        		clearStatsPerLevel = true;
-        		printInfo("Player Statistics will be erased per level.");
         	}
         }
         else if(Trigger.getSource() == enableMappingItem)
@@ -1312,15 +1295,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		((GridGUI) map).repositionScrollBarsToPlayer();
 		movePlayerVision(); // for fog, if enabled
 		
-		// reset statistics if they wanted to
-		if(clearStatsPerLevel)
-			resetStatistics();
-		
 		// update the old quest status, if there was one
 		if(questsCompleted!=0)
 		{
 			updateQuestStatus(questsTotal-1, "Complete!", Color.BLUE);
 		}
+		
+		// reset level statistics
+		resetStatistics();
 
 		// add new quest to messageGUI
 		addQuest(questsTotal,Hideout,"Find the Exit","Try to find the exit in this level.","Started");
