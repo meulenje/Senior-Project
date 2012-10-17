@@ -42,7 +42,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected final int Y_DIM = 600;
 	protected final int C_WIDTH = 25; // object image size
 	protected final int C_HEIGHT = 25; // object image size
-    protected Entity[][] board; // the maximum board size
+    protected GridObject[][] board; // the maximum board size
     protected ArrayList<QuestGUI> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
     protected int clockSpeed = 1000; // time between ticks in milliseconds
@@ -105,7 +105,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected boolean blinkOnExit = false;
     protected boolean clearStatsPerLevel = false;
     protected int monsterGridSpeed = 6; // monster moves after X seconds
-    protected double percentChanceOfEncounter = 0.05; // when entering a Encounterable space, there is a small chance the player will run into a monster
+    protected double percentChanceOfEncounter = 0.1; // when entering a Encounterable space, there is a small chance the player will run into a monster
     
     // special Grid variables
 	protected int hops = 0; // # of jumps taken
@@ -332,13 +332,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	public void createGridObjects()
 	{
 		// create the board
-		board = new Entity[BROWS][BCOLS];
+		board = new GridObject[BROWS][BCOLS];
 		
         for (int i=0; i<BROWS; i++)
         {
             for (int j=0; j<BCOLS; j++)
             {
-            	board[i][j] = new Entity(this,GrassID,EmptyID,EmptyID,"",false,0,0,0,0,0);
+            	board[i][j] = new GridObject(this,GrassID,EmptyID,EmptyID);
             	((GridGUI) map).addGridObject(i,j); // place on grid panel
             }
         }
@@ -713,7 +713,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			monsterCount++;
 		
 		// check for chance of random encounter on certain terrain (Eg. Tall Grass)
-		if(board[prow][pcol].isEncountersEnabled())
+		if(board[prow][pcol].isRandomEncounter())
 		{
 			Random rand = new Random();
 			double r = rand.nextDouble(); // 0.0 to 1.0
@@ -995,7 +995,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	            }
 	        }
 		}
-	}
+	} // end of movePlayerVision()
 	
 	/**
 	 * Sets all of the map's tiles visible or invisible
@@ -1018,10 +1018,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	
 	/**
 	 * Randomizes the current board with new images and ids
+	 * 
+	 * This function is for testing purposes only. Official game levels
+	 * should not use this function, since the levels generated may be
+	 * impossible for the player to complete.
 	 */
 	public void randomizeBoard()
 	{
-        // randomly build a testing grid with rocks and holes
+        // randomly build a testing grid with rocks, holes, grass, and monsters
         Random rand = new Random();
         boolean doorPlaced = false;
         boolean warpAPlaced = false;
