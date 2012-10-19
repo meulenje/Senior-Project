@@ -94,7 +94,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected int WaterID = -3;
     
     // special Frame features
-    protected boolean windowResizeable = false;
+    protected boolean windowResizeable = true;
     
     // special map features
     protected boolean showHintsEnabled = true;
@@ -265,8 +265,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         
         // --------------------------------------------------------
         // create the CombatGUI combat panel
-        combat = new JPanel();
-        combat.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
+        combat = new CombatGUI2(this);
         // --------------------------------------------------------
 
         // --------------------------------------------------------
