@@ -1,0 +1,47 @@
+Name:
+
+Level:
+
+Stats: Life/Mana/Attack/Defense/Agility
+
+Slot:
+
+Equippable:
+
+Duration:
+
+Description
+
+***
+
+Name:
+
+Level:
+
+Stats: Life/Mana/Attack/Defense/Agility
+
+Slot:
+
+Equippable:
+
+Duration:
+
+Description
+
+***
+
+Name:
+
+Level:
+
+Stats: Life/Mana/Attack/Defense/Agility
+
+Slot:
+
+Equippable:
+
+Duration:
+
+Description
+
+||End of File||
