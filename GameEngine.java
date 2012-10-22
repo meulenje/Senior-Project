@@ -124,25 +124,25 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected int questsTotal = 0;
     
     // default images
-    protected ImageIcon Empty = new ImageIcon("Emtpy.png");
-    protected ImageIcon FogCenter = new ImageIcon("Fog.png");
-    protected ImageIcon FogLeft = new ImageIcon("FogLeft.png");
-    protected ImageIcon FogTop = new ImageIcon("FogTop.png");
-    protected ImageIcon FogRight = new ImageIcon("FogRight.png");
-    protected ImageIcon FogBottom = new ImageIcon("FogBottom.png");
-    protected ImageIcon Player = new ImageIcon("PlayerFront.gif");
-    protected ImageIcon PlayerOutline = new ImageIcon("PlayerOutline.png");
-	protected ImageIcon GlowingGem = new ImageIcon("Gem.gif");
-	protected ImageIcon LavaMonster = new ImageIcon("LavaMonster.gif");
-	protected ImageIcon Pirate = new ImageIcon("Pirate.gif");
-	protected ImageIcon Water = new ImageIcon("Water.png");
-	protected ImageIcon Dirt = new ImageIcon("Dirt.png");
-	protected ImageIcon Grass = new ImageIcon("Grass.png");
-	protected ImageIcon TallGrass = new ImageIcon("TallGrass.png");
-	protected ImageIcon Rock = new ImageIcon("Rock.png");
-	protected ImageIcon Hole = new ImageIcon("Hole.png");
-	protected ImageIcon XSpace = new ImageIcon("XSpace.png");
-	protected ImageIcon Hideout = new ImageIcon("Hideout.png");
+    protected ImageIcon Empty = new ImageIcon("images/Emtpy.png");
+    protected ImageIcon FogCenter = new ImageIcon("images/Fog.png");
+    protected ImageIcon FogLeft = new ImageIcon("images/FogLeft.png");
+    protected ImageIcon FogTop = new ImageIcon("images/FogTop.png");
+    protected ImageIcon FogRight = new ImageIcon("images/FogRight.png");
+    protected ImageIcon FogBottom = new ImageIcon("images/FogBottom.png");
+    protected ImageIcon Player = new ImageIcon("images/PlayerFront.gif");
+    protected ImageIcon PlayerOutline = new ImageIcon("images/PlayerOutline.png");
+	protected ImageIcon GlowingGem = new ImageIcon("images/Gem.gif");
+	protected ImageIcon LavaMonster = new ImageIcon("images/LavaMonster.gif");
+	protected ImageIcon Pirate = new ImageIcon("images/Pirate.gif");
+	protected ImageIcon Water = new ImageIcon("images/Water.png");
+	protected ImageIcon Dirt = new ImageIcon("images/Dirt.png");
+	protected ImageIcon Grass = new ImageIcon("images/Grass.png");
+	protected ImageIcon TallGrass = new ImageIcon("images/TallGrass.png");
+	protected ImageIcon Rock = new ImageIcon("images/Rock.png");
+	protected ImageIcon Hole = new ImageIcon("images/Hole.png");
+	protected ImageIcon XSpace = new ImageIcon("images/XSpace.png");
+	protected ImageIcon Hideout = new ImageIcon("images/Hideout.png");
 	
     
     // default gui parts

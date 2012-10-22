@@ -49,6 +49,7 @@ public class CombatGUI2 extends JPanel implements ActionListener, KeyListener {
 	
 	// specific text labels, images and DropDown Menus
 	private JTextArea status;
+	protected JLabel imageBackground;
 	protected JComboBox<String> targets;
 	protected JComboBox<String> abilities;
 	protected JComboBox<String> items;
@@ -76,7 +77,7 @@ public class CombatGUI2 extends JPanel implements ActionListener, KeyListener {
 		
 		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM));
 		this.setLayout(new BorderLayout());
-		this.setBackground(Color.WHITE);
+		this.setBackground(Color.BLACK);
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
         
@@ -85,8 +86,9 @@ public class CombatGUI2 extends JPanel implements ActionListener, KeyListener {
 		
 		// use a panel to hold the top three panels, player, middle, and enemy sides
 		JPanel northPanel = new JPanel();
-		northPanel.setPreferredSize(new Dimension(GE.X_DIM - 10, GE.Y_DIM - actionHeight));
-		northPanel.setOpaque(false); // transparent background
+		northPanel.setPreferredSize(new Dimension(GE.X_DIM - 10, GE.Y_DIM - actionHeight - 200));
+		//northPanel.setOpaque(false); // transparent background
+		northPanel.setBackground(Color.WHITE);
 		northPanel.setLayout(new GridLayout(0,3)); // rows, cols
 		
 		// build the player's side roster
@@ -233,10 +235,41 @@ public class CombatGUI2 extends JPanel implements ActionListener, KeyListener {
 		// Finalize the GUI and place each component
 		this.add(northPanel, BorderLayout.NORTH);
 		this.add(southPanel); // doesn't need layout
+		this.setBorder(BorderFactory.createEmptyBorder(100, 0, 100, 0));
 		
         // view the aciton menu first
         viewActionMenu();
         appendStatus("Scroll Down to see current status. I'm working on this bug.");
+        playerSide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.Player, "You", true, 90, 100, 20, 10, 10), 
+        		GE.Grass));
+        playerSide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.GlowingGem, "Golden Egg", true, 100, 100, 20, 10, 10), 
+        		GE.Grass));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.LavaMonster, "Blob 1", true, 10, 10, 5, 10, 10), 
+        		GE.Dirt));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.LavaMonster, "Blob 2", true, 10, 10, 5, 10, 10), 
+        		GE.Dirt));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.LavaMonster, "Blob 3", true, 10, 10, 5, 10, 10), 
+        		GE.Dirt));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.LavaMonster, "Blob 4", true, 10, 10, 5, 10, 10), 
+        		GE.Dirt));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.Pirate, "Scurvy 1", true, 10, 15, 8, 10, 10), 
+        		GE.Water));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.Pirate, "Scurvy 2", true, 10, 15, 8, 10, 10), 
+        		GE.Water));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.Pirate, "Scurvy 3", true, 10, 15, 8, 10, 10), 
+        		GE.Water));
+        enemySide.add(new CombatObject(GE, 
+        		new Entity(GE, GE.Pirate, "Scurvy 4", true, 10, 15, 8, 10, 10), 
+        		GE.Water));
 	} // end of constructor
 	
 	/**
