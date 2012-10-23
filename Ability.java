@@ -1,3 +1,4 @@
+package rpg;
 
 public class Ability {
 	
