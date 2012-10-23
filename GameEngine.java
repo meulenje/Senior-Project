@@ -124,7 +124,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected int questsTotal = 0;
     
     // default images
-    protected ImageIcon Empty = new ImageIcon("images/Emtpy.png");
+    protected ImageIcon Empty = new ImageIcon("images/Empty.png");
     protected ImageIcon FogCenter = new ImageIcon("images/Fog.png");
     protected ImageIcon FogLeft = new ImageIcon("images/FogLeft.png");
     protected ImageIcon FogTop = new ImageIcon("images/FogTop.png");
