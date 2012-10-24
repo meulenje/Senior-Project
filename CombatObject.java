@@ -13,13 +13,13 @@ public class CombatObject extends JPanel implements ActionListener {
 
 	private GameEngine GE;
 	
-	private Entity entity;
+	protected Entity entity;
 	private int objectWidth = 50;
 	private int objectHeight = 50;
 	
 	// gui parts
 	private JLabel imageLabel;
-	private JProgressBar healthBar;
+	protected JProgressBar healthBar;
 	private JLabel name;
 	private JPanel imagePanel;
     protected ImageIcon backgroundImage; // grass, dirt, floor, etc...
@@ -100,7 +100,7 @@ public class CombatObject extends JPanel implements ActionListener {
 	public void setCurrentTurn(boolean flag)
 	{
 		if(flag)
-			imagePanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 1));
+			imagePanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 		else
 			imagePanel.setBorder(null);
 	}
