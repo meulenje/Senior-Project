@@ -3,7 +3,6 @@ package rpg;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
 
 /**
  * GridGUI class
@@ -37,13 +35,14 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	private JPanel gridPanel;
     private JPanel buttonPanel;
     private JScrollPane scrollPanel;
-    private JProgressBar healthBar;
+    private JLabel pointsLabel;
+    private JLabel playerName;
+    private JProgressBar playerHealthBar;
     private JButton resetButton;
     private JButton upButton;
     private JButton downButton;
     private JButton leftButton;
     private JButton rightButton;
-    private JTextField nameField;
     private JButton inventoryButton;
     private JButton questsButton;
 	
@@ -81,8 +80,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
 
         //JButtons and listeners
-        nameField = new JTextField("Louie");
-        nameField.setSize(20, 10);
         resetButton = new JButton("Teleport");
         resetButton.addActionListener(this);
         leftButton = new JButton("<");
@@ -94,21 +91,24 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         rightButton = new JButton(">");
         rightButton.addActionListener(this);
         
-        // health bar for the player
-        healthBar = new JProgressBar(0);
-        healthBar.setForeground(Color.RED);
-        healthBar.setBackground(Color.WHITE);
-        healthBar.setBorderPainted(true);
-        healthBar.setValue(50);
+        // name and HP bar for player
+        playerName = new JLabel("", JLabel.RIGHT);
         
+        playerHealthBar = new JProgressBar(0);
+        playerHealthBar.setForeground(Color.RED);
+        playerHealthBar.setBackground(Color.WHITE);
+        playerHealthBar.setBorderPainted(true);
         
-        // Build HP/Mag/Exp Bar Area
-        statsPanel.add(nameField);
+        pointsLabel = new JLabel("", JLabel.RIGHT);
+        pointsLabel.setForeground(Color.BLUE);
+        
+        // Build stats bar area
+        statsPanel.add(playerName);
         JLabel hp = new JLabel("HP:", JLabel.RIGHT);
         hp.setForeground(Color.RED);
         statsPanel.add(hp);
-        statsPanel.add(healthBar);
-        statsPanel.add(new JLabel(""));
+        statsPanel.add(playerHealthBar);
+        statsPanel.add(pointsLabel);
         statsPanel.add(new JLabel(""));
         statsPanel.add(new JLabel(""));
         statsPanel.add(new JLabel(""));
@@ -211,10 +211,33 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 		scrollPanel.getVerticalScrollBar().setValue(x);
 	}
 	
+	/**
+	 * A simple label near the player's name
+	 * @param points
+	 */
+	public void setPointsLabel(String points)
+	{
+		pointsLabel.setText(points);
+	}
+	
+	/**
+	 * sets the player's name on the GridGUI
+	 * @param name
+	 */
+	public void updatePlayerName(String name)
+	{
+		// update player's name next to HP bar
+		playerName.setText(name);
+	}
+	
+	/**
+	 * sets the player's health on the GridGUI
+	 * @param value
+	 */
 	public void updateHealthBar(int value)
 	{
-		// update player health bar
-		healthBar.setValue(value);
+		// update player health bar and name
+		playerHealthBar.setValue(value);
 	}
 	
 	@Override

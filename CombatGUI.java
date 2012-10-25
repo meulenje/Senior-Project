@@ -42,7 +42,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	private JPanel enemySide;
 	private JLayeredPane actionPanel; // lower panel
 	private JPanel actionMenu; // highest layer
-	private JPanel actionTarget; // second layer
+	private JPanel actionAttack; // second layer
 	private JPanel actionAbility; // third layer
 	private JPanel actionItem; // fourth layer
 	private JPanel actionText; // lowest layer
@@ -51,7 +51,9 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	// specific text labels, images and DropDown Menus
 	protected JTextArea status;
 	protected JLabel imageBackground;
-	protected JComboBox<String> targets;
+	protected JComboBox<String> attackTargets;
+	protected JComboBox<String> abilityTargets;
+	protected JComboBox<String> itemTargets;
 	protected JComboBox<String> abilities;
 	protected JComboBox<String> items;
 
@@ -66,8 +68,8 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	private JButton fleeButton;
 	private JButton abilityButton;
 	private JButton itemButton;
-	private JButton submitTargetButton;
-	private JButton cancelTargetButton;
+	private JButton submitAttackButton;
+	private JButton cancelAttackButton;
 	private JButton submitAbilityButton;
 	private JButton cancelAbilityButton;
 	private JButton submitItemButton;
@@ -103,8 +105,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		playerSide.setBorder(ptb);
 		ptb.setTitleColor(Color.BLUE);
 		ptb.setBorder(new LineBorder(Color.BLUE));
-		playerSide.setLayout(new GridLayout(4, 2, 0, 0)); // rows, cols, hspace,
-															// vspace
+		playerSide.setLayout(new GridLayout(4, 2, 0, 0)); // rows, cols, hspace, vspace
 		playerSide.setOpaque(false); // transparent background
 
 		// build a blank middle panel
@@ -117,8 +118,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		etb.setTitleColor(Color.RED);
 		etb.setBorder(new LineBorder(Color.RED));
 		enemySide.setBorder(etb);
-		enemySide.setLayout(new GridLayout(4, 2, 0, 0)); // rows, cols, hspace,
-															// vspace
+		enemySide.setLayout(new GridLayout(4, 2, 0, 0)); // rows, cols, hspace, vspace
 		enemySide.setOpaque(false); // transparent background
 
 		// place each component into the northPanel
@@ -129,8 +129,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		// build and place each layer to the action panel
 		// build the main action menu for the highest layer
 		actionMenu = new JPanel();
-		actionMenu.setLayout(new GridLayout(0, 4, 20, 40)); // rows, cols,
-															// hspace, vspace
+		actionMenu.setLayout(new GridLayout(0, 4, 20, 40)); // rows, cols, hspace, vspace
 		actionMenu.setSize(actionWidth, actionHeight);
 		actionMenu.setLocation(10, 10);
 
@@ -152,48 +151,50 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		// finished making main action menu
 
 		// build the target panel
-		actionTarget = new JPanel();
-		actionTarget.setLayout(new GridLayout(1, 3, 20, 40));
-		targets = new JComboBox<String>(); // pass String[] of list to this
-											// object
-		actionTarget.add(targets);
-		actionTarget.setSize(actionWidth, actionHeight);
-		actionTarget.setLocation(10, 10);
-		cancelTargetButton = new JButton("Back"); // back button
-		cancelTargetButton.addActionListener(this);
-		submitTargetButton = new JButton("Attack!"); // submit button
-		submitTargetButton.addActionListener(this);
-		actionTarget.add(submitTargetButton);
-		actionTarget.add(cancelTargetButton);
+		actionAttack = new JPanel();
+		actionAttack.setLayout(new GridLayout(1, 3, 20, 40));
+		attackTargets = new JComboBox<String>(); // pass String[] of list to this object
+		actionAttack.setSize(actionWidth, actionHeight);
+		actionAttack.setLocation(10, 10);
+		cancelAttackButton = new JButton("Back"); // back button
+		cancelAttackButton.addActionListener(this);
+		submitAttackButton = new JButton("Attack!"); // submit button
+		submitAttackButton.addActionListener(this);
+		actionAttack.add(attackTargets);
+		actionAttack.add(submitAttackButton);
+		actionAttack.add(cancelAttackButton);
 		// finished making ability panel
 
 		// build the ability panel
 		actionAbility = new JPanel();
-		actionAbility.setLayout(new GridLayout(1, 3, 20, 40));
+		actionAbility.setLayout(new GridLayout(1, 4, 20, 40));
 		actionAbility.setSize(actionWidth, actionHeight);
 		actionAbility.setLocation(10, 10);
-		abilities = new JComboBox<String>(); // pass String[] of list to this
-												// object
-		actionAbility.add(abilities);
+		abilities = new JComboBox<String>(); // pass String[] of list to this object
+		abilityTargets = new JComboBox<String>();
 		cancelAbilityButton = new JButton("Back"); // back button
 		cancelAbilityButton.addActionListener(this);
 		submitAbilityButton = new JButton("Cast!"); // submit button
 		submitAbilityButton.addActionListener(this);
+		actionAbility.add(abilities);
+		actionAbility.add(abilityTargets);
 		actionAbility.add(submitAbilityButton);
 		actionAbility.add(cancelAbilityButton); // re-add the same back button
 		// finished making ability panel
 
 		// build the item panel
 		actionItem = new JPanel();
-		actionItem.setLayout(new GridLayout(1, 3, 20, 40));
+		actionItem.setLayout(new GridLayout(1, 4, 20, 40));
 		actionItem.setSize(actionWidth, actionHeight);
 		actionItem.setLocation(10, 10);
 		items = new JComboBox<String>(); // pass String[] of list to this object
-		actionItem.add(items);
+		itemTargets = new JComboBox<String>();
 		cancelItemButton = new JButton("Back"); // back button
 		cancelItemButton.addActionListener(this);
 		submitItemButton = new JButton("Use!"); // submit button
 		submitItemButton.addActionListener(this);
+		actionItem.add(items);
+		actionItem.add(itemTargets);
 		actionItem.add(submitItemButton);
 		actionItem.add(cancelItemButton); // re-add the same back button
 		// finished making item panel
@@ -218,13 +219,13 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		// build the lower actions panel
 		actionPanel = new JLayeredPane();
 		actionPanel.add(actionMenu); // top layer
-		actionPanel.add(actionTarget);
+		actionPanel.add(actionAttack);
 		actionPanel.add(actionAbility);
 		actionPanel.add(actionItem);
 		actionPanel.add(actionText); // bottom layer
 
 		actionPanel.setLayer(actionMenu, JLayeredPane.DRAG_LAYER, 0);
-		actionPanel.setLayer(actionTarget, JLayeredPane.POPUP_LAYER, 0);
+		actionPanel.setLayer(actionAttack, JLayeredPane.POPUP_LAYER, 0);
 		actionPanel.setLayer(actionAbility, JLayeredPane.MODAL_LAYER, 0);
 		actionPanel.setLayer(actionItem, JLayeredPane.PALETTE_LAYER, 0);
 		actionPanel.setLayer(actionText, JLayeredPane.DEFAULT_LAYER, 0);
@@ -257,16 +258,14 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	 * 
 	 * This funciton should be called each time combat is started
 	 */
-	public void resetCombatGUI() {
+	public void resetCombatGUI() 
+	{
 		// should clear the player and enemy sides
 		playerSide.removeAll();
 		enemySide.removeAll();
 		objects.removeAll(objects);
 		
 		combatOver = false;
-
-		// function to update JComboBoxes (targets, abilities, items)
-		// TODO
 
 		// function to populate player's side
 		populatePlayerTeam();
@@ -358,7 +357,6 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		status.append("\n" + newStatus);
 
 		// force scroll down to bottom
-		// TODO: this line is broken and needs more work!
 		actionTextScrollBar.getVerticalScrollBar().setValue(
 				status.getRows() * 10);
 	}
@@ -367,15 +365,15 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionText.setVisible(false);
 		actionItem.setVisible(false);
 		actionAbility.setVisible(false);
-		actionTarget.setVisible(false);
+		actionAttack.setVisible(false);
 		actionMenu.setVisible(true);
 	}
 
-	public void viewTargetMenu() {
+	public void viewAttackMenu() {
 		actionText.setVisible(false);
 		actionItem.setVisible(false);
 		actionAbility.setVisible(false);
-		actionTarget.setVisible(true);
+		actionAttack.setVisible(true);
 		actionMenu.setVisible(false);
 	}
 
@@ -383,7 +381,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionText.setVisible(false);
 		actionItem.setVisible(false);
 		actionAbility.setVisible(true);
-		actionTarget.setVisible(false);
+		actionAttack.setVisible(false);
 		actionMenu.setVisible(false);
 	}
 
@@ -391,7 +389,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionText.setVisible(false);
 		actionItem.setVisible(true);
 		actionAbility.setVisible(false);
-		actionTarget.setVisible(false);
+		actionAttack.setVisible(false);
 		actionMenu.setVisible(false);
 	}
 
@@ -399,7 +397,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionText.setVisible(true);
 		actionItem.setVisible(false);
 		actionAbility.setVisible(false);
-		actionTarget.setVisible(false);
+		actionAttack.setVisible(false);
 		actionMenu.setVisible(false);
 	}
 
@@ -426,7 +424,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 
 		if (a.getSource() == attackButton) {
 			action = 1; // remember what they chose
-			viewTargetMenu();
+			viewAttackMenu();
 		} else if (a.getSource() == fleeButton) {
 			action = 2; // remember what they chose
 			appendStatus("Action=" + action
@@ -441,21 +439,21 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		} else if (a.getSource() == itemButton) {
 			action = 4; // remember what they chose
 			viewItemMenu();
-		} else if (a.getSource() == submitTargetButton
+		} else if (a.getSource() == submitAttackButton
 				|| a.getSource() == submitAbilityButton
 				|| a.getSource() == submitItemButton) {
 			// execute the specified action
 			if (action == 1) // attack
-				GE.playerTurn("Attack", targets.getSelectedIndex());
+				GE.playerTurn("Attack", attackTargets.getSelectedIndex());
 			else if (action == 3)
 				GE.playerTurn(abilities.getSelectedItem().toString(),
-						targets.getSelectedIndex());
+						abilityTargets.getSelectedIndex());
 			else if (action == 4)
-				appendStatus("Action=" + action + " You used an item!");
+				appendStatus("Action=" + action + " You used an item!"); //TODO
 
 			// look at status panel
 			viewStatusPanel();
-		} else if (a.getSource() == cancelTargetButton
+		} else if (a.getSource() == cancelAttackButton
 				|| a.getSource() == cancelAbilityButton
 				|| a.getSource() == cancelItemButton) {
 			// back out, and show the main action menu
@@ -495,11 +493,13 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		{
 			// shortcut to "Inventory Tab"
 			GE.viewInventoryPanel();
-		} else if (key == 67) // 'c'
+		} 
+		else if (key == 77) // 'm'
 		{
-			// shortcut to "Combat Tab"
-			GE.viewCombatPanel();
-		} else if (key == 81) // 'q'
+			// shortcut to "Map Tab"
+			GE.viewMapPanel();
+		} 
+		else if (key == 81) // 'q'
 		{
 			// shortcut to "Quest Tab"
 			GE.viewQuestPanel();

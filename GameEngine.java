@@ -2,8 +2,6 @@ package rpg;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -105,6 +103,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected int SpiralID = 10;
     
     // special Frame features
+    protected boolean musicEnabled = true;
+    protected boolean soundEnabled = true;
     protected boolean windowResizeable = true;
     protected Color backgroundColor = Color.black;
 	protected Color foregroundColor = Color.white;
@@ -118,19 +118,31 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected boolean warpingEnabled = true;
     protected boolean blinkOnExit = false;
     protected boolean clearStatsPerLevel = false;
-    protected int monsterGridSpeed = 6; // monster moves after X seconds
+    protected int monsterGridSpeed = 2; // monster moves after X seconds
     protected double percentChanceOfEncounter = 0.1; // when entering a Encounterable space, there is a small chance the player will run into a monster
     
     // special Grid variables
 	protected int hops = 0; // # of jumps taken
 	protected int steps = 0; // # of steps taken
-	protected int encounters = 0; // # of encounters
+	protected int encounters = 0; // # of battle encounters
 	protected int itemsCollected = 0; // # of items found on map
+	protected int traps = 0; // # of traps triggered
 	protected int objectsPushed = 0; // # of rock pushes
 	protected int objectsPushedInHoles = 0; // # of rocks pushed into holes
 	protected int warps = 0; // # of times they warped
 	protected int keysPushed = 0; // # of keyboard buttons pushed
 	protected int numOfMonsters = 0; // keep track of how many monsters there are
+	
+	// special Combat variables
+	protected int kills = 0; // # of enemies killed
+	protected int deaths = 0; // # of times a character died
+	protected int fightsWon = 0; // # of battles won
+	protected int fightsLost = 0; // # of fights lost
+	protected int fightsFled = 0; // # of fights fled from
+	protected int damageDealt = 0; // # of damage dealt in battle
+	protected int damageTaken = 0; // # of damage taken in battle
+	protected int damageHealed = 0; // # of damage healed in battle
+	
 	
 	// special Quest variables
 	protected int questsCompleted = 0;
@@ -183,6 +195,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     private JMenuItem saveItem;
     private JMenuItem loadItem;
     protected JMenuItem time;
+    private JCheckBoxMenuItem enableMusicItem;
+    private JCheckBoxMenuItem enableSoundItem;
     private JCheckBoxMenuItem enableHintsItem;
     private JCheckBoxMenuItem enableFogItem;
     private JCheckBoxMenuItem enableBlinkItem;
@@ -228,9 +242,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	characters = new ArrayList<Entity>();
     	Entity mario = new Entity(Player, "Mario", true, 30, 30, 20, 20, 10);
     	Entity luigi = new Entity(Player, "Luigi", true, 30, 30, 20, 20, 10);
+    	Ability cure = new Ability("Heal", 1, 0, 10);
+		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
+		luigi.abilities.add(cure);
+		mario.abilities.add(fireball);
     	characters.add(mario);
     	characters.add(luigi);
-    	enemies = initializeEnemies(1);
+    	//enemies = initializeEnemies(1);
     	
         // Create the JWindow and Frame to hold the Panels
     	
@@ -250,6 +268,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         loadItem = new JMenuItem("Load Game");
         teleportItem = new JMenuItem("Teleport to Start");
         statsItem = new JMenuItem("Report Stats");
+        enableMusicItem = new JCheckBoxMenuItem("Play Music");
+        enableSoundItem = new JCheckBoxMenuItem("Play SFX");
         enableHintsItem = new JCheckBoxMenuItem("Show Hints");
         enableFogItem = new JCheckBoxMenuItem("Fog of War");
         enableMappingItem = new JCheckBoxMenuItem("Show Visited");
@@ -272,17 +292,23 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         statsItem.addActionListener(this);
         actionsMenu.add(statsItem);
         
+        enableMusicItem.addActionListener(this);
+        enableSoundItem.addActionListener(this);
         enableHintsItem.addActionListener(this);
         enableFogItem.addActionListener(this);
         enableBlinkItem.addActionListener(this);
         enableWarpItem.addActionListener(this);
         enableMappingItem.addActionListener(this);
+        optionsMenu.add(enableMusicItem);
+        optionsMenu.add(enableSoundItem);
         optionsMenu.add(enableHintsItem);
         optionsMenu.add(enableFogItem);
         optionsMenu.add(enableMappingItem);
         optionsMenu.add(enableBlinkItem);
         optionsMenu.add(enableWarpItem);
         
+        enableMusicItem.setState(musicEnabled);
+        enableSoundItem.setState(soundEnabled);
         enableHintsItem.setState(showHintsEnabled);
         enableFogItem.setState(fogOfWar);
         enableBlinkItem.setState(blinkOnExit);
@@ -298,7 +324,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // show what time it is
         time = new JMenuItem("Time: X", JLabel.RIGHT);
         time.setForeground(Color.BLUE);
-        
+                
         menubar.add(fileMenu);
         menubar.add(optionsMenu);
         menubar.add(actionsMenu);
@@ -481,12 +507,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		// load a new map
     	loadMap();
     	
-    	// view the mapPanel
-    	viewMapPanel();
-    	
 		// reset clock
 		klok.pause();
 		klok.currentTime = 0;
+		
+		// view the mapPanel
+    	viewMapPanel();
     }
     
 	/**
@@ -531,8 +557,16 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void printError(String e)
     {
+    	// pause time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.pause();
+    	
         // found an error and is printing it according to the view
     	JOptionPane.showMessageDialog(window,e,"ERROR",JOptionPane.ERROR_MESSAGE);
+    	
+    	// resume time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.run(Clock.FOREVER);
     }
     
 	/**
@@ -541,8 +575,16 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void printInfo(String s)
     {
+    	// pause time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.pause();
+    	
         // found some information to print
     	JOptionPane.showMessageDialog(window,s,"Information",JOptionPane.INFORMATION_MESSAGE);
+    	
+    	// resume time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.run(Clock.FOREVER);
     }
     
     /**
@@ -552,7 +594,17 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public String printQuestion(String t)
     {
-        return JOptionPane.showInputDialog(window,t,"Question",JOptionPane.QUESTION_MESSAGE);
+    	// pause time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.pause();
+    	
+        String r = JOptionPane.showInputDialog(window,t,"Question",JOptionPane.QUESTION_MESSAGE);
+        
+        // resume time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.run(Clock.FOREVER);
+    	
+    	return r;
     }
     
     /**
@@ -565,7 +617,17 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public int printYesNoQuestion(String b)
     {
-        return JOptionPane.showConfirmDialog(window,b,"Question",JOptionPane.YES_NO_OPTION);
+    	// pause time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.pause();
+    	
+        int r = JOptionPane.showConfirmDialog(window,b,"Question",JOptionPane.YES_NO_OPTION);
+        
+        // resume time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.run(Clock.FOREVER);
+    	
+    	return r;
     }
     
     
@@ -580,7 +642,17 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public int printCustomQuestion(String question, Object[] choices)
     {
-    	return JOptionPane.showOptionDialog(window,question,"Question",JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,choices,choices[1]);
+    	// pause time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.pause();
+    	
+    	int r = JOptionPane.showOptionDialog(window,question,"Question",JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,choices,choices[1]);
+    	
+    	// resume time if on the map
+    	if(tabs.getSelectedIndex() == 0)
+    		klok.run(Clock.FOREVER);
+    	
+    	return r;
     }
     
     /**
@@ -675,6 +747,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		steps = 0; // # of steps taken
 		encounters = 0; // # of encounters
 		itemsCollected = 0; // # of items collected on map
+		traps = 0; // # of traps triggered
 		objectsPushed = 0; // # of rock pushes
 		objectsPushedInHoles = 0; // # of rocks pushed into holes
 		warps = 0; // # of times they warped
@@ -692,6 +765,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 				hops+" Hops\n"+
 				encounters+" Battles\n"+
 				itemsCollected+" Items Found\n"+
+				traps+" Traps Triggered\n"+
 				objectsPushed+" Objects Pushed\n"+
 				objectsPushedInHoles+" Objects Pushed into Holes\n"+
 				warps+" Times Warped\n"+
@@ -783,6 +857,49 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
 	
 	/**
+	 * Removes enemies that are next to the player. Also morphs
+	 * the enemies into the ID of the parameter.
+	 * (Eg. 0=nothing, BagID=purple bag drop)
+	 * 
+	 * This allows some monsters to turn into various things after
+	 * they "die".
+	 * 
+	 * This function should be called after combat is finished and
+	 * the player has won in combat. Not if they fled or died.
+	 */
+	public void removeDefeatedEnemies(int newIDofMonster)
+	{
+		// remove any enemy objects that are NSWE from the player's current position
+		if(prow!=BROWS-1 && board[prow+1][pcol].isMonster())
+			board[prow+1][pcol].setEntity(newIDofMonster);
+		
+		if(prow!=0 && board[prow-1][pcol].isMonster())
+			board[prow-1][pcol].setEntity(newIDofMonster);
+		
+		if(pcol!=BCOLS && board[prow][pcol+1].isMonster())
+			board[prow][pcol+1].setEntity(newIDofMonster);
+		
+		if(pcol!=0 && board[prow][pcol-1].isMonster())
+			board[prow][pcol-1].setEntity(newIDofMonster);
+		return;		
+	}
+	
+	/**
+	 * Removes all enemies from the game board.
+	 * 
+	 * This function should not be called. It could be used in a
+	 * cheat code or some kind of bomb.
+	 */
+	public void removeAllEnemies()
+	{
+		for(int i=0; i<BROWS; i++)
+			for(int j=0; j<BCOLS; j++)
+				if(board[i][j].isMonster())
+					board[i][j].setEntity(EmptyID);
+		return;
+	}
+	
+	/**
 	 * Check if the player's current position is over the
 	 * exit portal for the level. If true, then they beat the level!
 	 */
@@ -820,21 +937,26 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 * Scans the four surrounding locations, NSWE, for a monster.
 	 * Also checks if the location the player is on, has a chance
 	 * of spawning a random encounter. (Eg. Tall Grass)
-	 * @return boolean
+	 * 
+	 * If an enemy is found, this function starts combat!
+	 * 
+	 * @return void
 	 */
-	public boolean checkForEnemies()
+	public void checkForEnemies()
 	{
 		int monsterCount = 0;
-		boolean returnVal = false;
 		
 		// check NSWE of player position for enemies
 		if(prow!=BROWS-1 && board[prow+1][pcol].isMonster())
 			monsterCount++;
-		else if(prow!=0 && board[prow-1][pcol].isMonster())
+		
+		if(prow!=0 && board[prow-1][pcol].isMonster())
 			monsterCount++;
-		else if(pcol!=BCOLS-1 && board[prow][pcol+1].isMonster())
+		
+		if(pcol!=BCOLS-1 && board[prow][pcol+1].isMonster())
 			monsterCount++;
-		else if(pcol!=0 && board[prow][pcol-1].isMonster())
+		
+		if(pcol!=0 && board[prow][pcol-1].isMonster())
 			monsterCount++;
 		
 		// check for chance of random encounter on certain terrain (Eg. Tall Grass)
@@ -855,20 +977,24 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		{
 			Object[] options = {"Fight!", "Flee!"};
 			int answer= printCustomQuestion("What will you do?", options);
-			if(answer==0)
+			
+			if(answer==0) // FIGHT!
 			{
+				// populate enemies team with the number of monsters we ran into
+				initializeCombat(monsterCount);
+				
 				// go to combatPanel tab
 				viewCombatPanel();
-				returnVal = true;
 			}
-			else
+			else // FLEE!
 			{
-				// stay on the Map tab
-				returnVal = false;
+				// should figure out if flee was successful...
+				// TODO
+				
 			}
 		}
 		
-		return returnVal;
+		return;
 	}
 	
 	/**
@@ -881,7 +1007,10 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		if(i == BeartrapID)
 		{
 			// inflict 10% damage of totalHealth to first player
-			characters.get(1).setCurrentHealth((int)((double)characters.get(1).getMaxHealth() * 0.1));
+			characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
+		
+			// keep track of how many
+			traps++;
 		}
 	}
 	
@@ -934,22 +1063,24 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		
 		if( i != -9999) // cannot be the reserved number
 		{
+			itemsCollected++;
+			
 			// Is it a special item? (When picked up, it pops an information box.)
 			if(i == 6)
 			{
 				// show a popup
-				printInfo("You found something special!");
+				((GridGUI) mapPanel).setPointsLabel("Bags: "+itemsCollected);
 			}
 			// check for beartrap
 			else if(i == BeartrapID)
 			{
 				// inflict 10% damage of totalHealth to first player
-				characters.get(1).setCurrentHealth(characters.get(1).getCurrentHealth() - (int)((double)characters.get(1).getMaxHealth() * 0.1));
+				characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
 			}
+			
 			
 			// add item to inventory
 			// TODO
-			itemsCollected++;
 		}
 		return;
 	}
@@ -1018,8 +1149,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		if(edgeOfMap || (nearEdgeOfMap && leftShift))
 		{
 			if(showHintsEnabled) // show popup hint
-				printInfo("You cannot move off the mapPanel!");
-			return;
+				printInfo("You cannot move off the map!");
+			return; // exit
 		}
 		
 		// check if the next spot is empty, <0.
@@ -1108,14 +1239,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			checkForItem(itemID);
 			checkForWarp();
 			checkForExit();
-			if(checkForEnemies()){
-				initializeCombat();
-			}
+			checkForEnemies(); // starts combat if needed
         } 
-        else
+        else // bumped into something
         {
-        	// bumped into something
-        	checkForEnemies();
+        	checkForEnemies();// starts combat if needed
         	
         	// show hint if they bumped a hole
         	if(showHintsEnabled && board[prow+x][pcol+y].isHole())
@@ -1250,11 +1378,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 {
                 	board[i][j].resetObject(DirtID,RockID,EmptyID);
                 }
-                // randomly make "bags" to pick up
-                else if(temp==6)
-                {
-                	board[i][j].resetObject(GrassID,BagID,EmptyID);
-                }
                 // randomly make "monsters"
                 else if(temp==7)
                 {
@@ -1338,6 +1461,32 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         else if(Trigger.getSource() == statsItem)
         {
         	printInfo(getStatistics());
+        }
+        else if(Trigger.getSource() == enableMusicItem)
+        {
+        	if(musicEnabled)
+        	{
+        		musicEnabled = false;
+        		stopMusic();
+        	}
+        	else
+        	{
+        		musicEnabled = true;
+        		startMusic();
+        	}
+        }
+        else if(Trigger.getSource() == enableSoundItem)
+        {
+        	if(soundEnabled)
+        	{
+        		soundEnabled = false;
+        		stopSound();
+        	}
+        	else
+        	{
+        		soundEnabled = true;
+        		startSound();
+        	}
         }
         else if(Trigger.getSource() == enableFogItem)
         {
@@ -1434,8 +1583,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		// update the clock time on the JMenu
 		time.setText("Time: "+klok.currentTime);
 		
-		// update grid gui health bar
-		int hp = (int) (((double)characters.get(1).getCurrentHealth() / (double)characters.get(1).getMaxHealth()) * 100);
+		// update grid gui health bar and name
+		((GridGUI) mapPanel).updatePlayerName(characters.get(0).getName());
+		int hp = (int) (((double)characters.get(0).getCurrentHealth() / (double)characters.get(0).getMaxHealth()) * 100);
 		((GridGUI) mapPanel).updateHealthBar(hp);
 		return false;
 	}
@@ -1470,22 +1620,25 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 */
 	public void playMusic(final String soundFile, final boolean loop)
 	{
-		try
+		if(musicEnabled)
 		{
-			// set the loop
-			if(loop)
-				musicStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-			else
-				musicStream.setLoopCount(0);
-			
-			File sfx = new File(soundFile);
-			Sequence sfxSequence = MidiSystem.getSequence(sfx);
-			musicStream.setSequence(sfxSequence);
-			musicStream.start();
-		}
-		catch(Exception e)
-		{
-			printError("Whoops!\n\n"+e.getMessage());			
+			try
+			{
+				// set the loop
+				if(loop)
+					musicStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				else
+					musicStream.setLoopCount(0);
+				
+				File sfx = new File(soundFile);
+				Sequence sfxSequence = MidiSystem.getSequence(sfx);
+				musicStream.setSequence(sfxSequence);
+				musicStream.start();
+			}
+			catch(Exception e)
+			{
+				printError("Whoops!\n\n"+e.getMessage());			
+			}
 		}
 	}
 	
@@ -1497,23 +1650,58 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 */
 	public void playSound(final String soundFile, final boolean loop)
 	{
-		try
+		if(soundEnabled)
 		{
-			// set the loop
-			if(loop)
-				soundStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-			else
-				soundStream.setLoopCount(0);
-			
-			File sfx = new File(soundFile);
-			Sequence sfxSequence = MidiSystem.getSequence(sfx);
-			soundStream.setSequence(sfxSequence);
-			soundStream.start();
+			try
+			{
+				// set the loop
+				if(loop)
+					soundStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				else
+					soundStream.setLoopCount(0);
+				
+				File sfx = new File(soundFile);
+				Sequence sfxSequence = MidiSystem.getSequence(sfx);
+				soundStream.setSequence(sfxSequence);
+				soundStream.start();
+			}
+			catch(Exception e)
+			{
+				printError("Whoops!\n\n"+e.getMessage());			
+			}
 		}
-		catch(Exception e)
-		{
-			printError("Whoops!\n\n"+e.getMessage());			
-		}
+	}
+	
+	/**
+	 * Resumes playing music.
+	 */
+	public void startMusic()
+	{
+		musicStream.start();
+	}
+	
+	/**
+	 * Resumes playing sounds.
+	 */
+	public void startSound()
+	{
+		soundStream.start();
+	}
+	
+	/**
+	 * Stops Music from playing permanently.
+	 */
+	public void stopMusic()
+	{
+		musicStream.stop();
+	}
+	
+	/**
+	 * Stops Sound Effects from playing permanently.
+	 */
+	public void stopSound()
+	{
+		soundStream.stop();
 	}
 	
 	/**
@@ -1582,8 +1770,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		questsTotal++;
 	}
 	
-	public void initializeCombat() {
-		enemies = initializeEnemies(0);
+	public void initializeCombat(int numOfEnemies) {
+		enemies = initializeEnemies(numOfEnemies);
 		actor = null;
 		event = null;
 		combatOver = false;
@@ -1616,8 +1804,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
 	public void setupTurn(Entity character, ArrayList<Entity> targets) {
 		if (!combatOver) {
-			((CombatGUI) combatPanel).targets.removeAllItems();
+			((CombatGUI) combatPanel).attackTargets.removeAllItems(); // attacks
+			((CombatGUI) combatPanel).abilityTargets.removeAllItems(); // abilities
+			((CombatGUI) combatPanel).itemTargets.removeAllItems(); // items
 			((CombatGUI) combatPanel).abilities.removeAllItems();
+			((CombatGUI) combatPanel).items.removeAllItems();
 
 			for (CombatObject obj : ((CombatGUI) combatPanel).objects) {
 				if (obj.entity.equals(character)) {
@@ -1636,7 +1827,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 				((CombatGUI) combatPanel).abilities.addItem(ability.getName());
 			}
 			for (Entity target : targets) {
-				((CombatGUI) combatPanel).targets.addItem(target.getName());
+				((CombatGUI) combatPanel).attackTargets.addItem(target.getName());
+				((CombatGUI) combatPanel).abilityTargets.addItem(target.getName());
+				((CombatGUI) combatPanel).itemTargets.addItem(target.getName());
 			}
 		}else{
 			((CombatGUI)combatPanel).update();
@@ -1722,13 +1915,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		else {
 			Ability activeAbility = actor.getAbilityByName(action);
 			if (activeAbility.friendly()) {
-				event = executeAbility(actor,
-						((CombatGUI) combatPanel).targets.getSelectedIndex(),
-						enemies, characters, activeAbility);
+				event = executeAbility(actor, target, enemies, characters, activeAbility);
 			} else {
-				event = executeAbility(actor,
-						((CombatGUI) combatPanel).targets.getSelectedIndex(),
-						enemies, characters, activeAbility);
+				event = executeAbility(actor, target, enemies, characters, activeAbility);
 			}
 		}
 
@@ -1863,9 +2052,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		return combatants;
 	}
 
-	public ArrayList<Entity> initializeEnemies(int zoneID) {
+	public ArrayList<Entity> initializeEnemies(int numOfEnemies) {
 		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
-		int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
+		int numberOfEnemies = randomNumberGenerator.nextInt(numOfEnemies) + 1;
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
@@ -1880,22 +2069,30 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		return monsterArray;
 	}
 
-	public boolean endCombat(ArrayList<Entity> characters, int experience,
-			int result) {
-
+	public boolean endCombat(ArrayList<Entity> characters, int experience, int result)
+	{
 		boolean returnVal = false;
 		if (result == 0) {
 			// code to handle running away (nothing happens)
 			returnVal = true;
 		} else {
-			if (result == 1) {
-				for (Entity character : characters) {
+			if (result == 1) 
+			{
+				for (Entity character : characters) 
+				{
 					character.setExp(character.getExp() + experience);
 					((CombatGUI) combatPanel).appendStatus(character.getName()
 							+ " has earned " + experience + " experience!");
 				}
+				
+				// clean up enemies from board
+				// turn them into bags to pickup
+				removeDefeatedEnemies(BagID);
+				
 				returnVal = true;
-			} else {
+			} 
+			else 
+			{
 				returnVal = false;
 			}
 		}
