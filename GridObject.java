@@ -122,7 +122,7 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isConsumable()
     {
-    	return false;
+    	return (entityID==GE.BagID || entityID==GE.MushroomID || entityID==GE.BeartrapID);
     }
     
     /**
@@ -157,6 +157,18 @@ public class GridObject extends JLayeredPane {
     	return (accessoryID==GE.TallGrassID);
     }
     
+    /**
+     * isTrap
+     * Returns true if the location contains a
+     * trap that performs a specific behavior when
+     * stepped on. (Eg. Spikes hurt player, switch
+     * unlocks door, warp teleports player)
+     * @return
+     */
+    public boolean isTrap()
+    {
+    	return (entityID==GE.SpikeID || entityID==GE.BeartrapID || entityID==GE.SpiralID);
+    }
     
     /**
      * Sets the id of the entityID layer and adjusts
@@ -189,6 +201,26 @@ public class GridObject extends JLayeredPane {
     	else if(p == GE.PirateID)
     	{
     		entityImage=GE.Pirate;
+    	}
+    	else if(p == GE.BagID)
+    	{
+    		entityImage=GE.Bag;
+    	}
+    	else if(p == GE.BeartrapID)
+    	{
+    		entityImage=GE.Beartrap;
+    	}
+    	else if(p == GE.SpikeID)
+    	{
+    		entityImage=GE.Spike;
+    	}
+    	else if(p == GE.SpiralID)
+    	{
+    		entityImage=GE.Dirt;
+    	}
+    	else if(p == GE.MushroomID)
+    	{
+    		entityImage = GE.Mushroom;
     	}
     	else
     		GE.printError("Error!\nNo image found for entityID id="+p);

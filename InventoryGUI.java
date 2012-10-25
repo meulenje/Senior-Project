@@ -33,7 +33,7 @@ import javax.swing.event.ListSelectionListener;
  *
  */
 
-public class InventoryGUI extends JPanel implements ActionListener , ListSelectionListener{
+public class InventoryGUI extends JPanel implements ActionListener {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -97,7 +97,6 @@ public class InventoryGUI extends JPanel implements ActionListener , ListSelecti
         itemPicture = new JLabel(); //picture of the item selected
         itemPicture.setFont(itemPicture.getFont().deriveFont(Font.BOLD));
         itemPicture.setHorizontalAlignment(JLabel.CENTER);
-        itemPicture.setText(IE.getItemDescription());
         itemPicture.setVerticalTextPosition(JLabel.BOTTOM);
         itemPicture.setHorizontalTextPosition(JLabel.CENTER);
         itemPicture.setIconTextGap(35);
@@ -119,7 +118,7 @@ public class InventoryGUI extends JPanel implements ActionListener , ListSelecti
 
         //Provide a preferred size for the split pane.
         inventorySplitPane.setPreferredSize(new Dimension(200, 200));
-        //updateBackpackLabel(IE.);
+        updateBackpackLabel(IE.getInitialSelectedItem());// this just selects the first item from the list
 
         
         //Add components to the inventory panel
@@ -239,19 +238,13 @@ public class InventoryGUI extends JPanel implements ActionListener , ListSelecti
 		return button;
 	}
 
- 
-    //Listens to the list whether selected item is changed
-    public void valueChanged(ListSelectionEvent arg0) 
-    {
-        JList list = (JList)arg0.getSource();
-        updateBackpackLabel(IE.getSelectedItem(list.getSelectedIndex()));
-    }
-    
+     
     //Brings up the selected image
-    protected void updateBackpackLabel (String name) 
+    protected void updateBackpackLabel (item item) 
     {
-        ImageIcon icon = createImageIcon( name + ".png");
+        ImageIcon icon = createImageIcon( item.getItemName() + ".png");
         itemPicture.setIcon(icon);
+        itemPicture.setText(IE.getItemDescription());
         if  (icon != null) {
                        
         } else {
@@ -276,10 +269,10 @@ public class InventoryGUI extends JPanel implements ActionListener , ListSelecti
 
       
     /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(String path) 
+    protected ImageIcon createImageIcon(String path) 
     {
        URL imgURL = InventoryGUI.class.getResource(path);
-        if (imgURL != null) {
+        if (imgURL != null) {        	
             return new ImageIcon(imgURL);
         } else {
             System.err.println("Couldn't find file: " + path);

@@ -3,6 +3,7 @@ package rpg;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 
 /**
  * GridGUI class
@@ -36,15 +38,14 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
     private JPanel buttonPanel;
     private JScrollPane scrollPanel;
     private JProgressBar healthBar;
-    private JProgressBar magicBar;
-    private JProgressBar expBar;
     private JButton resetButton;
     private JButton upButton;
     private JButton downButton;
     private JButton leftButton;
     private JButton rightButton;
     private JTextField nameField;
-
+    private JButton inventoryButton;
+    private JButton questsButton;
 	
 	public GridGUI(GameEngine tempEngine)
 	{
@@ -75,8 +76,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         
         // Build the button panel
         buttonPanel = new JPanel(new GridLayout());
-        buttonPanel.setPreferredSize(new Dimension( GE.X_DIM , 50 ));
-        buttonPanel.setBackground(Color.RED);
+        buttonPanel.setPreferredSize(new Dimension( GE.X_DIM - 10, 50 ));
         JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
         JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
 
@@ -97,31 +97,40 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         // health bar for the player
         healthBar = new JProgressBar(0);
         healthBar.setForeground(Color.RED);
+        healthBar.setBackground(Color.WHITE);
         healthBar.setBorderPainted(true);
-        healthBar.setValue(100);
+        healthBar.setValue(50);
         
-        // magic bar for the player
-        magicBar = new JProgressBar(0);
-        magicBar.setForeground(Color.BLUE);
-        magicBar.setBorderPainted(true);
-        magicBar.setValue(90);
         
-        // experience bar for the player
-        expBar = new JProgressBar(0);
-        expBar.setForeground(Color.GREEN);
-        expBar.setBorderPainted(true);
-        expBar.setValue(50);
-        
-        // Build Health Bar Area
+        // Build HP/Mag/Exp Bar Area
         statsPanel.add(nameField);
-        statsPanel.add(new JLabel("HP:",JLabel.RIGHT));
+        JLabel hp = new JLabel("HP:", JLabel.RIGHT);
+        hp.setForeground(Color.RED);
+        statsPanel.add(hp);
         statsPanel.add(healthBar);
         statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel("Magic:",JLabel.RIGHT));
-        statsPanel.add(magicBar);
         statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel("EXP:",JLabel.RIGHT));
-        statsPanel.add(expBar);
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
+        
+        // Build bag and journal shortcut buttons (inventory and quests)
+        JPanel bagPanel = new JPanel();
+        bagPanel.setLayout(new GridLayout(2,3));
+        
+        bagPanel.add(new JLabel(""));
+        inventoryButton = new JButton();
+        inventoryButton.addActionListener(this);
+        inventoryButton.setIcon(GE.InventoryIcon);
+        bagPanel.add(inventoryButton);
+        bagPanel.add(new JLabel(""));
+        bagPanel.add(new JLabel(""));
+        questsButton = new JButton();
+        questsButton.addActionListener(this);
+        questsButton.setIcon(GE.ListIcon);
+        bagPanel.add(questsButton);
+        bagPanel.add(new JLabel(""));
         
         // Build arrow button Area
         arrowPanel.add(new JLabel(""));
@@ -133,7 +142,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         
         // group the HUD display, with health bars, and buttons
         buttonPanel.add(statsPanel, BorderLayout.WEST);
-        buttonPanel.add(new JPanel()); // empty panel in between
+        buttonPanel.add(bagPanel); // empty panel in between
         buttonPanel.add(arrowPanel, BorderLayout.EAST);
         
         
@@ -200,6 +209,12 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	{
 		scrollPanel.getHorizontalScrollBar().setValue(y);
 		scrollPanel.getVerticalScrollBar().setValue(x);
+	}
+	
+	public void updateHealthBar(int value)
+	{
+		// update player health bar
+		healthBar.setValue(value);
 	}
 	
 	@Override
@@ -301,6 +316,17 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         {
         	GE.printError("What did you do?!");
         }
+        else if(ae.getSource() == inventoryButton)
+        {
+        	// jump to inventory panel
+        	GE.viewInventoryPanel();
+        }
+        else if(ae.getSource() == questsButton)
+        {
+        	// jump to quests panel
+        	GE.viewQuestPanel();
+        }
+        
         else if(ae.getSource() == upButton)
         {
         	// increment the players coordinates

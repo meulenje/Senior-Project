@@ -67,7 +67,6 @@ public class Clock implements ActionListener
     public void run(int duration)
     {
         endingTime = duration;
-
         timer.start();
     }
 

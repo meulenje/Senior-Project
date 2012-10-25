@@ -21,10 +21,10 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 	
 	private JButton newButton;
 	private JButton loadButton;
+	private JButton optionsButton;
 	private JButton editorButton;
 	private JButton quitButton;
-	private Color backgroundColor = Color.black;
-	private Color foregroundColor = Color.white;
+	private JLabel key;
 	
 	public MainMenuGUI(GameEngine tempEngine)
 	{
@@ -32,7 +32,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		
 		// create main menu gui
 		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 60));
-		this.setBackground(backgroundColor);
+		this.setBackground(GE.backgroundColor);
 		this.setLayout(new FlowLayout());
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
@@ -40,15 +40,15 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		// show a logo image with text
 		JPanel imagePanel = new JPanel(new BorderLayout());
 		imagePanel.setPreferredSize(new Dimension(GE.Y_DIM - 10,400));
-		imagePanel.setBackground(foregroundColor);
+		imagePanel.setBackground(GE.foregroundColor);
 		JLabel titleText = new JLabel("Game Logo Here", JLabel.CENTER);
 		titleText.setIcon(GE.PlayerOutline);
 		imagePanel.add(titleText, BorderLayout.CENTER);
 		this.add(imagePanel, BorderLayout.NORTH);
 		
 		// show a list of buttons
-		JPanel buttonPanel = new JPanel(new GridLayout(4,0,5,5));
-		buttonPanel.setPreferredSize(new Dimension(200, 150));
+		JPanel buttonPanel = new JPanel(new GridLayout(6,0,5,5));
+		buttonPanel.setPreferredSize(new Dimension(200, 220));
 		buttonPanel.setOpaque(false);
 		newButton = new JButton("New Game");
 		newButton.addActionListener(this);
@@ -58,6 +58,10 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		loadButton.addActionListener(this);
 		buttonPanel.add(loadButton);
 		
+		optionsButton = new JButton("Options");
+		optionsButton.addActionListener(this);
+		buttonPanel.add(optionsButton);
+		
 		editorButton = new JButton("Map Editor");
 		editorButton.addActionListener(this);
 		buttonPanel.add(editorButton);
@@ -66,18 +70,22 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		quitButton.addActionListener(this);
 		buttonPanel.add(quitButton);
 		
+		key = new JLabel("", JLabel.RIGHT);
+		key.setForeground(Color.GRAY);
+		buttonPanel.add(key);
+		
 		JPanel box = new JPanel();
 		box.setPreferredSize(new Dimension(GE.Y_DIM -10, 240));
 		box.setOpaque(false);
 		box.add(buttonPanel, BorderLayout.CENTER);
 		TitledBorder tb = new TitledBorder("Main Menu");
-		tb.setTitleColor(foregroundColor);
+		tb.setTitleColor(GE.foregroundColor);
 		tb.setTitlePosition(2);
 		tb.setTitleFont(new Font("sansserif",Font.BOLD,16));
 		box.setBorder(tb);
 		this.add(box, BorderLayout.SOUTH);
 		
-	}
+	} // end of constructor 
 	
 	@Override
 	public void actionPerformed(ActionEvent ae)
@@ -88,14 +96,16 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		{
 			// make a new game!
 			GE.newGame();
-			this.setVisible(false);
 		}
 		else if(source == loadButton)
 		{
 			// load a game
 			GE.loadGame();
-			//this.setVisible(false);
-			//GE.tabs.setVisible(true);
+		}
+		else if(source == optionsButton)
+		{
+			// view options panel
+			// TODO
 		}
 		else if(source == editorButton)
 		{
@@ -110,19 +120,44 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 	}
 
 	@Override
-	public void keyPressed(KeyEvent arg0) {
+	public void keyPressed(KeyEvent k)
+	{
+		int keyCode = k.getKeyCode();
+		
+		// debugging purposes (displays key input number
+		key.setText(""+keyCode);
+		
+		// shortcut keys to certain actions
+		if(keyCode == 49 || keyCode == 78 || keyCode == 10) // 1,n,ENTER = newGame
+		{
+			GE.newGame();
+		}
+		else if(keyCode == 50 || keyCode == 76) // 2 or l = loadGame
+		{
+			GE.loadGame();
+		}
+		else if(keyCode == 51 || keyCode == 79) // 3 or o = options
+		{
+			// TODO
+		}
+		else if(keyCode == 52 || keyCode == 77 || keyCode == 69) // 4,m,e = Map Editor
+		{
+			Editor e = new Editor();
+		}
+		else if(keyCode == 53 || keyCode == 81 || keyCode == 27) // 5,q,ESC = Quit
+		{
+			GE.quitProgram();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent k) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {
+	public void keyTyped(KeyEvent k) {
 		// TODO Auto-generated method stub
 		
 	}

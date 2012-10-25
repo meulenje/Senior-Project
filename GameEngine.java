@@ -22,7 +22,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
+import java.util.Stack;
+import javax.sound.midi.*;
 import javax.swing.JFrame;
 
 /**
@@ -36,6 +39,7 @@ import javax.swing.JFrame;
  */
 public class GameEngine implements ActionListener, FocusListener, ClockListener {
 	
+	
 	// Game Engine specific variables
 	protected final int MAXIMUMSIZE = 100; // Max board size for rows and columns
 	protected final int X_DIM = 600; // default frame window size
@@ -45,6 +49,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected GridObject[][] board; // the maximum board size
     protected ArrayList<QuestGUI> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
+    protected Sequencer musicStream; // a sequencer to play background music
+    protected Sequencer soundStream; // a sequencer to play sound effects
     protected int clockSpeed = 1000; // time between ticks in milliseconds
     
     /** Reference Grid
@@ -92,12 +98,20 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected int GrassID = -2;
     protected int TallGrassID = 1;
     protected int WaterID = -3;
+    protected int BagID = 6;
+    protected int SpikeID = 7;
+    protected int MushroomID = 8;
+    protected int BeartrapID = 9;
+    protected int SpiralID = 10;
     
     // special Frame features
-    protected boolean windowResizeable = false;
-    
-    // special map features
-    protected boolean showHintsEnabled = true;
+    protected boolean windowResizeable = true;
+    protected Color backgroundColor = Color.black;
+	protected Color foregroundColor = Color.white;
+	protected Color highlightColor = Color.blue;
+
+    // special mapPanel features
+    protected boolean showHintsEnabled = false;
     protected boolean fogOfWar = false;
     protected boolean mappingEnabled = false;
     protected int playerVisionRange = 3;
@@ -111,6 +125,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected int hops = 0; // # of jumps taken
 	protected int steps = 0; // # of steps taken
 	protected int encounters = 0; // # of encounters
+	protected int itemsCollected = 0; // # of items found on map
 	protected int objectsPushed = 0; // # of rock pushes
 	protected int objectsPushedInHoles = 0; // # of rocks pushed into holes
 	protected int warps = 0; // # of times they warped
@@ -124,26 +139,39 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected int questsTotal = 0;
     
     // default images
-    protected ImageIcon Empty = new ImageIcon("Emtpy.png");
-    protected ImageIcon FogCenter = new ImageIcon("Fog.png");
-    protected ImageIcon FogLeft = new ImageIcon("FogLeft.png");
-    protected ImageIcon FogTop = new ImageIcon("FogTop.png");
-    protected ImageIcon FogRight = new ImageIcon("FogRight.png");
-    protected ImageIcon FogBottom = new ImageIcon("FogBottom.png");
-    protected ImageIcon Player = new ImageIcon("PlayerFront.gif");
-    protected ImageIcon PlayerOutline = new ImageIcon("PlayerOutline.png");
-	protected ImageIcon GlowingGem = new ImageIcon("Gem.gif");
-	protected ImageIcon LavaMonster = new ImageIcon("LavaMonster.gif");
-	protected ImageIcon Pirate = new ImageIcon("Pirate.gif");
-	protected ImageIcon Water = new ImageIcon("Water.png");
-	protected ImageIcon Dirt = new ImageIcon("Dirt.png");
-	protected ImageIcon Grass = new ImageIcon("Grass.png");
-	protected ImageIcon TallGrass = new ImageIcon("TallGrass.png");
-	protected ImageIcon Rock = new ImageIcon("Rock.png");
-	protected ImageIcon Hole = new ImageIcon("Hole.png");
-	protected ImageIcon XSpace = new ImageIcon("XSpace.png");
-	protected ImageIcon Hideout = new ImageIcon("Hideout.png");
+    protected ImageIcon Empty = new ImageIcon("images/Empty.png");
+    protected ImageIcon FogCenter = new ImageIcon("images/Fog.png");
+    protected ImageIcon FogLeft = new ImageIcon("images/FogLeft.png");
+    protected ImageIcon FogTop = new ImageIcon("images/FogTop.png");
+    protected ImageIcon FogRight = new ImageIcon("images/FogRight.png");
+    protected ImageIcon FogBottom = new ImageIcon("images/FogBottom.png");
+    protected ImageIcon Player = new ImageIcon("images/PlayerFront.gif");
+    protected ImageIcon PlayerOutline = new ImageIcon("images/PlayerOutline.png");
+	protected ImageIcon GlowingGem = new ImageIcon("images/Gem.gif");
+	protected ImageIcon LavaMonster = new ImageIcon("images/LavaMonster.gif");
+	protected ImageIcon Pirate = new ImageIcon("images/Pirate.gif");
+	protected ImageIcon Water = new ImageIcon("images/Water.png");
+	protected ImageIcon Dirt = new ImageIcon("images/Dirt.png");
+	protected ImageIcon Grass = new ImageIcon("images/Grass.png");
+	protected ImageIcon TallGrass = new ImageIcon("images/TallGrass.png");
+	protected ImageIcon Rock = new ImageIcon("images/Rock.png");
+	protected ImageIcon Hole = new ImageIcon("images/Hole.png");
+	protected ImageIcon XSpace = new ImageIcon("images/XSpace.png");
+	protected ImageIcon Spike = new ImageIcon("images/Spike.png");
+	protected ImageIcon Beartrap = new ImageIcon("images/Beartrap.png");
+	protected ImageIcon Spiral = new ImageIcon("images/Spiral.gif");
+	protected ImageIcon Mushroom = new ImageIcon("images/Mushroom.png");
+	protected ImageIcon Hideout = new ImageIcon("images/Hideout.png");
+	protected ImageIcon Bag = new ImageIcon("images/Bag.png");
+	protected ImageIcon Backpack = new ImageIcon("images/Backpack.png");
+	protected ImageIcon Book = new ImageIcon("images/Book.png");
+	protected ImageIcon InventoryIcon = new ImageIcon("images/InventoryIcon.jpg");
+	protected ImageIcon ListIcon = new ImageIcon("images/ListIcon.jpg");
 	
+	// sound files
+	protected String menuTheme = "sounds/Golden Sun Menu Screen.mid";
+	protected String overworldTheme = "sounds/Golden Sun Over World.mid";
+	protected String battleTheme = "sounds/Golden Sun Battle Theme.mid";	
     
     // default gui parts
     private JFrame window;
@@ -160,12 +188,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     private JCheckBoxMenuItem enableBlinkItem;
     private JCheckBoxMenuItem enableWarpItem;
     private JCheckBoxMenuItem enableMappingItem;
-    private JLayeredPane layers;
-    protected JTabbedPane tabs;
+    protected JLayeredPane layers;
+    protected JPanel loadingScreen;
     protected JPanel mainmenu;
-    protected JPanel map;
-    protected JPanel combat;
-    protected JPanel inventory;
+    protected JTabbedPane tabs;
+    protected JPanel mapPanel;
+    protected JPanel combatPanel;
+    protected JPanel inventoryPanel;
     protected JPanel questPanel;
     
 	// keep track of keyboard keys being held down
@@ -175,13 +204,34 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected boolean right = false; // 39
 	protected boolean leftShift = false; // 16
 	protected boolean spaceBar = false; // 32
-
+	
+	//Combat Engine Fields
+	private Random randomNumberGenerator = new Random();
+	int accumulatedExp = 0;
+	Entity actor;
+	ArrayList<Entity> enemies;
+	String event;
+	boolean combatOver;
+	Stack<Entity> turnStack;
+	int combatResult;
+	ArrayList<Entity> combatants;
+	ArrayList<Entity> characters;
+	//end combatPanel engine fields
     
     /**
      * Constructor for GameEngine
      */
     public GameEngine()
-    {                 
+    {            
+    	
+    	//combatPanel constructor
+    	characters = new ArrayList<Entity>();
+    	Entity mario = new Entity(Player, "Mario", true, 30, 30, 20, 20, 10);
+    	Entity luigi = new Entity(Player, "Luigi", true, 30, 30, 20, 20, 10);
+    	characters.add(mario);
+    	characters.add(luigi);
+    	enemies = initializeEnemies(1);
+    	
         // Create the JWindow and Frame to hold the Panels
     	
         // program window
@@ -240,7 +290,10 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         enableMappingItem.setState(mappingEnabled); 
         // disable unnecessary options
         if(!fogOfWar) 
+        {
         	enableMappingItem.setEnabled(false); // mapping is useless unless you have fogOfWar enabled
+        	mappingEnabled = false;
+        }
 
         // show what time it is
         time = new JMenuItem("Time: X", JLabel.RIGHT);
@@ -259,20 +312,19 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         
 
         // --------------------------------------------------------       
-        // create the GridGui map panel
-        map = new GridGUI(this);
+        // create the GridGui mapPanel panel
+        mapPanel = new GridGUI(this);
         // --------------------------------------------------------
         
         // --------------------------------------------------------
-        // create the CombatGUI combat panel
-        combat = new JPanel();
-        combat.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
+        // create the CombatGUI combatPanel panel
+        combatPanel = new CombatGUI(this);
         // --------------------------------------------------------
 
         // --------------------------------------------------------
-        // create the InventoryGUI inventory panel
-        inventory = new JPanel();
-        inventory.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
+        // create the InventoryGUI inventoryPanel panel
+        inventoryPanel = new JPanel();
+        inventoryPanel.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
         // --------------------------------------------------------
         
         // --------------------------------------------------------
@@ -282,9 +334,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         
         // create the TabbedPane
         tabs = new JTabbedPane();
-        tabs.addTab("Map", map);
-        tabs.addTab("Inventory", inventory);
-        tabs.addTab("Combat", combat);
+        tabs.addTab("Map", mapPanel);
+        tabs.addTab("Inventory", inventoryPanel);
+        tabs.addTab("Combat", combatPanel);
         tabs.addTab("Quests", questPanel);
         tabs.addFocusListener(this);
         tabs.setLocation(0,0);
@@ -297,15 +349,31 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         mainmenu.setSize(X_DIM,Y_DIM + 60);
         // --------------------------------------------------------
 
-        // create two layers
-        // 0 -- is for the GamePanels (Grid, Combat, etc)
+        // --------------------------------------------------------
+        // make a loading screen
+        loadingScreen = new JPanel();
+        loadingScreen.setLayout(new BorderLayout());
+        loadingScreen.setBackground(Color.BLACK);
+        JLabel loadingText = new JLabel("", JLabel.CENTER);
+        loadingText.setIcon(new ImageIcon("images/loading.gif"));
+        loadingScreen.add(loadingText, BorderLayout.CENTER);
+        loadingScreen.setLocation(0,0);
+        loadingScreen.setPreferredSize(new Dimension(X_DIM, Y_DIM + 60));
+        loadingScreen.setSize(X_DIM,Y_DIM + 60);
+        // --------------------------------------------------------
+        
+        // create layers panel
+        // 0   -- is for the GamePanels (Grid, Combat, etc)
         // 100 -- is for the MainMenu
+        // 200   -- is for the Loading Screen
         layers = new JLayeredPane();
         layers.setLayout(new BorderLayout());
         layers.add(tabs);
         layers.add(mainmenu);
+        layers.add(loadingScreen);
         layers.setLayer(tabs, 0);
         layers.setLayer(mainmenu, 100);
+        layers.setLayer(loadingScreen, 200);
         
         // add the layers to the window
         window.add(layers, BorderLayout.CENTER);
@@ -321,8 +389,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // on every tick, event() will be called.
         klok = new Clock();
         klok.register(this); // The Engine listens to the Clock
-        klok.register((GridGUI) map); // the Grid listens to the Clock
+        klok.register((GridGUI) mapPanel); // the Grid listens to the Clock
         klok.setRate(clockSpeed); // time passes per tick by this speed in milliseconds
+        
+        // creates two Sequencers and initializes them.
+        // this is used to play music and sound effects
+        initializeAudioStreams();
+        
+        // view main menu (also plays music)
+        viewMainMenu();
     }
     
     /**
@@ -339,7 +414,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
             for (int j=0; j<BCOLS; j++)
             {
             	board[i][j] = new GridObject(this,GrassID,EmptyID,EmptyID);
-            	((GridGUI) map).addGridObject(i,j); // place on grid panel
+            	((GridGUI) mapPanel).addGridObject(i,j); // place on grid panel
             }
         }
 	}
@@ -351,7 +426,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	{
 		board = null;
 		// remove each GridObject reference from the grid panel
-		((GridGUI) map).removeAllGridObjects();
+		((GridGUI) mapPanel).removeAllGridObjects();
 	}
 	
 	/**
@@ -382,7 +457,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	// choose player
     	// TODO
     	
-    	// delete old map and make a new empty one
+    	// choose maps/levels
+    	// TODO
+    	
+    	// temporarily view the loading screen
+    	viewLoadingScreen();
+    	
+    	// delete old mapPanel and make a new empty one
     	deleteGridObjects();
     	createGridObjects();
     	
@@ -399,6 +480,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		
 		// load a new map
     	loadMap();
+    	
+    	// view the mapPanel
+    	viewMapPanel();
     	
 		// reset clock
 		klok.pause();
@@ -504,7 +588,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewQuestPanel()
     {  	
+    	loadingScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	tabs.setVisible(true);
     	tabs.setSelectedIndex(3);
+    	questPanel.requestFocus();
     	klok.pause();
     }
     
@@ -513,8 +601,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewCombatPanel()
     {
+    	loadingScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	tabs.setVisible(true);
     	tabs.setSelectedIndex(2);
+    	combatPanel.requestFocus();
     	klok.pause();
+    	
+    	// play battle music
+    	playMusic(battleTheme, true);
     }
     
     /**
@@ -522,7 +617,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewInventoryPanel()
     {
+    	loadingScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	tabs.setVisible(true);
     	tabs.setSelectedIndex(1);
+    	inventoryPanel.requestFocus();
     	klok.pause();
     }
     
@@ -531,8 +630,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewMapPanel()
     {
+    	loadingScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	tabs.setVisible(true);
     	tabs.setSelectedIndex(0);
+    	mapPanel.requestFocus();
     	klok.run(Clock.FOREVER);
+    	
+    	// play overworld music
+    	playMusic(overworldTheme, true);
     }
     
     /**
@@ -540,7 +646,23 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
      */
     public void viewMainMenu()
     {
+    	loadingScreen.setVisible(false);
     	mainmenu.setVisible(true);
+    	tabs.setVisible(false);
+    	mainmenu.requestFocus();
+    	
+    	// play menu music
+    	playMusic(menuTheme, true);
+    }
+    
+    /**
+     * Forces player to view the Loading Screen
+     */
+    public void viewLoadingScreen()
+    {
+    	loadingScreen.setVisible(true);
+    	mainmenu.setVisible(false);
+    	tabs.setVisible(false);
     }
     
 	/**
@@ -552,6 +674,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		hops = 0; // # of jumps taken
 		steps = 0; // # of steps taken
 		encounters = 0; // # of encounters
+		itemsCollected = 0; // # of items collected on map
 		objectsPushed = 0; // # of rock pushes
 		objectsPushedInHoles = 0; // # of rocks pushed into holes
 		warps = 0; // # of times they warped
@@ -568,6 +691,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 				steps+" Steps\n"+
 				hops+" Hops\n"+
 				encounters+" Battles\n"+
+				itemsCollected+" Items Found\n"+
 				objectsPushed+" Objects Pushed\n"+
 				objectsPushedInHoles+" Objects Pushed into Holes\n"+
 				warps+" Times Warped\n"+
@@ -636,7 +760,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
 	
 	/**
-	 * Removes all warps from the map, and replaces them grass
+	 * Removes all warps from the mapPanel, and replaces them grass
 	 * @return void
 	 */
 	public void removeWarps()
@@ -679,7 +803,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			
 			if(temp==0)
 			{
-				// start fresh again! Load a new map
+				// start fresh again! Load a new mapPanel
 				loadMap();
 			}
 			else // 1 or -1
@@ -698,9 +822,10 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 * of spawning a random encounter. (Eg. Tall Grass)
 	 * @return boolean
 	 */
-	public void checkForEnemies()
+	public boolean checkForEnemies()
 	{
 		int monsterCount = 0;
+		boolean returnVal = false;
 		
 		// check NSWE of player position for enemies
 		if(prow!=BROWS-1 && board[prow+1][pcol].isMonster())
@@ -721,7 +846,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			{
 				// A surprise encounter happens!
 				monsterCount++;
-				playSound("Hit.wav");
 			}
 		}
 		
@@ -733,26 +857,41 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			int answer= printCustomQuestion("What will you do?", options);
 			if(answer==0)
 			{
-				// go to combat tab
+				// go to combatPanel tab
 				viewCombatPanel();
+				returnVal = true;
 			}
 			else
 			{
 				// stay on the Map tab
-				viewMapPanel();
+				returnVal = false;
 			}
 		}
 		
-		return;
+		return returnVal;
 	}
 	
 	/**
-	 * Warps the player's position to the twin warp on the map.
+	 * Checks the player's current position to see if they are
+	 * standing over any traps.
+	 */
+	public void checkForTrap(int i)
+	{
+		// check for beartrap
+		if(i == BeartrapID)
+		{
+			// inflict 10% damage of totalHealth to first player
+			characters.get(1).setCurrentHealth((int)((double)characters.get(1).getMaxHealth() * 0.1));
+		}
+	}
+	
+	/**
+	 * Warps the player's position to the twin warp on the mapPanel.
 	 * -8 and -9 represent the two warps. Entering either warp,
 	 * will send the player to the other end. (Two-Way)
 	 * 
 	 */
-	public void steppedOnWarp()
+	public void checkForWarp()
 	{
 		int a = board[prow][pcol].getTerrain();
 		
@@ -773,13 +912,44 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	            		// warp the player
 	            		// delay here
 	            		repositionPlayer(i,j);
-	            		((GridGUI) map).repositionScrollBarsToPlayer();
+	            		((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 	            		movePlayerVision();
 	            		warps++;
 	            		break;
 	            	}
 	            }
 	        }
+		}
+		return;
+	}
+	
+	/**
+	 * Check if the player stepped on an item.
+	 * @param i
+	 */
+	public void checkForItem(int i)
+	{
+		// This function should be improved to look at Entity attributes,
+		// and not just an id number. TODO
+		
+		if( i != -9999) // cannot be the reserved number
+		{
+			// Is it a special item? (When picked up, it pops an information box.)
+			if(i == 6)
+			{
+				// show a popup
+				printInfo("You found something special!");
+			}
+			// check for beartrap
+			else if(i == BeartrapID)
+			{
+				// inflict 10% damage of totalHealth to first player
+				characters.get(1).setCurrentHealth(characters.get(1).getCurrentHealth() - (int)((double)characters.get(1).getMaxHealth() * 0.1));
+			}
+			
+			// add item to inventory
+			// TODO
+			itemsCollected++;
 		}
 		return;
 	}
@@ -830,6 +1000,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	public void movePlayer(int x, int y)
 	{
 		boolean player_has_moved = false;
+		int itemID = -9999; // reserved number meaning "no item"
 		
 		// check for boundaries
 		boolean edgeOfMap = ( 
@@ -847,13 +1018,25 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		if(edgeOfMap || (nearEdgeOfMap && leftShift))
 		{
 			if(showHintsEnabled) // show popup hint
-				printInfo("You cannot move off the map!");
+				printInfo("You cannot move off the mapPanel!");
 			return;
 		}
 		
 		// check if the next spot is empty, <0.
         if(!leftShift && board[prow+x][pcol+y].isEmptySpace())
         {       	
+        	// move the player
+        	repositionPlayer(prow+x,pcol+y);
+            player_has_moved = true;
+            steps++;
+        }
+        // check if the next spot has a consumable object on it,
+        // if so, pick up the item and add it to inventory
+        else if(!leftShift && board[prow+x][pcol+y].isConsumable())
+        {
+        	// remember what the item was
+        	itemID = board[prow+x][pcol+y].getEntity();
+        	
         	// move the player
         	repositionPlayer(prow+x,pcol+y);
             player_has_moved = true;
@@ -891,7 +1074,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 objectsPushedInHoles++;
         	}
         }
-        // check if the player can jump over spot
+        // check if the player can jump over spot to an empty spot
         else if(leftShift && board[prow+x+x][pcol+y+y].isEmptySpace()
         		&& ( board[prow+x][pcol+y].isHole()
         		|| board[prow+x][pcol+y].isEmptySpace()))
@@ -902,22 +1085,36 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
             player_has_moved = true;
             hops++;
         }
-        
+        // check if the player can jump over spot to a consumable item
+        else if(leftShift && board[prow+x+x][pcol+y+y].isConsumable()
+        		&& ( board[prow+x][pcol+y].isHole()
+        		|| board[prow+x][pcol+y].isEmptySpace()))
+        {
+        	// if so, we can jump and pick up the item
+        	
+        	// remember the item we picked up
+        	itemID = board[prow+x+x][pcol+y+y].getEntity();
+        	
+        	repositionPlayer(prow+x+x,pcol+y+y);
+            player_has_moved = true;
+            hops++;
+        }
         
         // reposition the "camera" if they moved
         if(player_has_moved)
         {
-        	((GridGUI) map).repositionScrollBarsToPlayer();
+        	((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 			movePlayerVision();
-			steppedOnWarp();
+			checkForItem(itemID);
+			checkForWarp();
 			checkForExit();
-			checkForEnemies();
+			if(checkForEnemies()){
+				initializeCombat();
+			}
         } 
         else
         {
         	// bumped into something
-        	// reply by playing a sound file
-        	playSound("Hit.wav");
         	checkForEnemies();
         	
         	// show hint if they bumped a hole
@@ -998,7 +1195,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	} // end of movePlayerVision()
 	
 	/**
-	 * Sets all of the map's tiles visible or invisible
+	 * Sets all of the mapPanel's tiles visible or invisible
 	 * @return void
 	 */
 	public void setFog(boolean f)
@@ -1034,7 +1231,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         numOfMonsters = 0;
         
         if(blinkOnExit) // turn off display briefly
-        	((GridGUI) map).setVisible(false);
+        	((GridGUI) mapPanel).setVisible(false);
         
         for (int i=0; i<BROWS; i++)
         {
@@ -1053,11 +1250,21 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 {
                 	board[i][j].resetObject(DirtID,RockID,EmptyID);
                 }
+                // randomly make "bags" to pick up
+                else if(temp==6)
+                {
+                	board[i][j].resetObject(GrassID,BagID,EmptyID);
+                }
                 // randomly make "monsters"
                 else if(temp==7)
                 {
                 	board[i][j].resetObject(DirtID,LavaMonsterID,EmptyID);
                 	numOfMonsters++;
+                }
+                // randomly make "beartraps"
+                else if(temp==11)
+                {
+                	board[i][j].resetObject(GrassID,BeartrapID,TallGrassID);
                 }
                 // place warp 'a'
                 else if(warpingEnabled && !warpAPlaced && temp==8)
@@ -1071,7 +1278,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 	board[i][j].resetObject(WarpBID,EmptyID,EmptyID);
                 	warpBPlaced = true;
                 }
-                // randomly place one door per map
+                // randomly place one door per mapPanel
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
                 {
                 	board[i][j].resetObject(GrassID,EmptyID,ExitID);
@@ -1092,7 +1299,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         }
         
         if(blinkOnExit) // show display
-        	((GridGUI) map).setVisible(true);
+        	((GridGUI) mapPanel).setVisible(true);
         
         if(fogOfWar)
         	setFog(true);
@@ -1107,7 +1314,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		
 		if(Trigger.getSource() == newItem)
 		{
-			int answer = printYesNoQuestion("Are you sure you want\nto start a new map?");
+			int answer = printYesNoQuestion("Are you sure you want\nto start a new mapPanel?");
 			if(answer==0)
 				newGame();
 		}
@@ -1125,7 +1332,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         else if(Trigger.getSource() == teleportItem)
         {
         	repositionPlayer(prowStart,pcolStart);
-        	((GridGUI) map).repositionScrollBarsToPlayer();
+        	((GridGUI) mapPanel).repositionScrollBarsToPlayer();
         	movePlayerVision();
         }
         else if(Trigger.getSource() == statsItem)
@@ -1138,7 +1345,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         	{
         		setFog(false);
         		fogOfWar = false;
-        		mappingEnabled = false; // mapping is useless without fog
+        		mappingEnabled = false; // mapPanelping is useless without fog
         		enableMappingItem.setEnabled(false);
         	}
         	else
@@ -1193,18 +1400,18 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			int tab = tabs.getSelectedIndex();
 			if(tab == 0)
 			{
-				map.requestFocus();
+				mapPanel.requestFocus();
 				klok.run(Clock.FOREVER);
 			}
 			else if(tab == 1)
 			{
 				klok.pause();
-				inventory.requestFocus();
+				inventoryPanel.requestFocus();
 			}
 			else if(tab == 2)
 			{
 				klok.pause();
-				combat.requestFocus();
+				combatPanel.requestFocus();
 			}
 			else if(tab == 3)
 			{
@@ -1227,25 +1434,86 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		// update the clock time on the JMenu
 		time.setText("Time: "+klok.currentTime);
 		
+		// update grid gui health bar
+		int hp = (int) (((double)characters.get(1).getCurrentHealth() / (double)characters.get(1).getMaxHealth()) * 100);
+		((GridGUI) mapPanel).updateHealthBar(hp);
 		return false;
 	}
 	
-	public synchronized void playSound(final String soundFile)
+	/**
+	 * Initializes the Sequencer to play MIDI files
+	 * This function throws an Exception
+	 */
+	public void initializeAudioStreams()
 	{
-		new Thread(new Runnable() {
-			public void run() {
-				try
-			    {
-			        Clip clip = AudioSystem.getClip();
-			        clip.open(AudioSystem.getAudioInputStream(new File(soundFile)));
-			        clip.start();
-			    }
-			    catch (Exception ex)
-			    {
-			        printError("Whoops!\nThere was a problem when trying to play "+soundFile+".\n\n"+ex.getMessage());
-			    }
-			}
-		}).start();
+		try
+		{
+			// music sequencer
+			musicStream = MidiSystem.getSequencer();
+			musicStream.open();
+			
+			// sound effect sequencer
+			soundStream = MidiSystem.getSequencer();
+			soundStream.open();
+		}
+		catch (MidiUnavailableException e)
+		{
+			// Unexpected Error
+			printError("Whoops!\n\n"+e.getMessage());
+		}
+	}
+	
+	/**
+	 * Plays the sound file using a Sequencer. It plays background music.
+	 * This function throws an Exception.
+	 * @param soundFile
+	 */
+	public void playMusic(final String soundFile, final boolean loop)
+	{
+		try
+		{
+			// set the loop
+			if(loop)
+				musicStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+			else
+				musicStream.setLoopCount(0);
+			
+			File sfx = new File(soundFile);
+			Sequence sfxSequence = MidiSystem.getSequence(sfx);
+			musicStream.setSequence(sfxSequence);
+			musicStream.start();
+		}
+		catch(Exception e)
+		{
+			printError("Whoops!\n\n"+e.getMessage());			
+		}
+	}
+	
+	/**
+	 * Plays the sound file using a Sequencer. It plays as a sound effect.
+	 * This function throws an Exception.
+	 * @param soundFile
+	 * @param loop
+	 */
+	public void playSound(final String soundFile, final boolean loop)
+	{
+		try
+		{
+			// set the loop
+			if(loop)
+				soundStream.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+			else
+				soundStream.setLoopCount(0);
+			
+			File sfx = new File(soundFile);
+			Sequence sfxSequence = MidiSystem.getSequence(sfx);
+			soundStream.setSequence(sfxSequence);
+			soundStream.start();
+		}
+		catch(Exception e)
+		{
+			printError("Whoops!\n\n"+e.getMessage());			
+		}
 	}
 	
 	/**
@@ -1285,18 +1553,18 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
 	
 	/**
-	 * Loads from file, the next map for this game.
+	 * Loads from file, the next mapPanel for this game.
 	 */
 	public void loadMap()
 	{
-    	// delete old map and make a new empty one
+    	// delete old mapPanel and make a new empty one
     	deleteGridObjects();
     	createGridObjects();
     	
-		// load a new map
+		// load a new mapPanel
 		randomizeBoard();
 		repositionPlayer(prowStart,pcolStart);
-		((GridGUI) map).repositionScrollBarsToPlayer();
+		((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 		movePlayerVision(); // for fog, if enabled
 		
 		// update the old quest status, if there was one
@@ -1312,6 +1580,370 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		addQuest(questsTotal,Hideout,"Find the Exit","Try to find the exit in this level.","Started");
 		
 		questsTotal++;
+	}
+	
+	public void initializeCombat() {
+		enemies = initializeEnemies(0);
+		actor = null;
+		event = null;
+		combatOver = false;
+		turnStack = new Stack<Entity>();
+		combatResult = 0;
+		combatants = new ArrayList<Entity>();
+		accumulatedExp = 0;
+		((CombatGUI) combatPanel).resetCombatGUI();
+
+		for (Entity c : characters) {
+			combatants.add(c);
+		}
+		for (Entity m : enemies) {
+			combatants.add(m);
+		}
+
+		// determine turn order
+		combatants = sortTurnOrderArray(combatants);
+
+		// populate turn stack for first round
+		for (Entity e : combatants) {
+			turnStack.push(e);
+		}
+
+		Entity a = turnStack.peek();
+
+		setupTurn(a, combatants);
+
+	}
+
+	public void setupTurn(Entity character, ArrayList<Entity> targets) {
+		if (!combatOver) {
+			((CombatGUI) combatPanel).targets.removeAllItems();
+			((CombatGUI) combatPanel).abilities.removeAllItems();
+
+			for (CombatObject obj : ((CombatGUI) combatPanel).objects) {
+				if (obj.entity.equals(character)) {
+					obj.setCurrentTurn(true);
+				} else {
+					obj.setCurrentTurn(false);
+				}
+			}
+
+			if (!character.isPlayer) {
+				monsterTurn(character);
+				((CombatGUI) combatPanel).viewStatusPanel();
+			}
+
+			for (Ability ability : character.abilities) {
+				((CombatGUI) combatPanel).abilities.addItem(ability.getName());
+			}
+			for (Entity target : targets) {
+				((CombatGUI) combatPanel).targets.addItem(target.getName());
+			}
+		}else{
+			((CombatGUI)combatPanel).update();
+			System.out.println("akdbnasdjknaskdjasd");
+			((CombatGUI)combatPanel).endCombat(combatResult, accumulatedExp);
+		}
+
+	}
+
+	public void endTurn() {
+		((CombatGUI) combatPanel).appendStatus(event);
+
+		// clean out dead combatants
+		characters = cleanCharacterList(characters);
+		enemies = cleanMonsterList(enemies);
+		combatants = mergeCombatantArrays(enemies, characters);
+
+		if (enemies.size() < 1) {
+			combatOver = true;
+			combatResult = 1;
+		}
+
+		if (characters.size() < 1) {
+			combatOver = true;
+			combatResult = -1;
+		}
+		// peek at next Entity in stack to make sure they are alive
+		if (!turnStack.empty() && !turnStack.peek().alive()) {
+			turnStack.pop();
+		}
+
+		// if stack is empty, refill it
+		if (turnStack.empty()) {
+			for (Entity e : combatants) {
+				turnStack.push(e);
+			}
+		}
+
+		((CombatGUI) combatPanel).update();
+	}
+
+	public void monsterTurn(Entity m) {
+
+		String action = m.monsterTurn();
+		if (action.equals("attack")) {
+			event = executeAttack(m, characters.get(0));
+		} else {
+			/**
+			 * event = executeAbility(m, 0, enemies, characters,
+			 * actor.abilities.get(0));
+			 **/
+		}
+
+		turnStack.pop();
+		endTurn();
+	}
+
+	public void playerTurn(String action, int target) {
+
+		actor = turnStack.pop();
+
+		// start character turn
+
+		// actions for character
+		if (action.equals("Attack")) {
+			event = executeAttack(actor, combatants.get(target));
+		}
+
+		else if (action.equals("Wait")) {
+			event = actor.getName() + " waits.";
+		}
+
+		else if (action.equals("Flee")) {
+			if (attemptToFlee()) {
+				event = "You fled successfully!";
+				combatOver = true;
+				combatResult = 0;
+			} else {
+				event = "Your attempt to flee failed!";
+			}
+		}
+
+		else {
+			Ability activeAbility = actor.getAbilityByName(action);
+			if (activeAbility.friendly()) {
+				event = executeAbility(actor,
+						((CombatGUI) combatPanel).targets.getSelectedIndex(),
+						enemies, characters, activeAbility);
+			} else {
+				event = executeAbility(actor,
+						((CombatGUI) combatPanel).targets.getSelectedIndex(),
+						enemies, characters, activeAbility);
+			}
+		}
+
+		endTurn();
+
+	}
+
+	public String executeAttack(Entity source, Entity target) {
+		int calculatedDamage = 0;
+		int attackVal = source.getAttack() + randomNumberGenerator.nextInt(6);
+		int defenseVal = target.getDefense() + randomNumberGenerator.nextInt(6);
+
+		calculatedDamage = attackVal - (defenseVal / 2);
+		if (calculatedDamage < 0) {
+			calculatedDamage = 0;
+		}
+
+		target.setCurrentHealth(target.getCurrentHealth() - calculatedDamage);
+		return (source.getName() + "'s attack hit " + target.getName()
+				+ " for " + calculatedDamage + " damage!");
+	}
+
+	/*
+	 * TYPE 0 -- damage 1 -- heal 2 -- statusmod
+	 * 
+	 * SCOPE 0 -- single target 1 -- splash
+	 */
+	public String executeAbility(Entity source, int targetID,
+			ArrayList<? extends Entity> enemies,
+			ArrayList<? extends Entity> allies, Ability ability) {
+
+		String result = null;
+
+		switch (ability.getType()) {
+
+		// damage ability
+		case 0:
+
+			// single target
+			if (ability.getScope() == 0) {
+				int calculatedDamage = 0;
+				int attackVal = source.getAttack()
+						+ randomNumberGenerator.nextInt(6);
+				int defenseVal = enemies.get(targetID).getDefense()
+						+ randomNumberGenerator.nextInt(6);
+
+				calculatedDamage = attackVal - (defenseVal / 2);
+				if (calculatedDamage < 0) {
+					calculatedDamage = 0;
+				}
+
+				enemies.get(targetID).setCurrentHealth(
+						enemies.get(targetID).getCurrentHealth()
+								- calculatedDamage);
+				result = (source.getName() + "'s " + ability.getName()
+						+ " hit " + enemies.get(targetID).getName() + " for "
+						+ calculatedDamage + " damage!");
+			}
+
+			// splash
+			else {
+
+				int avgDefense = 0;
+				// average enemies defense values
+				for (Entity e : enemies) {
+					avgDefense += e.getDefense();
+				}
+
+				avgDefense /= enemies.size();
+
+				int calculatedDamage = 0;
+				int attackVal = source.getAttack()
+						+ randomNumberGenerator.nextInt(6);
+				int defenseVal = avgDefense + randomNumberGenerator.nextInt(6);
+
+				calculatedDamage = attackVal - (defenseVal / 2);
+				if (calculatedDamage < 0) {
+					calculatedDamage = 0;
+				}
+
+				for (Entity e : enemies) {
+					e.setCurrentHealth(e.getCurrentHealth() - calculatedDamage);
+					result = (source.getName() + "'s " + ability.getName()
+							+ " hit all enemies for " + calculatedDamage + " damage!");
+				}
+			}
+
+			break;
+
+		// healing ability
+		case 1:
+			int amountHealed = source.getAttack()
+					+ randomNumberGenerator.nextInt(6);
+			combatants.get(targetID).setCurrentHealth(
+					combatants.get(targetID).getCurrentHealth() + amountHealed);
+			if (combatants.get(targetID).getCurrentHealth() > combatants.get(
+					targetID).getMaxHealth()) {
+				combatants.get(targetID).setCurrentHealth(
+						combatants.get(targetID).getMaxHealth());
+				return (combatants.get(targetID).getName()
+						+ " was fully healed by " + source.getName() + "'s "
+						+ ability.getName() + "!");
+			} else {
+				return (combatants.get(targetID).getName() + " was healed for "
+						+ amountHealed + " damage by " + source.getName()
+						+ "'s " + ability.getName() + "!");
+			}
+
+		}
+
+		return result;
+
+	}
+
+	public boolean attemptToFlee() {
+		boolean result;
+
+		int roll = randomNumberGenerator.nextInt(3);
+		if (roll == 2) {
+			result = true;
+		} else {
+			result = false;
+		}
+
+		return result;
+	}
+
+	// returns array of type Entity sorted by speed. Lowest speed is first.
+	public ArrayList<Entity> sortTurnOrderArray(ArrayList<Entity> combatants) {
+		Collections.sort(combatants);
+
+		return combatants;
+	}
+
+	public ArrayList<Entity> initializeEnemies(int zoneID) {
+		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
+		int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
+		Entity m;
+
+		for (int i = 1; i <= numberOfEnemies; i++) {
+			m = new Entity(LavaMonster, "Lava Monster", false, 10, 10, 10, 10,
+					1);
+			m.setExp(5);
+			Ability cure = new Ability("heal", 1, 0, 0);
+			m.abilities.add(cure);
+			m.setName(m.getName() + " " + i);
+			monsterArray.add(m);
+		}
+		return monsterArray;
+	}
+
+	public boolean endCombat(ArrayList<Entity> characters, int experience,
+			int result) {
+
+		boolean returnVal = false;
+		if (result == 0) {
+			// code to handle running away (nothing happens)
+			returnVal = true;
+		} else {
+			if (result == 1) {
+				for (Entity character : characters) {
+					character.setExp(character.getExp() + experience);
+					((CombatGUI) combatPanel).appendStatus(character.getName()
+							+ " has earned " + experience + " experience!");
+				}
+				returnVal = true;
+			} else {
+				returnVal = false;
+			}
+		}
+		//viewMapPanel();
+		return returnVal;
+	}
+
+	private ArrayList<Entity> cleanMonsterList(ArrayList<Entity> entities) {
+		ArrayList<Entity> newArray = new ArrayList<Entity>();
+
+		for (Entity e : entities) {
+			if (e.getCurrentHealth() > 0) {
+				newArray.add(e);
+			} else {
+				((CombatGUI) combatPanel).appendStatus(e.getName()
+						+ " was slain!");
+				accumulatedExp += e.getExp();
+			}
+		}
+		return newArray;
+	}
+
+	private ArrayList<Entity> cleanCharacterList(ArrayList<Entity> entities) {
+		ArrayList<Entity> newArray = new ArrayList<Entity>();
+
+		for (Entity e : entities) {
+			if (e.getCurrentHealth() > 0) {
+				newArray.add(e);
+			} else {
+				((CombatGUI) combatPanel).appendStatus(e.getName()
+						+ " was slain!");
+				newArray.add(e);
+			}
+		}
+		return newArray;
+	}
+
+	private ArrayList<Entity> mergeCombatantArrays(
+			ArrayList<? extends Entity> a, ArrayList<? extends Entity> b) {
+		ArrayList<Entity> newArray = new ArrayList<Entity>();
+		for (Entity e : a) {
+			newArray.add(e);
+		}
+		for (Entity e : b) {
+			newArray.add(e);
+		}
+
+		return newArray;
 	}
 	
 } // end of GameEngine

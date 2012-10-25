@@ -1,7 +1,10 @@
 package rpg;
 
 import java.util.ArrayList;
+
+import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -20,16 +23,16 @@ public class InventoryEngine implements ListSelectionListener{
 		
 	private InventoryGUI IG; // link to the InventoryGUI
 	
-	private ArrayList<String> itemsInBackpack; //characters inventory items
+	private JList<item> itemList = new JList<item>(); // list to hold values of items 
+	private ArrayList<item> itemsInBackpack; //characters inventory items
 	private String equipped; //evenually each character will have equipped, in need of Enitiy class
 	private ArrayList<String> charactersInParty; //character names
 	private int index = 0; //index of selected character
-
-	private JList<Object> items;
+	
 
 	public InventoryEngine(InventoryGUI tempGUI)
 	{
-		//link to inventoryGUI
+		//link to inventoryGUI 
 		IG = tempGUI; 
 		
 		//initialize array list of characters
@@ -42,24 +45,25 @@ public class InventoryEngine implements ListSelectionListener{
 		charactersInParty.add("eyes");
 		
 		//initialize array list of items
-		itemsInBackpack = new ArrayList<String>();
-		itemsInBackpack.add("scroll");
-		itemsInBackpack.add("paperClip");
-		itemsInBackpack.add("tent");
-		itemsInBackpack.add("rpg");
-		itemsInBackpack.add("hammer");
-		itemsInBackpack.add("shovel");
-		itemsInBackpack.add("revolver");
-		itemsInBackpack.add("hat");
-		itemsInBackpack.add("sword");
-		itemsInBackpack.add("egg");
-		itemsInBackpack.add("diamondPickaxe");
+		itemsInBackpack = new ArrayList<item>();
+		itemsInBackpack.add(new item("scroll", "A piece of paper that you can read"));
+		itemsInBackpack.add(new item("paperClip", "Hold paper, or scrolls together"));
+		itemsInBackpack.add(new item("tent", "Cover for you to sleep on your journey"));
+		itemsInBackpack.add(new item("rpg", "To blow shit up"));
+		itemsInBackpack.add(new item("hammer", "To smash rocks...."));
+		itemsInBackpack.add(new item("shovel","To dig to China....."));
+		itemsInBackpack.add(new item("revolver", "A clue to who murdered someone"));
+		itemsInBackpack.add(new item("hat","Goes on the head for stylish purposes"));
+		itemsInBackpack.add(new item("sword","When guns are not present"));
+		itemsInBackpack.add(new item("egg", "Breakfast food stolen from a nest you found"));		
+		itemsInBackpack.add(new item("diamondPickaxe","For mining blocks faster"));
+		
 		
 		//initailize the list
-		items = new JList<Object>(getItemArray());  //JList that displays the items
-        items.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        items.setSelectedIndex(0);
-        items.addListSelectionListener((ListSelectionListener) this);
+		itemList = new JList<item>(getItemArray());  //JList that displays the items
+        itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        itemList.setSelectedIndex(0);
+        itemList.addListSelectionListener((ListSelectionListener) this);
 		
 		
 	}
@@ -70,14 +74,17 @@ public class InventoryEngine implements ListSelectionListener{
 		return charactersInParty.get(index);
 	}
 	
-	//return the string of the item that is selected
-	public String getSelectedItem(int pIndex)
+//return the string of the item that is selected
+	public item getSelectedItem(int pIndex)
 	{
 		return itemsInBackpack.get(pIndex);
 	}
 	
-	//get the first item from the list
-	//public String getSelectedItem
+	//remember last selected item ( for now its just grabbing the first item!)
+	public item getInitialSelectedItem()
+	{
+		return itemsInBackpack.get(0);
+	}
 	
 	//Just one equipped item so far, until more of character entity equip options are defined
 	public void setEquipped(String pEquip)
@@ -94,13 +101,13 @@ public class InventoryEngine implements ListSelectionListener{
 	//return the string of the name of the item selected
 	public String getItemName()
 	{
-		return itemsInBackpack.get(items.getSelectedIndex());
+		return itemsInBackpack.get(itemList.getSelectedIndex()).getItemName();
 	}
 	
 	//return the string of the description of the item selected
 	public String getItemDescription()
 	{
-		return "description: this is a description";
+		return itemsInBackpack.get(itemList.getSelectedIndex()).getItemDescription();
 	}
 	
 	//navigates to the previous character selection
@@ -131,25 +138,24 @@ public class InventoryEngine implements ListSelectionListener{
 	}
 	
 	//returns the item list
-	public JList<Object> getItemList()
+	public JList<item> getItemList()
 	{
-		return this.items;
+		return this.itemList;
 	}
 	
 	//returns an array of the list
-	public String[] getItemArray()
+	public item[] getItemArray()
 	{
-		String[] array = itemsInBackpack.toArray(new String[itemsInBackpack.size()]);		
-		return array;
+		item[] array = new item[itemsInBackpack.size()];
+		itemsInBackpack.toArray(array);		
+		return array; 
 	}
 
 	@Override
 	public void valueChanged(ListSelectionEvent arg0) 
 	{
 		
-		JList list = (JList)arg0.getSource();
-        IG.updateBackpackLabel(getSelectedItem(list.getSelectedIndex()));
-		
+        IG.updateBackpackLabel(getSelectedItem(itemList.getSelectedIndex()));	
 		
 	}
 	
