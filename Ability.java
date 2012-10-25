@@ -1,5 +1,6 @@
 package rpg;
 
+
 public class Ability {
 	
 	private String name;

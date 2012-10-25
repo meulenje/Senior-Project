@@ -1,0 +1,16 @@
+name
+map number
+objective(s)
+previous level file name (NULL if First)
+next level file name (NULL if Last)
+showHintsEnabled
+fogEnabled
+mappingEnabled
+playerVisionRange
+percentChanceEncounter
+enemyGridSpeed
+grid size
+player start position
+terrain grid
+entity grid
+accessory grid

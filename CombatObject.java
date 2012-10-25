@@ -13,11 +13,12 @@ public class CombatObject extends JPanel implements ActionListener {
 
 	private GameEngine GE;
 	
-	protected Entity entity;
+	Entity entity;
 	private int objectWidth = 50;
 	private int objectHeight = 50;
 	
 	// gui parts
+	
 	private JLabel imageLabel;
 	protected JProgressBar healthBar;
 	private JLabel name;

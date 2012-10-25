@@ -38,8 +38,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
     private JPanel buttonPanel;
     private JScrollPane scrollPanel;
     private JProgressBar healthBar;
-    private JProgressBar magicBar;
-    private JProgressBar expBar;
     private JButton resetButton;
     private JButton upButton;
     private JButton downButton;
@@ -103,19 +101,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         healthBar.setBorderPainted(true);
         healthBar.setValue(50);
         
-        // magic bar for the player
-        magicBar = new JProgressBar(0);
-        magicBar.setForeground(Color.BLUE);
-        magicBar.setBackground(Color.WHITE);
-        magicBar.setBorderPainted(true);
-        magicBar.setValue(90);
-        
-        // experience bar for the player
-        expBar = new JProgressBar(0);
-        expBar.setForeground(Color.GREEN);
-        expBar.setBackground(Color.WHITE);
-        expBar.setBorderPainted(true);
-        expBar.setValue(50);
         
         // Build HP/Mag/Exp Bar Area
         statsPanel.add(nameField);
@@ -124,15 +109,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         statsPanel.add(hp);
         statsPanel.add(healthBar);
         statsPanel.add(new JLabel(""));
-        JLabel mag = new JLabel("Magic:", JLabel.RIGHT);
-        mag.setForeground(Color.BLUE);
-        statsPanel.add(mag);
-        statsPanel.add(magicBar);
         statsPanel.add(new JLabel(""));
-        JLabel exp = new JLabel("EXP:", JLabel.RIGHT);
-        exp.setForeground(Color.GREEN);
-        statsPanel.add(exp);
-        statsPanel.add(expBar);
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
+        statsPanel.add(new JLabel(""));
         
         // Build bag and journal shortcut buttons (inventory and quests)
         JPanel bagPanel = new JPanel();
@@ -228,6 +209,12 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	{
 		scrollPanel.getHorizontalScrollBar().setValue(y);
 		scrollPanel.getVerticalScrollBar().setValue(x);
+	}
+	
+	public void updateHealthBar(int value)
+	{
+		// update player health bar
+		healthBar.setValue(value);
 	}
 	
 	@Override
