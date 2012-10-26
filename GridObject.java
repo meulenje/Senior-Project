@@ -216,7 +216,7 @@ public class GridObject extends JLayeredPane {
     	}
     	else if(p == GE.SpiralID)
     	{
-    		entityImage=GE.Dirt;
+    		entityImage=GE.Spiral;
     	}
     	else if(p == GE.MushroomID)
     	{

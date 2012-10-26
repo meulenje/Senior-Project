@@ -89,6 +89,8 @@ public class MessageGUI extends JPanel implements KeyListener {
         	// shortcut to "Map Tab"
         	GE.viewMapPanel();
         }
+        else if(key == 27) // ESC to pause game
+			GE.pauseGame();
 	}
 
 	@Override

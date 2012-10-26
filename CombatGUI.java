@@ -516,6 +516,9 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		{
 			GE.right = true;
 		}
+		else if(key == 27) // ESC to pause game
+			GE.pauseGame();
+		
 		GE.keysPushed++;
 	}
 

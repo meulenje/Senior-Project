@@ -288,6 +288,9 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 			GE.right = true;
 			GE.movePlayer(0,1);
 		}
+		else if(key == 27) // ESC to pause game
+			GE.pauseGame();
+        
         GE.keysPushed++;
 	}
 

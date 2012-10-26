@@ -323,7 +323,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
         // show what time it is
         time = new JMenuItem("Time: X", JLabel.RIGHT);
-        time.setForeground(Color.BLUE);
+        time.setForeground(highlightColor);
                 
         menubar.add(fileMenu);
         menubar.add(optionsMenu);
@@ -379,7 +379,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // make a loading screen
         loadingScreen = new JPanel();
         loadingScreen.setLayout(new BorderLayout());
-        loadingScreen.setBackground(Color.BLACK);
+        loadingScreen.setBackground(backgroundColor);
         JLabel loadingText = new JLabel("", JLabel.CENTER);
         loadingText.setIcon(new ImageIcon("images/loading.gif"));
         loadingScreen.add(loadingText, BorderLayout.CENTER);
@@ -549,6 +549,36 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	{
 		// gracefully exit the entire game
 		System.exit(1);
+	}
+	
+	/**
+	 * Pauses the game to quickly resume playing.
+	 */
+	public void pauseGame()
+	{
+		// pauses the clock
+		klok.pause();
+		
+		// pauses Music
+		stopMusic();
+		
+		// show loading screen
+		tabs.setVisible(false);
+		loadingScreen.setVisible(true);
+		
+		// displays that the game is paused, click to resume
+		JOptionPane.showMessageDialog(window,"Game is paused.\nClick OK to resume playing.","Pause",JOptionPane.INFORMATION_MESSAGE);
+		
+		// resumes Music
+		startMusic();
+		
+		// hide loading screen
+		tabs.setVisible(true);
+		loadingScreen.setVisible(false);
+		
+		// resume clock ticking if they were viewing the Map
+		if(tabs.getSelectedIndex() == 0)
+			klok.run(Clock.FOREVER);
 	}
 
 	/**
@@ -908,6 +938,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		// did they stumble upon the exit door?
 		if(board[prow][pcol].isExit())
 		{
+			// add a fade over the grid
+			setGridFade(true);
+			
 			questsCompleted++;
 			
 			if(questsCompleted % 3 == 0) // every three wins, print stats
@@ -916,18 +949,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 				printInfo("Way to go! You're a Laker for a Lifetime!");
 			}
 			
-			int temp = printYesNoQuestion("Congrats! You found the exit!\n\nPlay again?");
+			printInfo("Congrats! You found the exit!");
 			
-			if(temp==0)
-			{
-				// start fresh again! Load a new mapPanel
-				loadMap();
-			}
-			else // 1 or -1
-			{
-				// they chose to quit
-				endGame();
-			}
+			// start new map
+			// replace with next level finder TODO
+			loadMap();
+			
+			setGridFade(false);
 		}
 		return;
 	}
@@ -1012,6 +1040,27 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			// keep track of how many
 			traps++;
 		}
+		// check for whirlwind
+		else if(i == SpiralID)
+		{
+			// sends the player to a random location on the map!
+			boolean playerWasWarped = false;
+			
+			while(!playerWasWarped)
+			{
+				Random r = new Random();
+				int x = r.nextInt(BROWS); // 0 to MAX row
+				int y = r.nextInt(BCOLS); // 0 to MAX column
+				
+				// make sure its a valid location. (empty!)
+				if(board[x][y].isEmptySpace())
+				{
+					repositionPlayer(x,y);
+					playerWasWarped = true;
+				}
+			}			
+		}
+		return;
 	}
 	
 	/**
@@ -1342,6 +1391,29 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
 	
 	/**
+	 * Makes all of the GridObjects appear hazy or dark.
+	 * 
+	 * This is not compatable with fogOfWar enabled.
+	 * @param onOff
+	 */
+	public void setGridFade(boolean onOff)
+	{
+		if(!fogOfWar)
+		{
+	        for (int i=0; i<BROWS; i++)
+	        {
+	            for (int j=0; j<BCOLS; j++)
+	            {
+	            	if(!onOff)
+	            		board[i][j].setFog(0);
+	            	else
+	            		board[i][j].setFog(FogCenterID);
+	            }
+	        }
+		}
+	}
+	
+	/**
 	 * Randomizes the current board with new images and ids
 	 * 
 	 * This function is for testing purposes only. Official game levels
@@ -1355,6 +1427,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         boolean doorPlaced = false;
         boolean warpAPlaced = false;
         boolean warpBPlaced = false;
+        boolean spiralPlaced = false;
         int temp;
         numOfMonsters = 0;
         
@@ -1365,7 +1438,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         {
             for (int j=0; j<BCOLS; j++)
             {
-            	// randomly place circles
                 temp = rand.nextInt(51) - 2; // random -2 to 48
                 
                 // randomly scatter "holes"
@@ -1406,6 +1478,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 {
                 	board[i][j].resetObject(GrassID,EmptyID,ExitID);
                 	doorPlaced = true;
+                }
+                // randomly place one spiral, if necessary
+                else if(!spiralPlaced && temp==23)
+                {
+                	board[i][j].resetObject(DirtID,SpiralID,EmptyID);
+                	spiralPlaced = true;
                 }
                 else
                 {
@@ -1758,7 +1836,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		// update the old quest status, if there was one
 		if(questsCompleted!=0)
 		{
-			updateQuestStatus(questsTotal-1, "Complete!", Color.BLUE);
+			updateQuestStatus(questsTotal-1, "Complete!", highlightColor);
 		}
 		
 		// reset level statistics
