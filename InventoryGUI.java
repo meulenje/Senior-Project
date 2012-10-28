@@ -12,15 +12,11 @@ import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 /**
  * Inventory GUI class
@@ -42,15 +38,17 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	
 	//gui components:
 	
-	private JPanel characterPanel; //panel for character selection
-	private JPanel statsPanel; //panel for character stats
+	private JPanel centerPanel; //panel to group everything but character selector
+	private JPanel rightCenterPanel; //panel to group paper doll and item display	
+	private JPanel statsPanel; //panel for character stats, goes in character selector
+	private JPanel itemDisplay; //panel for displaying item
+	private JPanel paperDollPanel; //panel for characters equipped items 
 	
-	//SplitPane of: items in your backpack, and the items' description
-	private JSplitPane inventorySplitPane;
+	//SplitPane of: items in your backpack, and equipped items of selected character
 	private JScrollPane itemScrollPane;
-	private JScrollPane descriptionScrollPane;
 	
-	//toolbar for selecting character
+	
+	//toolbar for selecting character, also displays hp, magic, exp...
 	private JToolBar toolBar;
 	 
 	//toolbar components
@@ -75,67 +73,73 @@ public class InventoryGUI extends JPanel implements ActionListener {
     	GE = tempEngine;
     	
     	// The inventory panel
-    	this.setLayout(new GridLayout(4,0));  
+    	this.setLayout(new BorderLayout());  
     	this.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM )); //set to default grid engine panel size
     	this.setBackground(Color.GRAY);
     	
     	//==========================
-    	//character selection part
+    	//character selection 
     	//==========================
     	
     	//make the toolbar
         toolBar = new JToolBar();
         // Todo: set toolbar not draggable
-        makeToolbar(toolBar);                      
+        makeToolbar(toolBar);       
+        
+      //==================
+        //item description 
+        //==================
+        itemDisplay = new JPanel();        
+        itemPicture = new JLabel(); 
+        itemDisplay.add(itemPicture);
                
         //==================
-        //inventory part
+        //item inventory list
         //==================
         
-        itemScrollPane = new JScrollPane(IE.getItemList()); // add the items to the JScrollPane
-        
-        itemPicture = new JLabel(); //picture of the item selected
-        itemPicture.setFont(itemPicture.getFont().deriveFont(Font.BOLD));
-        itemPicture.setHorizontalAlignment(JLabel.CENTER);
-        itemPicture.setVerticalTextPosition(JLabel.BOTTOM);
-        itemPicture.setHorizontalTextPosition(JLabel.CENTER);
-        itemPicture.setIconTextGap(35);
-                
-        descriptionScrollPane = new JScrollPane(itemPicture); //Description of item area
-
-        //Create a split pane with the two scroll panes in it.
-        inventorySplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                   itemScrollPane, descriptionScrollPane);
-        inventorySplitPane.setOneTouchExpandable(true);
-        inventorySplitPane.setDividerLocation(150);
-               
-
-        //Provide minimum sizes for the two components in the split pane.
-        Dimension minimumSize = new Dimension(200, 300);
-        descriptionScrollPane.setMinimumSize(minimumSize);
-        descriptionScrollPane.setMinimumSize(minimumSize);
-        inventorySplitPane.setResizeWeight(1.0);
-
-        //Provide a preferred size for the split pane.
-        inventorySplitPane.setPreferredSize(new Dimension(200, 200));
+        itemScrollPane = new JScrollPane(IE.getItemList()); // add the items to the JScrollPane           
         updateBackpackLabel(IE.getInitialSelectedItem());// this just selects the first item from the list
 
+        //==================
+        //
+        //==================
         
-        //Add components to the inventory panel
-        this.add(toolBar);
-        this.add(inventorySplitPane);
+        paperDollPanel = new JPanel();      
+        centerPanel = new JPanel();
+        centerPanel.setLayout(new BorderLayout());        
+        rightCenterPanel = new JPanel();
+        rightCenterPanel.setLayout(new BorderLayout());
+        
+        //group together
+        centerPanel.add(itemScrollPane, BorderLayout.WEST); 
+        centerPanel.add(rightCenterPanel, BorderLayout.CENTER);
+        rightCenterPanel.add(paperDollPanel,BorderLayout.CENTER);
+        rightCenterPanel.add(itemDisplay, BorderLayout.NORTH);
+        
+               
+        // apply sizing to components
+	    toolBar.setPreferredSize(new Dimension(600,50));
+        paperDollPanel.setPreferredSize(new Dimension(300,300));
+        itemDisplay.setPreferredSize(new Dimension(600,50));
+        itemScrollPane.setPreferredSize(new Dimension(200,200));   
+        
+        //Add components to the inventory panel    
+                
+        this.add(toolBar, BorderLayout.NORTH);         
+        
+      	this.add(centerPanel, BorderLayout.CENTER);
+           
         
         // TODO add the stats bar and abilities of character using the stats panel and character panel        
-        
-    	
+            	
     }
+	
 	//make the navigation toolbar
 	protected void makeToolbar(JToolBar toolBar) 
 	{         	      
 		//toolbar properties
-	    toolBar.setLayout(new BorderLayout());
-	    toolBar.setPreferredSize(new Dimension(100,100));
-	   	   	    
+	    toolBar.setLayout(new GridLayout(0,4));
+	   	
         //make the button to select previous character.
         previousCharacterButton = makeButton("Previous",PREVIOUS, "Previous Character", "Previous");       
         
@@ -148,8 +152,6 @@ public class InventoryGUI extends JPanel implements ActionListener {
         nextCharacterButton = makeButton("Next", NEXT, "Next Character", "Next");
         
         //make the stats area
-        
-        //JLabels for stats
         JLabel healthLabel = new JLabel("HP:"); // health
         healthLabel.setForeground(Color.RED);
         JLabel expLabel = new JLabel("EXP:"); // experience
@@ -160,47 +162,40 @@ public class InventoryGUI extends JPanel implements ActionListener {
         // health bar for the player
         healthBar = new JProgressBar(0);
         healthBar.setForeground(Color.RED);
+        healthBar.setSize(new Dimension(15,25));
         healthBar.setBorderPainted(true);       
         healthBar.setValue(100); // just making it an arbitrary value
        
         // magic bar for the player
         magicBar = new JProgressBar(0);
         magicBar.setForeground(Color.BLUE);
+        magicBar.setPreferredSize(new Dimension(15,25));
         magicBar.setBorderPainted(true);
         magicBar.setValue(65);
        
         // experience bar for the player
         expBar = new JProgressBar(0);
         expBar.setForeground(Color.GREEN);
+        magicBar.setPreferredSize(new Dimension(15,25));
         expBar.setBorderPainted(true);
-        expBar.setValue(15);
+        expBar.setValue(95);
 
       
-        // Build Health Bar Area
-        characterPanel = new JPanel(new GridLayout(0,5));
-        statsPanel= new JPanel(new BorderLayout());
-        statsPanel.add(healthLabel, BorderLayout.CENTER);
-        statsPanel.add(healthBar, BorderLayout.CENTER);
-        statsPanel.add(new JLabel(""));
+        //add components to stats panel
+        statsPanel = new JPanel(new GridLayout(3,2));
+        statsPanel.setPreferredSize(new Dimension(45,75));
+        statsPanel.add(healthLabel);
+        statsPanel.add(healthBar);
         statsPanel.add(magicLabel);
-        statsPanel.add(magicBar);
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(expLabel, BorderLayout.CENTER);
-        statsPanel.add(expBar, BorderLayout.CENTER);                 
-        statsPanel.setPreferredSize(new Dimension(35,35));
-        statsPanel.setBackground(Color.BLACK);
-
+        statsPanel.add(magicBar); 
+        statsPanel.add(expLabel);
+        statsPanel.add(expBar);
         
         //add components to toolbar
-        toolBar.add(characterName, BorderLayout.NORTH);
-        toolBar.add(previousCharacterButton, BorderLayout.WEST);
-        toolBar.add(nextCharacterButton, BorderLayout.EAST);
-        toolBar.add(characterPicture, BorderLayout.SOUTH);
-//        toolBar.add(characterPanel, BorderLayout.SOUTH);
-//        characterPanel.add(previousCharacterButton);  
-//        characterPanel.add(statsPanel);
-//        characterPanel.add(characterPicture);
-//        characterPanel.add(nextCharacterButton);
+        toolBar.add(previousCharacterButton);        
+        toolBar.add(characterPicture);
+        toolBar.add(statsPanel);
+        toolBar.add(nextCharacterButton);        
         
     }
     // method to make buttons
@@ -256,10 +251,11 @@ public class InventoryGUI extends JPanel implements ActionListener {
     {
     	characterName.setEditable(false);
     	characterName.setHorizontalAlignment(JTextField.CENTER);      	
-    	characterName.setText(name);    
+    	characterName.setText(name);
     	//characterName.setFont(itemPicture.getFont().deriveFont(Font.BOLD));
     	ImageIcon icon = createImageIcon (name + ".png");
     	characterPicture.setIcon(icon);
+    	characterPicture.setText(name);
     	if  (icon != null) {
             
         } else {

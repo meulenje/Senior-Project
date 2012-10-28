@@ -2,9 +2,7 @@ package rpg;
 
 import java.util.ArrayList;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JList;
-import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -27,7 +25,7 @@ public class InventoryEngine implements ListSelectionListener{
 	private ArrayList<item> itemsInBackpack; //characters inventory items
 	private String equipped; //evenually each character will have equipped, in need of Enitiy class
 	private ArrayList<String> charactersInParty; //character names
-	private int index = 0; //index of selected character
+	private int index = 0; //index to track selected character
 	
 
 	public InventoryEngine(InventoryGUI tempGUI)
