@@ -1,4 +1,4 @@
-package rpg;
+
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -67,7 +67,6 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 	JButton[] buildingButtons;
 	JButton[] editButtons;
 
-
 	ImageIcon selected;
 
 	boolean mousePressed = false;
@@ -81,7 +80,11 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 	/* Edit Images */
 	protected ImageIcon editEraser = new ImageIcon("images/editEraser.png");
 	protected ImageIcon editSelect = new ImageIcon("images/editSelect.png");
-
+	protected ImageIcon editNewIcon = new ImageIcon("images/editNewIcon.png");
+	
+	protected ImageIcon temp = new ImageIcon();
+	protected ImageIcon temp2 = new ImageIcon();
+	
 	/* Background Images */
 	protected ImageIcon dirt = new ImageIcon("images/Dirt.png");
 	protected ImageIcon grey = new ImageIcon("images/Grey.png");
@@ -93,7 +96,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 	protected ImageIcon water = new ImageIcon("images/Water.gif");
 	protected ImageIcon xSpace = new ImageIcon("images/XSpace.png");
 	protected ImageIcon voidSpace = new ImageIcon("images/VoidSpace.png");
-	
+
 	/*Foreground Images */
 	protected ImageIcon gem = new ImageIcon("images/Gem.gif");
 	protected ImageIcon hole = new ImageIcon("images/Hole.png");
@@ -118,7 +121,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 	protected ImageIcon spike = new ImageIcon("images/Spike.png");
 	protected ImageIcon spiral = new ImageIcon("images/Spiral.gif");
 	protected ImageIcon tree = new ImageIcon("images/Tree.png");
-	
+
 	/* Top Images */
 	protected ImageIcon tallGrass = new ImageIcon("images/TallGrass.png");
 	protected ImageIcon hideout = new ImageIcon("images/Hideout.png");
@@ -155,7 +158,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 
 		frame.setJMenuBar(menubar);
 		mapPanel = new JPanel();
-		/* TODO ENTRY? 
+
 		mapPanel.setLayout(new GridLayout(20,20));
 		mapLayer = new JLayeredPane[20][20];
 		map = new JLabel[20][20];
@@ -164,13 +167,13 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 
 		for (int i = 0; i < mapLayer.length; i++){
 			for (int j = 0; j < mapLayer[0].length; j++){
-				
+
 				// Top level
 				map[i][j] = new JLabel(blank);
-				
+
 				// Main level
 				map2[i][j] = new JLabel(blank);
-				
+
 				// Ground Level
 				map3[i][j] = new JLabel(dirt);
 
@@ -196,14 +199,15 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 				mapPanel.add(mapLayer[i][j]);
 
 			}
-		}*/
+		}
 
 		editPanel = new JPanel();
 		editPanel.setLayout(new GridLayout(5, 1));
 
-		editButtons = new JButton[2];
+		editButtons = new JButton[3];
 		editButtons[0] = new JButton(editEraser);
 		editButtons[1] = new JButton(editSelect);
+		editButtons[2] = new JButton(editNewIcon);
 
 		for (int i = 0; i < editButtons.length; i++){
 			editButtons[i].addActionListener(this);
@@ -232,7 +236,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 		topButtons[3] = new JButton(table);
 		topButtons[4] = new JButton(bookcase);
 		topButtons[5] = new JButton(whiteboard);
-		
+
 		for (int i = 0; i < otherButtons.length; i++){
 			otherButtons[i].addActionListener(this);
 			otherPanel.add(otherButtons[i]);
@@ -274,10 +278,10 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 
 		buildingButtons[4] = new JButton(verticalLeftWall);
 		buildingButtons[5] = new JButton(verticalRightWall);
-		
+
 		buildingButtons[6] = new JButton(horizontalTopWall);
 		buildingButtons[7] = new JButton(horizontalBottomWall);
-		
+
 		buildingButtons[8] = new JButton(door1);
 		buildingButtons[9] = new JButton(door2);
 
@@ -341,13 +345,43 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 							mapLayer[i][j].add(map3[i][j], JLayeredPane.DEFAULT_LAYER, layerNum); //, new Integer(layerNum), 0);
 						}
 					}
+				}else if ((e.getSource() == map[i][j]) && (!mousePressed) && (selected != null)){
+					
+
+					if (layerNum == 0){
+						temp = (ImageIcon) map[i][j].getIcon();
+						map[i][j].setIcon(selected);
+					}else if (layerNum == 1){
+						temp = (ImageIcon) map2[i][j].getIcon();
+						map2[i][j].setIcon(selected);
+					}else if (layerNum == 2){
+						temp = (ImageIcon) map3[i][j].getIcon();
+						map3[i][j].setIcon(selected);
+					}
+
 				}
+
 			}
 		}
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
+		for (int i = 0; i < map.length; i++){
+			for (int j = 0; j < map[0].length; j++){
+				if ((e.getSource() == map[i][j]) && (mousePressed == false) && (selected != null)){
+					
+					if (layerNum == 0){
+						map[i][j].setIcon(temp);
+					}else if (layerNum == 1){
+						map2[i][j].setIcon(temp);
+					}else if (layerNum == 2){
+						map3[i][j].setIcon(temp);
+					}
+
+				}
+			}
+		}
 	}
 
 	@Override
@@ -404,7 +438,22 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 							mapLayer[i][j].add(map3[i][j], JLayeredPane.DEFAULT_LAYER, layerNum); //, new Integer(layerNum), 0);
 						}
 					}
+				}else if ((e.getSource() == map[i][j]) && (!mousePressed) && (selected != null)){
+					
+
+					if (layerNum == 0){
+						temp = (ImageIcon) map[i][j].getIcon();
+						map[i][j].setIcon(selected);
+					}else if (layerNum == 1){
+						temp = (ImageIcon) map2[i][j].getIcon();
+						map2[i][j].setIcon(selected);
+					}else if (layerNum == 2){
+						temp = (ImageIcon) map3[i][j].getIcon();
+						map3[i][j].setIcon(selected);
+					}
+
 				}
+
 			}
 		}
 	}
@@ -426,68 +475,27 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 		if (e.getSource() == quit){
 			System.exit(0);
 		}else if (e.getSource() == newMap){
-			mapPanel.setLayout(new GridLayout(20,20));
-			mapLayer = new JLayeredPane[20][20];
-			map = new JLabel[20][20];
-			map2 = new JLabel[20][20];
-			map3 = new JLabel[20][20];
 
-			for (int i = 0; i < mapLayer.length; i++){
-				for (int j = 0; j < mapLayer[0].length; j++){
-					
-					// Top level
-					map[i][j] = new JLabel(blank);
-					
-					// Main level
-					map2[i][j] = new JLabel(blank);
-					
-					// Ground Level
-					map3[i][j] = new JLabel(dirt);
-
-					map[i][j].addMouseListener(this);
-					map[i][j].addMouseMotionListener(this);
-					map[i][j].setBounds(0,0,dirt.getIconWidth(),dirt.getIconHeight());
-					map2[i][j].addMouseListener(this);
-					map2[i][j].addMouseMotionListener(this);
-					map2[i][j].setBounds(0,0,dirt.getIconWidth(),dirt.getIconHeight());
-					map3[i][j].addMouseListener(this);
-					map3[i][j].addMouseMotionListener(this);
-					map3[i][j].setBounds(0,0,dirt.getIconWidth(),dirt.getIconHeight());
-
-					mapLayer[i][j] = new JLayeredPane();
-					mapLayer[i][j].setPreferredSize(new Dimension(25,25));
-					mapLayer[i][j].addMouseListener(this);
-					mapLayer[i][j].addMouseMotionListener(this);
-					mapLayer[i][j].add(map[i][j],JLayeredPane.DEFAULT_LAYER, 0);
-					mapLayer[i][j].add(map2[i][j],JLayeredPane.DEFAULT_LAYER, 1);
-					mapLayer[i][j].add(map3[i][j],JLayeredPane.DEFAULT_LAYER, 2);
-					mapLayer[i][j].setBounds(0, 0, 25, 25);
-
-					mapPanel.add(mapLayer[i][j]);
-					frame.pack();
-					frame.setSize(600,600);
-				}
-			}
 		}else if (e.getSource() == load){  /* TODO File select */
 			try {
-				
+
 				FileInputStream fstream = new FileInputStream("save.txt");
 				DataInputStream in = new DataInputStream(fstream);
 				BufferedReader br = new BufferedReader(new InputStreamReader(in));
 				String strLine = br.readLine();
 				String[] mapSize = strLine.split(" ");							// Acquires number of rows and columns
-				
-				
-				
+
+
+
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			
+
 		}else if (e.getSource() == save){
-		
-			
+
+
 			/* SAVE FORMAT
 			 * Rows Columns  				Grid Size
 			 * pic pic pic					Top Level Grid
@@ -504,23 +512,23 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 			 * 
 			 * 
 			 */
-			
-			
+
+
 			f = new File("save.txt");	/* TODO Ask user file name */
-			
+
 			if (!f.exists()){
 				try {
 					f.createNewFile();
 				} catch (IOException e1) {}
 			}
-			
+
 			try {
 				FileWriter fstream = new FileWriter(f.getName());
 				BufferedWriter out = new BufferedWriter(fstream);
 				String temp = map.length + " " + map[0].length;
 				out.write(temp + "\n");
 				temp = "";
-				
+
 				for (int i = 0; i < map.length; i++){
 					for (int j = 0; j < map[i].length; j++){
 						temp += map[i][j].getIcon() + " ";
@@ -530,7 +538,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 					temp = "";
 				}
 				out.write("\n");
-				
+
 				for (int i = 0; i < map2.length; i++){
 					for (int j = 0; j < map2[i].length; j++){
 						temp += map2[i][j].getIcon() + " ";
@@ -540,7 +548,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 					temp = "";
 				}
 				out.write("\n");
-				
+
 				for (int i = 0; i < map3.length; i++){
 					for (int j = 0; j < map3[i].length; j++){
 						temp += map3[i][j].getIcon() + " ";
@@ -550,20 +558,24 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 					temp = "";
 				}
 				out.write("\n");
-				
-				
+
+
 				out.close();
-				
+
 			} catch (IOException e1) {}
-			
-			
-			
-		}else if (e.getSource() == editButtons[0]){
+
+
+
+		}else if (e.getSource() == editButtons[0]){	// Eraser
 			selected = dirt;
 			layerNum = 10;
-		}else if (e.getSource() == editButtons[1]){
+		}else if (e.getSource() == editButtons[1]){	// Select Tool
 			selected = null;
-		}else{
+
+		}else if (e.getSource() == editButtons[2]){ // New Icon
+			
+		}
+		else{
 
 
 			for (int i = 0; i < groundButtons.length; i++){
