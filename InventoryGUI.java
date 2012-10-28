@@ -98,7 +98,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
         //==================
         
         itemScrollPane = new JScrollPane(IE.getItemList()); // add the items to the JScrollPane           
-        updateBackpackLabel(IE.getInitialSelectedItem());// this just selects the first item from the list
+        updateBackpackLabel(IE.getSelectedItem(0));// this just selects the first item from the list
 
         //==================
         //
@@ -146,7 +146,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
         //Make a label to hold the picture of the character
         characterPicture = new JLabel(null,null, JLabel.CENTER);
         characterPicture.setPreferredSize(new Dimension(50,50));        
-        updateCharacterLabel(IE.getSelectedCharacter());
+        updateCharacterLabel(GE.getSelectedCharacter());
   
         //make button to select next character
         nextCharacterButton = makeButton("Next", NEXT, "Next Character", "Next");
@@ -237,9 +237,9 @@ public class InventoryGUI extends JPanel implements ActionListener {
     //Brings up the selected image
     protected void updateBackpackLabel (item item) 
     {
-        ImageIcon icon = createImageIcon( item.getItemName() + ".png");
+        ImageIcon icon = item.getItemIcon();
         itemPicture.setIcon(icon);
-        itemPicture.setText(IE.getItemDescription());
+        itemPicture.setText(item.getItemDescription());
         if  (icon != null) {
                        
         } else {
@@ -247,15 +247,14 @@ public class InventoryGUI extends JPanel implements ActionListener {
         }
     }
 	// Label that shows the item name
-    protected void updateCharacterLabel (String name)
+    protected void updateCharacterLabel (Entity entity)
     {
     	characterName.setEditable(false);
     	characterName.setHorizontalAlignment(JTextField.CENTER);      	
-    	characterName.setText(name);
-    	//characterName.setFont(itemPicture.getFont().deriveFont(Font.BOLD));
-    	ImageIcon icon = createImageIcon (name + ".png");
+    	characterName.setText(entity.getName());
+    	ImageIcon icon = entity.getImage();
     	characterPicture.setIcon(icon);
-    	characterPicture.setText(name);
+    	//characterPicture.setText(name);
     	if  (icon != null) {
             
         } else {
@@ -265,16 +264,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
 
       
     /** Returns an ImageIcon, or null if the path was invalid. */
-    protected ImageIcon createImageIcon(String path) 
-    {
-       URL imgURL = InventoryGUI.class.getResource(path);
-        if (imgURL != null) {        	
-            return new ImageIcon(imgURL);
-        } else {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-    }
+    
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) 
@@ -283,14 +273,14 @@ public class InventoryGUI extends JPanel implements ActionListener {
 		
 		if(PREVIOUS.equals(cmd))
 		{
-			IE.navigateCharacter("previous");
-			updateCharacterLabel(IE.getSelectedCharacter());
+			GE.navigateCharacter("previous");
+			updateCharacterLabel(GE.getSelectedCharacter());
 		}
 		
 		if(NEXT.equals(cmd))
 		{
-			IE.navigateCharacter("next");
-			updateCharacterLabel(IE.getSelectedCharacter());
+			GE.navigateCharacter("next");
+			updateCharacterLabel(GE.getSelectedCharacter());
 		}
 			
 		

@@ -7,12 +7,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
+
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,6 +28,8 @@ import java.util.Random;
 import java.util.Stack;
 import javax.sound.midi.*;
 import javax.swing.JFrame;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  * Game Engine class
@@ -35,7 +40,7 @@ import javax.swing.JFrame;
  * @version 10/11/2012
  *
  */
-public class GameEngine implements ActionListener, FocusListener, ClockListener {
+public class GameEngine implements ActionListener, FocusListener, ClockListener, ListSelectionListener {
 	
 	
 	// Game Engine specific variables
@@ -44,8 +49,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected final int Y_DIM = 600;
 	protected final int C_WIDTH = 25; // object image size
 	protected final int C_HEIGHT = 25; // object image size
-    protected GridObject[][] board; // the maximum board size
-    protected ArrayList<QuestGUI> quests; // list of quest messages
+    protected GridObject[][] board; // the maximum board size     
     protected Clock klok; // a timer to control other settings
     protected Sequencer musicStream; // a sequencer to play background music
     protected Sequencer soundStream; // a sequencer to play sound effects
@@ -231,12 +235,42 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	ArrayList<Entity> combatants;
 	ArrayList<Entity> characters;
 	//end combatPanel engine fields
+	
+	//InventoryGUI variables 
+	private JList<item> itemList = new JList<item>(); // list to h
+	private ArrayList<item> itemsInBackpack; //array inventory items
+	
+	private int index = 0; //index to track selected character
+	
+	
+	//Quest GUI variables
+	protected ArrayList<QuestGUI> quests; // list of quest messages  
     
     /**
      * Constructor for GameEngine
      */
     public GameEngine()
     {            
+    	//inventoryPanel 
+    	//initialize array list of items
+		itemsInBackpack = new ArrayList<item>();
+		itemsInBackpack.add(new item("Book", "Something to read"));
+		itemsInBackpack.add(new item("Gem", "A gem"));
+		itemsInBackpack.add(new item("Beartrap", "Used to break ankles"));
+		itemsInBackpack.add(new item("Bag", "Open to view items"));
+		itemsInBackpack.add(new item("Chair", "Sit on"));
+		itemsInBackpack.add(new item("Rock","Throw at pirates"));
+		itemsInBackpack.add(new item("Spike", "Ouch"));
+		itemsInBackpack.add(new item("WhiteBoard","Write on me"));
+		itemsInBackpack.add(new item("Creature", "Bad dude"));
+		itemsInBackpack.add(new item("BookCase", "Holds your books for you"));		
+		itemsInBackpack.add(new item("Door1", "Open and walk through"));
+				
+		//initailize the list
+		itemList = new JList<item>(getItemArray());  //JList that displays the items
+        itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        itemList.setSelectedIndex(0);
+        itemList.addListSelectionListener((ListSelectionListener) this);
     	
     	//combatPanel constructor
     	characters = new ArrayList<Entity>();
@@ -349,8 +383,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
         // --------------------------------------------------------
         // create the InventoryGUI inventoryPanel panel
-        inventoryPanel = new JPanel();
-        inventoryPanel.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
+        inventoryPanel = new InventoryGUI(this);
         // --------------------------------------------------------
         
         // --------------------------------------------------------
@@ -2220,6 +2253,70 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
 		return newArray;
 	}
+
 	
+	//inventory GUI methods
+	@Override
+	public void valueChanged(ListSelectionEvent arg0) 
+	{
+		
+        ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem(itemList.getSelectedIndex()));	
+		
+	}
+	
+	//return the string of the character that is selected
+		public Entity getSelectedCharacter()
+		{
+			return characters.get(index);
+		}
+		
+	//return the string of the item that is selected
+		public item getSelectedItem(int pIndex)
+		{
+			return itemsInBackpack.get(pIndex);
+		}
+					
+		//navigates to the previous character selection
+		public void  navigateCharacter(String pNav)
+		{ 	
+			int size = characters.size(); 
+			//if navigating to previous character
+			if(pNav == "previous")
+			{			
+				index -= 1;
+				//if trying to navigate before first character, go to end
+				if(index < 0)
+				{
+					index = size-1;
+				}
+			}
+			//if navigating to next character
+			if(pNav == "next")
+			{
+				index += 1;
+				//if no more characters in list, go to beginning 
+				if(index >= size)
+				{
+					index = 0;
+				}
+			}
+				
+		}
+		
+		//returns the item list
+		public JList<item> getItemList()
+		{
+			return this.itemList;
+		}
+		
+		//returns an array of the list
+		public item[] getItemArray()
+		{
+			item[] array = new item[itemsInBackpack.size()];
+			itemsInBackpack.toArray(array);		
+			return array; 
+		}
+
+			
 } // end of GameEngine
 // --------------------
