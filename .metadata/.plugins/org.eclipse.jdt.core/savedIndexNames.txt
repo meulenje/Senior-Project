@@ -1,1 +1,0 @@
-INDEX VERSION 1.126+C:\Users\Mistuh Marvin\workspace\git\.metadata\.plugins\org.eclipse.jdt.core
