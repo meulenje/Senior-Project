@@ -41,8 +41,8 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		JPanel imagePanel = new JPanel(new BorderLayout());
 		imagePanel.setPreferredSize(new Dimension(GE.Y_DIM - 10,400));
 		imagePanel.setBackground(GE.foregroundColor);
-		JLabel titleText = new JLabel("Game Logo Here", JLabel.CENTER);
-		titleText.setIcon(GE.PlayerOutline);
+		JLabel titleText = new JLabel("", JLabel.CENTER);
+		titleText.setIcon(GE.RPGLogo);
 		imagePanel.add(titleText, BorderLayout.CENTER);
 		this.add(imagePanel, BorderLayout.NORTH);
 		
