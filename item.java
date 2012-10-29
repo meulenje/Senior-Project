@@ -1,5 +1,7 @@
 package rpg;
 
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 
 public class item {
@@ -8,7 +10,7 @@ public class item {
 	private String name; //name of item
 	private String description; //description of item
 	private boolean consumable; // if it is used, does it get thrown out
-	ImageIcon picture;  
+	ImageIcon icon; // the picture of the item  
 	
 	//default constructor
 	public item()
@@ -27,16 +29,17 @@ public class item {
 	{
 		this.name = pName;
 		this.description = pDescription;
+		this.icon = createImageIcon("images/"+pName+".png");
 	}
 	
 	//constructor to initialize item id, and whether it is consumable
-	public item(int pId, String pName, String pDes, boolean pCon, ImageIcon pPic)
+	public item(int pId, String pName, String pDes, boolean pCon)
 	{
 		this.id = pId;
 		this.name = pName;
 		this.description = pDes;
 		this.consumable = pCon;
-		this.picture = pPic; 
+		this.icon = createImageIcon("images/"+pName+".png"); 
 		
 	}
 	
@@ -58,23 +61,38 @@ public class item {
 		return this.description;
 	}
 	
+	//get the item picture icon
+	public ImageIcon getItemIcon()
+	{
+		return this.icon;
+	}
+	
 	//set item name
-	private void setItemName(String pName)
+	public void setItemName(String pName)
 	{
 		this.name = pName;
 	}
 	//set item id
-	private void setItemId(int pId)
+	public void setItemId(int pId)
 	{
 		this.id = pId;
 	}
-	
+		
 	//returns item String information
 	public String toString()
 	{
 		return name;
 	}
 	
+	protected ImageIcon createImageIcon(String path) 
+    {       
+        if (path != null) {        	
+            return new ImageIcon(path);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+    }
 
 }
 
