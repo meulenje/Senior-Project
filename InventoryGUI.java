@@ -9,6 +9,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+
+import javax.swing.BoundedRangeModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -33,7 +35,6 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private InventoryEngine IE;// link to inventory engine
 	private GameEngine GE; // link back to game engine
 	
 	//gui components:
@@ -62,14 +63,14 @@ public class InventoryGUI extends JPanel implements ActionListener {
     private JProgressBar healthBar; 
     private JProgressBar magicBar;
     private JProgressBar expBar;
+    private BoundedRangeModel healthBarModel;  //enables flexibility of health progress bar
+    private BoundedRangeModel magicBarModel; 
+    private BoundedRangeModel expBarModel; 
     
     //The IventoryGUI panel
 	public InventoryGUI(GameEngine tempEngine)
     {
-		// link to inventory engine
-		IE = new InventoryEngine(this);
-		
-    	// link back to JFrame
+		// link back to JFrame
     	GE = tempEngine;
     	
     	// The inventory panel
@@ -97,8 +98,9 @@ public class InventoryGUI extends JPanel implements ActionListener {
         //item inventory list
         //==================
         
-        itemScrollPane = new JScrollPane(IE.getItemList()); // add the items to the JScrollPane           
-        updateBackpackLabel(IE.getSelectedItem(0));// this just selects the first item from the list
+        itemScrollPane = new JScrollPane(GE.getItemList()); // add the items to the JScrollPane           
+        updateBackpackLabel(GE.getSelectedItem(0));// this just selects the first item from the list
+        updateCharacterStatsBars(GE.getSelectedCharacter());
 
         //==================
         //
@@ -128,10 +130,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
         this.add(toolBar, BorderLayout.NORTH);         
         
       	this.add(centerPanel, BorderLayout.CENTER);
-           
-        
-        // TODO add the stats bar and abilities of character using the stats panel and character panel        
-            	
+               	  
     }
 	
 	//make the navigation toolbar
@@ -141,7 +140,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	    toolBar.setLayout(new GridLayout(0,4));
 	   	
         //make the button to select previous character.
-        previousCharacterButton = makeButton("Previous",PREVIOUS, "Previous Character", "Previous");       
+        previousCharacterButton = makeButton("NewPointArrow",PREVIOUS, "Previous Character", "Previous");       
         
         //Make a label to hold the picture of the character
         characterPicture = new JLabel(null,null, JLabel.CENTER);
@@ -149,7 +148,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
         updateCharacterLabel(GE.getSelectedCharacter());
   
         //make button to select next character
-        nextCharacterButton = makeButton("Next", NEXT, "Next Character", "Next");
+        nextCharacterButton = makeButton("NewPointArrow", NEXT, "Next Character", "Next");
         
         //make the stats area
         JLabel healthLabel = new JLabel("HP:"); // health
@@ -160,26 +159,23 @@ public class InventoryGUI extends JPanel implements ActionListener {
         magicLabel.setForeground(Color.BLUE);
                       
         // health bar for the player
-        healthBar = new JProgressBar(0);
+        healthBar = new JProgressBar(0);   
         healthBar.setForeground(Color.RED);
         healthBar.setSize(new Dimension(15,25));
         healthBar.setBorderPainted(true);       
-        healthBar.setValue(100); // just making it an arbitrary value
-       
+               
         // magic bar for the player
-        magicBar = new JProgressBar(0);
+        magicBar = new JProgressBar(0);   
         magicBar.setForeground(Color.BLUE);
         magicBar.setPreferredSize(new Dimension(15,25));
         magicBar.setBorderPainted(true);
-        magicBar.setValue(65);
-       
+              
         // experience bar for the player
-        expBar = new JProgressBar(0);
+        expBar = new JProgressBar(0);    
         expBar.setForeground(Color.GREEN);
         magicBar.setPreferredSize(new Dimension(15,25));
         expBar.setBorderPainted(true);
-        expBar.setValue(95);
-
+      
       
         //add components to stats panel
         statsPanel = new JPanel(new GridLayout(3,2));
@@ -205,31 +201,17 @@ public class InventoryGUI extends JPanel implements ActionListener {
 								            String altText) 
     {
 		//Look for the location of the image.
-		String imgLocation = ""
+		String imgLocation = "images/"
 		+ imageName
-		+ ".jpg";
-		URL imageURL = InventoryGUI.class.getResource(imgLocation);
+		+ ".png";
 		
 		//Create and initialize the button.
 		JButton button = new JButton();
 		button.setActionCommand(actionCommand);
 		button.setToolTipText(toolTipText);
 		button.addActionListener(this);
-		System.out.println(imageURL);
-		
-		//if image found
-		if (imageURL != null)
-		{    
-			button.setIcon(new ImageIcon(imageURL, altText));
-		}
-		//else no image found
-		else
-		{                                     
-			button.setText(altText);
-			System.err.println("Resource not found: "
-					+ imgLocation);
-		}
-		
+		button.setIcon(new ImageIcon(altText)); //TODO: make arrow images 
+			
 		return button;
 	}
 
@@ -262,10 +244,22 @@ public class InventoryGUI extends JPanel implements ActionListener {
         }
     }
 
-      
-    /** Returns an ImageIcon, or null if the path was invalid. */
-    
+   //updates the stats panel
+    protected void updateCharacterStatsBars(Entity entity)
+    {
+    	healthBarModel = healthBar.getModel();
+    	healthBarModel.setMaximum(entity.getMaxHealth());
+    	expBarModel = expBar.getModel();
+    	expBarModel.setMaximum(entity.getMaxHealth());
+    	magicBarModel = magicBar.getModel();
+    	magicBarModel.setMaximum(entity.getMaxHealth());
+	 	healthBarModel.setValue(GE.getSelectedCharacter().getCurrentHealth());
+    	expBar.setValue(GE.getSelectedCharacter().getCurrentHealth()); //TODO: magic and expierence progress bars only use health
+	 	magicBar.setValue(GE.getSelectedCharacter().getCurrentHealth()); 
 
+    }
+   
+    
 	@Override
 	public void actionPerformed(ActionEvent arg0) 
 	{
@@ -275,12 +269,14 @@ public class InventoryGUI extends JPanel implements ActionListener {
 		{
 			GE.navigateCharacter("previous");
 			updateCharacterLabel(GE.getSelectedCharacter());
+			updateCharacterStatsBars(GE.getSelectedCharacter());
 		}
 		
 		if(NEXT.equals(cmd))
 		{
 			GE.navigateCharacter("next");
 			updateCharacterLabel(GE.getSelectedCharacter());
+			updateCharacterStatsBars(GE.getSelectedCharacter());
 		}
 			
 		

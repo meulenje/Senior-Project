@@ -275,7 +275,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     	//combatPanel constructor
     	characters = new ArrayList<Entity>();
     	Entity mario = new Entity(Player, "Mario", true, 30, 30, 20, 20, 10);
-    	Entity luigi = new Entity(Player, "Luigi", true, 30, 30, 20, 20, 10);
+    	Entity luigi = new Entity(PlayerOutline, "Luigi", true, 30, 30, 20, 20, 10);
     	Ability cure = new Ability("Heal", 1, 0, 10);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
 		luigi.abilities.add(cure);
