@@ -15,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 
 /**
  * GridGUI class
@@ -396,14 +395,14 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	            		if(j!=0 && GE.board[i][j-1].isEmptySpace())
 	            		{
 	            			// move left
-	            			GE.board[i][j-1].setEntity(GE.board[i][j].getEntity());
-	            			GE.board[i][j].setEntity(GE.EmptyID);
+	            			GE.board[i][j-1].setObject(GE.board[i][j].getObject());
+	            			GE.board[i][j].setObject(null);
 	            		}
 	            		else if(i!=GE.BROWS-1 && GE.board[i+1][j].isEmptySpace())
 	            		{
 	            			// move down
-	            			GE.board[i+1][j].setEntity(GE.board[i][j].getEntity());
-	            			GE.board[i][j].setEntity(GE.EmptyID); 
+	            			GE.board[i+1][j].setObject(GE.board[i][j].getObject());
+	            			GE.board[i][j].setObject(null); 
 	            		}
 	            	}
 	            }

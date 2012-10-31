@@ -12,7 +12,7 @@ import javax.swing.ImageIcon;
  *
  * @author Jeff
  */
-public class Entity implements Comparable<Entity>{
+public class Entity extends RPGObject implements Comparable<Entity>{
 
     private int maxHealth;
     private int currentHealth;
@@ -26,18 +26,20 @@ public class Entity implements Comparable<Entity>{
     //experience value for monsters, accumulated experience for players
     private int exp;
     ArrayList<Ability> abilities = new ArrayList<Ability>();
-    private ImageIcon image;
 
-    public Entity(ImageIcon icon, String name, boolean isPlayer, int currentHealth, int maxHealth, int attack,
-            int defense, int speed) {
-        this.maxHealth = maxHealth;
+    public Entity(int id, ImageIcon image, String name, boolean isPlayer, 
+    		int currentHealth, int maxHealth, int attack, int defense, int speed) {
+        
+    	this.id = id;
+    	this.image = image;
+    	
+    	this.maxHealth = maxHealth;
         this.currentHealth = currentHealth;
         this.attack = attack;
         this.defense = defense;
         this.speed = speed;
         this.name = name;
         this.isPlayer = isPlayer;
-        this.setImage(icon);
     }
 
     //monster combat AI.
@@ -175,13 +177,5 @@ return exp;
 
 public void setExp(int exp) {
 this.exp = exp;
-}
-
-ImageIcon getImage() {
-	return image;
-}
-
-void setImage(ImageIcon image) {
-	this.image = image;
 }
 }

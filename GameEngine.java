@@ -7,15 +7,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.ListSelectionModel;
-
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,8 +25,6 @@ import java.util.Random;
 import java.util.Stack;
 import javax.sound.midi.*;
 import javax.swing.JFrame;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 /**
  * Game Engine class
@@ -40,7 +35,7 @@ import javax.swing.event.ListSelectionListener;
  * @version 10/11/2012
  *
  */
-public class GameEngine implements ActionListener, FocusListener, ClockListener, ListSelectionListener {
+public class GameEngine implements ActionListener, FocusListener, ClockListener {
 	
 	
 	// Game Engine specific variables
@@ -49,7 +44,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	protected final int Y_DIM = 600;
 	protected final int C_WIDTH = 25; // object image size
 	protected final int C_HEIGHT = 25; // object image size
-    protected GridObject[][] board; // the maximum board size     
+    protected GridObject[][] board; // the maximum board size
+    protected ArrayList<QuestGUI> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
     protected Sequencer musicStream; // a sequencer to play background music
     protected Sequencer soundStream; // a sequencer to play sound effects
@@ -105,6 +101,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     protected int MushroomID = 8;
     protected int BeartrapID = 9;
     protected int SpiralID = 10;
+    protected int SignID = 11;
     
     // special Frame features
     protected boolean musicEnabled = true;
@@ -123,7 +120,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     protected boolean blinkOnExit = false;
     protected boolean clearStatsPerLevel = false;
     protected int monsterGridSpeed = 2; // monster moves after X seconds
-    protected double percentChanceOfEncounter = 0.1; // when entering a Encounterable space, there is a small chance the player will run into a monster
+    protected double percentChanceOfEncounter = 0.0; // when entering a Encounterable space, there is a small chance the player will run into a monster
     
     // special Grid variables
 	protected int hops = 0; // # of jumps taken
@@ -178,16 +175,19 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	protected ImageIcon Spiral = new ImageIcon("images/Spiral.gif");
 	protected ImageIcon Mushroom = new ImageIcon("images/Mushroom.png");
 	protected ImageIcon Hideout = new ImageIcon("images/Hideout.png");
+	protected ImageIcon Sign = new ImageIcon("images/Sign.png");
 	protected ImageIcon Bag = new ImageIcon("images/Bag.png");
 	protected ImageIcon Backpack = new ImageIcon("images/Backpack.png");
 	protected ImageIcon Book = new ImageIcon("images/Book.png");
 	protected ImageIcon InventoryIcon = new ImageIcon("images/InventoryIcon.jpg");
 	protected ImageIcon ListIcon = new ImageIcon("images/ListIcon.jpg");
+	protected ImageIcon RPGLogo = new ImageIcon("images/RPGLogo.png");
 	
 	// sound files
 	protected String menuTheme = "sounds/Golden Sun Menu Screen.mid";
 	protected String overworldTheme = "sounds/Golden Sun Over World.mid";
 	protected String battleTheme = "sounds/Golden Sun Battle Theme.mid";	
+	protected String battleStart = "sounds/Golden Sun Saturos Battle.mid";
     
     // default gui parts
     private JFrame window;
@@ -208,6 +208,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     private JCheckBoxMenuItem enableMappingItem;
     protected JLayeredPane layers;
     protected JPanel loadingScreen;
+    protected JPanel animationScreen;
     protected JPanel mainmenu;
     protected JTabbedPane tabs;
     protected JPanel mapPanel;
@@ -235,54 +236,26 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	ArrayList<Entity> combatants;
 	ArrayList<Entity> characters;
 	//end combatPanel engine fields
-	
-	//InventoryGUI variables 
-	private JList<item> itemList = new JList<item>(); // list to h
-	private ArrayList<item> itemsInBackpack; //array inventory items
-	
-	private int index = 0; //index to track selected character
-	
-	
-	//Quest GUI variables
-	protected ArrayList<QuestGUI> quests; // list of quest messages  
     
     /**
      * Constructor for GameEngine
      */
     public GameEngine()
     {            
-    	//inventoryPanel 
-    	//initialize array list of items
-		itemsInBackpack = new ArrayList<item>();
-		itemsInBackpack.add(new item("Book", "Something to read"));
-		itemsInBackpack.add(new item("Gem", "A gem"));
-		itemsInBackpack.add(new item("Beartrap", "Used to break ankles"));
-		itemsInBackpack.add(new item("Bag", "Open to view items"));
-		itemsInBackpack.add(new item("Chair", "Sit on"));
-		itemsInBackpack.add(new item("Rock","Throw at pirates"));
-		itemsInBackpack.add(new item("Spike", "Ouch"));
-		itemsInBackpack.add(new item("WhiteBoard","Write on me"));
-		itemsInBackpack.add(new item("Creature", "Bad dude"));
-		itemsInBackpack.add(new item("BookCase", "Holds your books for you"));		
-		itemsInBackpack.add(new item("Door1", "Open and walk through"));
-				
-		//initailize the list
-		itemList = new JList<item>(getItemArray());  //JList that displays the items
-        itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        itemList.setSelectedIndex(0);
-        itemList.addListSelectionListener((ListSelectionListener) this);
-    	
     	//combatPanel constructor
-    	characters = new ArrayList<Entity>();
-    	Entity mario = new Entity(Player, "Mario", true, 30, 30, 20, 20, 10);
-    	Entity luigi = new Entity(PlayerOutline, "Luigi", true, 30, 30, 20, 20, 10);
+    	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
+    	Entity mario = new Entity(PlayerID, Player, "Mario", true, 30, 30, 11, 10, 10);
+    	Entity luigi = new Entity(PlayerID, Player, "Luigi", true, 30, 30, 10, 11, 9);
+    	Entity toad = new Entity(PlayerID, Player, "Toad", true, 15, 15, 10, 10, 15);
     	Ability cure = new Ability("Heal", 1, 0, 10);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
+		Ability headbutt = new Ability("Headbutt", 0, 0, 20);
 		luigi.abilities.add(cure);
 		mario.abilities.add(fireball);
+		toad.abilities.add(headbutt);
     	characters.add(mario);
     	characters.add(luigi);
-    	//enemies = initializeEnemies(1);
+    	characters.add(toad);
     	
         // Create the JWindow and Frame to hold the Panels
     	
@@ -383,7 +356,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
         // --------------------------------------------------------
         // create the InventoryGUI inventoryPanel panel
-        inventoryPanel = new InventoryGUI(this);
+        inventoryPanel = new JPanel();
+        inventoryPanel.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
         // --------------------------------------------------------
         
         // --------------------------------------------------------
@@ -408,6 +382,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         mainmenu.setSize(X_DIM,Y_DIM + 60);
         // --------------------------------------------------------
 
+        // --------------------------------------------------------        
+        animationScreen = new AnimationGUI(this);
+        animationScreen.setLocation(0,0);
+        animationScreen.setSize(X_DIM,Y_DIM + 60);
+        // --------------------------------------------------------        
+        
         // --------------------------------------------------------
         // make a loading screen
         loadingScreen = new JPanel();
@@ -424,14 +404,17 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         // create layers panel
         // 0   -- is for the GamePanels (Grid, Combat, etc)
         // 100 -- is for the MainMenu
+        // 150 -- is for the Animation Screen
         // 200   -- is for the Loading Screen
         layers = new JLayeredPane();
         layers.setLayout(new BorderLayout());
         layers.add(tabs);
         layers.add(mainmenu);
+        layers.add(animationScreen);
         layers.add(loadingScreen);
         layers.setLayer(tabs, 0);
         layers.setLayer(mainmenu, 100);
+        layers.setLayer(animationScreen, 150);
         layers.setLayer(loadingScreen, 200);
         
         // add the layers to the window
@@ -472,7 +455,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         {
             for (int j=0; j<BCOLS; j++)
             {
-            	board[i][j] = new GridObject(this,GrassID,EmptyID,EmptyID);
+            	board[i][j] = new GridObject(this,null,null,null);
             	((GridGUI) mapPanel).addGridObject(i,j); // place on grid panel
             }
         }
@@ -595,9 +578,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		// pauses Music
 		stopMusic();
 		
-		// show loading screen
-		tabs.setVisible(false);
-		loadingScreen.setVisible(true);
+		// show fade grid
+		setGridFade(true);
 		
 		// displays that the game is paused, click to resume
 		JOptionPane.showMessageDialog(window,"Game is paused.\nClick OK to resume playing.","Pause",JOptionPane.INFORMATION_MESSAGE);
@@ -605,9 +587,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		// resumes Music
 		startMusic();
 		
-		// hide loading screen
-		tabs.setVisible(true);
-		loadingScreen.setVisible(false);
+		// hide grid fade
+		setGridFade(false);
 		
 		// resume clock ticking if they were viewing the Map
 		if(tabs.getSelectedIndex() == 0)
@@ -724,6 +705,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewQuestPanel()
     {  	
     	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(3);
@@ -737,6 +719,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewCombatPanel()
     {
     	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(2);
@@ -753,6 +736,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewInventoryPanel()
     {
     	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(1);
@@ -766,6 +750,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewMapPanel()
     {
     	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(0);
@@ -782,6 +767,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewMainMenu()
     {
     	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(true);
     	tabs.setVisible(false);
     	mainmenu.requestFocus();
@@ -796,8 +782,26 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     public void viewLoadingScreen()
     {
     	loadingScreen.setVisible(true);
+    	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
     	tabs.setVisible(false);
+    }
+    
+    /**
+     * Forces the player to see the Animation
+     * 
+     * This function will turn the Animation Screen back
+     * to being invisible once the animation is done playing.
+     * 
+     * Do not set animationScreen to invisible, elsewhere.
+     * @param view
+     */
+    public void viewAnimationScreen()
+    {
+    	animationScreen.setVisible(true);
+    	((AnimationGUI) animationScreen).startAnimation();
+    	animationScreen.setVisible(true);
+    	// wait until the animation is finished before returning
     }
     
 	/**
@@ -908,11 +912,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
             for (int j=0; j<BCOLS; j++)
             {
             	// find the other warp
-            	if(board[i][j].getTerrain() == WarpAID 
-            			|| board[i][j].getTerrain() == WarpBID)
+            	if((board[i][j].terrain).id == WarpAID 
+            			|| board[i][j].terrain.id == WarpBID)
             	{
-            		// replace with grass
-            		board[i][j].setTerrain(GrassID);
+            		// replace with null
+            		board[i][j].setTerrain(null);
             	}
             }
         }
@@ -930,20 +934,20 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	 * This function should be called after combat is finished and
 	 * the player has won in combat. Not if they fled or died.
 	 */
-	public void removeDefeatedEnemies(int newIDofMonster)
+	public void removeDefeatedEnemies(Item i)
 	{
 		// remove any enemy objects that are NSWE from the player's current position
 		if(prow!=BROWS-1 && board[prow+1][pcol].isMonster())
-			board[prow+1][pcol].setEntity(newIDofMonster);
+			board[prow+1][pcol].setObject(i);
 		
 		if(prow!=0 && board[prow-1][pcol].isMonster())
-			board[prow-1][pcol].setEntity(newIDofMonster);
+			board[prow-1][pcol].setObject(i);
 		
 		if(pcol!=BCOLS && board[prow][pcol+1].isMonster())
-			board[prow][pcol+1].setEntity(newIDofMonster);
+			board[prow][pcol+1].setObject(i);
 		
 		if(pcol!=0 && board[prow][pcol-1].isMonster())
-			board[prow][pcol-1].setEntity(newIDofMonster);
+			board[prow][pcol-1].setObject(i);
 		return;		
 	}
 	
@@ -958,7 +962,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		for(int i=0; i<BROWS; i++)
 			for(int j=0; j<BCOLS; j++)
 				if(board[i][j].isMonster())
-					board[i][j].setEntity(EmptyID);
+					board[i][j].setObject(null);
 		return;
 	}
 	
@@ -1036,23 +1040,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		
 		if(monsterCount>0)
 		{
-			Object[] options = {"Fight!", "Flee!"};
-			int answer= printCustomQuestion("What will you do?", options);
+			// populate enemies team with the number of monsters we ran into
+			initializeCombat(monsterCount);
+				
+			// go to combatPanel tab
+			viewCombatPanel();
 			
-			if(answer==0) // FIGHT!
-			{
-				// populate enemies team with the number of monsters we ran into
-				initializeCombat(monsterCount);
-				
-				// go to combatPanel tab
-				viewCombatPanel();
-			}
-			else // FLEE!
-			{
-				// should figure out if flee was successful...
-				// TODO
-				
-			}
 		}
 		
 		return;
@@ -1104,7 +1097,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	 */
 	public void checkForWarp()
 	{
-		int a = board[prow][pcol].getTerrain();
+		int a = board[prow][pcol].terrain.id;
 		
 		if(warpingEnabled==true && (a==WarpAID || a==WarpBID))
 		{
@@ -1118,7 +1111,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	            for (int j=0; j<BCOLS; j++)
 	            {
 	            	// find the other warp
-	            	if(board[i][j].getTerrain() == b)
+	            	if(board[i][j].terrain.id == b)
 	            	{
 	            		// warp the player
 	            		// delay here
@@ -1138,23 +1131,23 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	 * Check if the player stepped on an item.
 	 * @param i
 	 */
-	public void checkForItem(int i)
+	public void checkForItem(RPGObject i)
 	{
 		// This function should be improved to look at Entity attributes,
 		// and not just an id number. TODO
 		
-		if( i != -9999) // cannot be the reserved number
+		if( i != null)
 		{
 			itemsCollected++;
 			
 			// Is it a special item? (When picked up, it pops an information box.)
-			if(i == 6)
+			if(i.id == 6)
 			{
 				// show a popup
 				((GridGUI) mapPanel).setPointsLabel("Bags: "+itemsCollected);
 			}
 			// check for beartrap
-			else if(i == BeartrapID)
+			else if(i.id == BeartrapID)
 			{
 				// inflict 10% damage of totalHealth to first player
 				characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
@@ -1183,14 +1176,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	public void repositionPlayer(int x, int y)
 	{
     	// erase the player
-        board[prow][pcol].setEntity(EmptyID);
+        board[prow][pcol].setObject(null);
         
         try
         {
         	// try to place the player, at the (x,y) coordinate
         	prow = x;
         	pcol = y;
-        	board[prow][pcol].setEntity(PlayerID);
+        	board[prow][pcol].setObject((RPGObject)characters.get(0));
         }
         catch(Exception e)
         {
@@ -1213,7 +1206,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	public void movePlayer(int x, int y)
 	{
 		boolean player_has_moved = false;
-		int itemID = -9999; // reserved number meaning "no item"
+		RPGObject item = null;
 		
 		// check for boundaries
 		boolean edgeOfMap = ( 
@@ -1248,12 +1241,20 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         else if(!leftShift && board[prow+x][pcol+y].isConsumable())
         {
         	// remember what the item was
-        	itemID = board[prow+x][pcol+y].getEntity();
+        	item = board[prow+x][pcol+y].getObject();
         	
         	// move the player
         	repositionPlayer(prow+x,pcol+y);
             player_has_moved = true;
             steps++;
+        }
+        // check if the next spot is a sign post to read
+        else if(!leftShift && board[prow+x][pcol+y].isSignPost())
+        {
+        	// don't move the player
+        	
+        	// read the sign
+        	printInfo("The sign reads...\n\n\'Hold \'A\' to charge your laser.\'");
         }
         // check if the next spot is pushable like a rock
         else if(!leftShift && board[prow+x][pcol+y].isPushable())
@@ -1262,10 +1263,10 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         	if(!nearEdgeOfMap && board[prow+x+x][pcol+y+y].isEmptySpace())
         	{
         		// if so, then move the pushable object forward one space
-        		board[prow+x+x][pcol+y+y].setEntity(board[prow+x][pcol+y].getEntity());
+        		board[prow+x+x][pcol+y+y].setObject(board[prow+x][pcol+y].getObject());
         		
         		// remove the old rock
-        		board[prow+x][pcol+y].setEntity(EmptyID);
+        		board[prow+x][pcol+y].setObject(null);
         		
             	// move the player
         		repositionPlayer(prow+x,pcol+y);
@@ -1306,7 +1307,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         	// if so, we can jump and pick up the item
         	
         	// remember the item we picked up
-        	itemID = board[prow+x+x][pcol+y+y].getEntity();
+        	item = board[prow+x+x][pcol+y+y].getObject();
         	
         	repositionPlayer(prow+x+x,pcol+y+y);
             player_has_moved = true;
@@ -1318,7 +1319,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         {
         	((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 			movePlayerVision();
-			checkForItem(itemID);
+			checkForItem(item);
 			checkForWarp();
 			checkForExit();
 			checkForEnemies(); // starts combat if needed
@@ -1461,6 +1462,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         boolean warpAPlaced = false;
         boolean warpBPlaced = false;
         boolean spiralPlaced = false;
+        int signs = 0;
         int temp;
         numOfMonsters = 0;
         
@@ -1476,46 +1478,60 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
                 // randomly scatter "holes"
                 if(temp==1)
                 {
-                	board[i][j].resetObject(DirtID,HoleID,EmptyID);
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                			new NonEntity(HoleID, Hole, false, false, true, false), null);
                 }
                 // randomly scatter "rocks"
                 else if(temp==-1 || temp==-2)
                 {
-                	board[i][j].resetObject(DirtID,RockID,EmptyID);
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                			new NonEntity(RockID, Rock, true, false, false, false), null);
                 }
                 // randomly make "monsters"
                 else if(temp==7)
                 {
-                	board[i][j].resetObject(DirtID,LavaMonsterID,EmptyID);
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                			new Entity(LavaMonsterID, LavaMonster, "LavaMonster", false, 10, 10, 5, 5, 5), null);
                 	numOfMonsters++;
                 }
                 // randomly make "beartraps"
-                else if(temp==11)
+                else if(temp==12)
                 {
-                	board[i][j].resetObject(GrassID,BeartrapID,TallGrassID);
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                			new NonEntity(BeartrapID, Beartrap, false, true, false, false), 
+                			new NonEntity(TallGrassID, TallGrass, false, false, false, false));
+                }
+                else if(temp==11 && signs<3)
+                {
+                	board[i][j].resetObject(new Terrain(GrassID, Grass, false, true, false), 
+                			new NonEntity(SignID, Sign, false, false, false, true), null);
+                	signs++;
                 }
                 // place warp 'a'
                 else if(warpingEnabled && !warpAPlaced && temp==8)
                 {
-                	board[i][j].resetObject(WarpAID,EmptyID,EmptyID);
+                	board[i][j].resetObject(new Terrain(WarpAID, XSpace, false, true, false), null, null);
                 	warpAPlaced = true;
                 }
                 // place warp 'b'
                 else if(warpingEnabled && !warpBPlaced && temp==9 && (i >= BROWS/2))
                 {
-                	board[i][j].resetObject(WarpBID,EmptyID,EmptyID);
+                	board[i][j].resetObject(new Terrain(WarpAID, XSpace, false, true, false), null, null);
                 	warpBPlaced = true;
                 }
-                // randomly place one door per mapPanel
+                // randomly place one exit per map
                 else if(!doorPlaced && (temp==10 || (i==3 && j==3)))
                 {
-                	board[i][j].resetObject(GrassID,EmptyID,ExitID);
+                	board[i][j].resetObject(new Terrain(GrassID, Grass, true, true, false), 
+                			null, 
+                			new NonEntity(ExitID, Hideout, false, false, false, false));
                 	doorPlaced = true;
                 }
                 // randomly place one spiral, if necessary
                 else if(!spiralPlaced && temp==23)
                 {
-                	board[i][j].resetObject(DirtID,SpiralID,EmptyID);
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                			new NonEntity(SpiralID, Spiral, false, true, false, false), null);
                 	spiralPlaced = true;
                 }
                 else
@@ -1523,11 +1539,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
                 	// everything else is dirt, grass, or tall grass
                 	temp = rand.nextInt(6); // 0 - 5
                 	if(temp>=4)
-                		board[i][j].resetObject(GrassID,EmptyID,TallGrassID);
+                		board[i][j].resetObject(new Terrain(GrassID, Grass, false, true, false), null, 
+                    			new NonEntity(TallGrassID, TallGrass, false, false, false, false));
                 	else if(temp==3)
-                		board[i][j].resetObject(DirtID,EmptyID,EmptyID);
+                		board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), null,null);
                 	else
-                		board[i][j].resetObject(GrassID,EmptyID,EmptyID);
+                		board[i][j].resetObject(new Terrain(GrassID, Grass, false, true, false), null,null);
                 }
             }
         }
@@ -2165,14 +2182,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 	public ArrayList<Entity> initializeEnemies(int numOfEnemies) {
 		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
-		int numberOfEnemies = randomNumberGenerator.nextInt(numOfEnemies) + 1;
+		int numberOfEnemies = randomNumberGenerator.nextInt(numOfEnemies+7) + 1;
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonster, "Lava Monster", false, 10, 10, 10, 10,
-					1);
+			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", false, 10, 10, 10, 10, 1);
 			m.setExp(5);
-			Ability cure = new Ability("heal", 1, 0, 0);
+			Ability cure = new Ability("Heal", 1, 0, 0);
 			m.abilities.add(cure);
 			m.setName(m.getName() + " " + i);
 			monsterArray.add(m);
@@ -2198,7 +2214,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 				
 				// clean up enemies from board
 				// turn them into bags to pickup
-				removeDefeatedEnemies(BagID);
+				removeDefeatedEnemies(new Item(BagID,Bag,"Bag","A bag that holds items.",true));
 				
 				returnVal = true;
 			} 
@@ -2207,7 +2223,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 				returnVal = false;
 			}
 		}
-		//viewMapPanel();
 		return returnVal;
 	}
 
@@ -2253,70 +2268,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 		return newArray;
 	}
-
 	
-	//inventory GUI methods
-	@Override
-	public void valueChanged(ListSelectionEvent arg0) 
-	{
-		
-        ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem(itemList.getSelectedIndex()));	
-		
-	}
-	
-	//return the string of the character that is selected
-		public Entity getSelectedCharacter()
-		{
-			return characters.get(index);
-		}
-		
-	//return the string of the item that is selected
-		public item getSelectedItem(int pIndex)
-		{
-			return itemsInBackpack.get(pIndex);
-		}
-					
-		//navigates to the previous character selection
-		public void  navigateCharacter(String pNav)
-		{ 	
-			int size = characters.size(); 
-			//if navigating to previous character
-			if(pNav == "previous")
-			{			
-				index -= 1;
-				//if trying to navigate before first character, go to end
-				if(index < 0)
-				{
-					index = size-1;
-				}
-			}
-			//if navigating to next character
-			if(pNav == "next")
-			{
-				index += 1;
-				//if no more characters in list, go to beginning 
-				if(index >= size)
-				{
-					index = 0;
-				}
-			}
-				
-		}
-		
-		//returns the item list
-		public JList<item> getItemList()
-		{
-			return this.itemList;
-		}
-		
-		//returns an array of the list
-		public item[] getItemArray()
-		{
-			item[] array = new item[itemsInBackpack.size()];
-			itemsInBackpack.toArray(array);		
-			return array; 
-		}
-
-			
 } // end of GameEngine
 // --------------------

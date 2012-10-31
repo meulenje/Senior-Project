@@ -19,23 +19,22 @@ public class GridObject extends JLayeredPane {
 	
 	private GameEngine GE; // link back to Engine
 	
-	protected Entity entityObject; // Object on this locaiton
-	
-    private int terrainID; // identifies what type of cell the image displays
-    private int entityID; // is there an object here? 0=no
-    private int accessoryID; // identifies what extra layer is on top
+	protected Terrain terrain; // background object
+	protected RPGObject object; // Object on this locaiton
+	protected RPGObject accessory; // highground object
     private int fogID;
+    
     protected ImageIcon terrainImage; // grass, dirt, floor, etc...
-    protected ImageIcon entityImage; // player, enemy, rock, etc...
+    protected ImageIcon objectImage; // player, enemy, rock, etc...
     protected ImageIcon accessoryImage; // tall grass, roofs, extra effects, etc...
     protected ImageIcon fogImage; // partially visible layer for fogID effect
     protected JLabel background; // container to hold terrainID image
-    protected JLabel foreground; // container to hold entityID image
+    protected JLabel foreground; // container to hold objectID image
     protected JLabel highground; // container to hold accessoryID image
     protected JLabel fogLayer; // only holds fogID for blurry vision
     
     // GridObject Constructor
-    public GridObject(GameEngine tempEngine, int t, int e, int a)
+    public GridObject(GameEngine tempEngine, Terrain t, RPGObject o, RPGObject a)
     {
     	// link to back Engine
     	GE = tempEngine;
@@ -65,7 +64,7 @@ public class GridObject extends JLayeredPane {
     	
     	// set variables and images
     	setTerrain(t);
-    	setEntity(e);
+    	setObject(o);
     	setAccessory(a);
     	setFog(GE.EmptyID);
     	
@@ -75,13 +74,13 @@ public class GridObject extends JLayeredPane {
      * A simple way to re-construct a GridObject
      * without having to call multiple functions.
      * @param int terrainID
-     * @param int entityID
+     * @param int objectID
      * @param int accessoryID
      */
-    public void resetObject(int t, int e, int a)
+    public void resetObject(Terrain t, RPGObject o, RPGObject a)
     {
     	setTerrain(t);
-    	setEntity(e);
+    	setObject(o);
     	setAccessory(a);
     }
     
@@ -93,7 +92,7 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isEmptySpace()
     {
-    	return (terrainID<0 && entityID==GE.EmptyID);	
+    	return (terrain.isWalkable() && object == null);	
     }
     
     /**
@@ -103,7 +102,10 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isHole()
     {
-    	return (entityID==GE.HoleID);
+    	if(object!=null && object instanceof NonEntity)
+    		if(((NonEntity) object).isHole())
+    			return true;
+    	return false;
     }
     
     /**
@@ -112,7 +114,10 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isPushable()
     {
-    	return (entityID==GE.RockID);
+    	if(object!=null && object instanceof NonEntity)
+    		if(((NonEntity)object).isPushable())
+    			return true;
+    	return false;
     }
     
     /**
@@ -122,7 +127,10 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isConsumable()
     {
-    	return (entityID==GE.BagID || entityID==GE.MushroomID || entityID==GE.BeartrapID);
+    	if(object!=null && object instanceof Item)
+    		if(((Item)object).isConsumable())
+    			return true;
+    	return false;
     }
     
     /**
@@ -132,7 +140,10 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isMonster()
     {
-    	return (entityID==GE.LavaMonsterID || entityID==GE.PirateID);
+    	if(object!=null && object instanceof Entity)
+    		if(!((Entity)object).isPlayer)
+    			return true;
+    	return false;
     }
     
     /**
@@ -142,7 +153,7 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isExit()
     {
-    	return (accessoryID==GE.ExitID);
+    	return (terrain.isExit());
     }
     
     /**
@@ -154,7 +165,7 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isRandomEncounter()
     {
-    	return (accessoryID==GE.TallGrassID);
+    	return (terrain.isRandomEncounter());
     }
     
     /**
@@ -167,66 +178,43 @@ public class GridObject extends JLayeredPane {
      */
     public boolean isTrap()
     {
-    	return (entityID==GE.SpikeID || entityID==GE.BeartrapID || entityID==GE.SpiralID);
+    	if(object!=null && object instanceof NonEntity)
+    		if(((NonEntity)object).isTrap())
+    			return true;
+    	return false;
     }
     
     /**
-     * Sets the id of the entityID layer and adjusts
+     * isSign
+     * Returns true if the location is a sign post.
+     * @return
+     */
+    public boolean isSignPost()
+    {
+    	if(object!=null && object instanceof NonEntity)
+    		if(((NonEntity)object).isSignPost())
+    			return true;
+    	return false;
+    }
+    
+    /**
+     * Sets the id of the objectID layer and adjusts
      * the image accordingly
      * @param int p
      */
-    public void setEntity(int p)
+    public void setObject(RPGObject o)
     {    	
+    	object = o;
+    	
     	// set the foreground image
-    	if(p == GE.EmptyID)
-    	{
-    		entityImage=GE.Empty;
-    	}
-    	else if(p == GE.PlayerID)
-    	{
-    		entityImage=GE.Player;
-    	}
-    	else if(p == GE.RockID)
-    	{
-    		entityImage=GE.Rock;
-    	}
-    	else if(p == GE.HoleID)
-    	{
-    		entityImage=GE.Hole;
-    	}
-    	else if(p == GE.LavaMonsterID)
-    	{
-    		entityImage=GE.LavaMonster;
-    	}
-    	else if(p == GE.PirateID)
-    	{
-    		entityImage=GE.Pirate;
-    	}
-    	else if(p == GE.BagID)
-    	{
-    		entityImage=GE.Bag;
-    	}
-    	else if(p == GE.BeartrapID)
-    	{
-    		entityImage=GE.Beartrap;
-    	}
-    	else if(p == GE.SpikeID)
-    	{
-    		entityImage=GE.Spike;
-    	}
-    	else if(p == GE.SpiralID)
-    	{
-    		entityImage=GE.Spiral;
-    	}
-    	else if(p == GE.MushroomID)
-    	{
-    		entityImage = GE.Mushroom;
-    	}
+    	
+    	// grab the image from the entity
+    	if(object == null)
+    		objectImage=GE.Empty;
     	else
-    		GE.printError("Error!\nNo image found for entityID id="+p);
-        
-    	entityID = p;
-        foreground.setIcon(entityImage);
+    		objectImage = object.getImage();
+    	
+        foreground.setIcon(objectImage);
     }
     
     /**
@@ -234,33 +222,16 @@ public class GridObject extends JLayeredPane {
      * the image accordingly.
      * @param int i
      */
-    public void setTerrain(int i)
+    public void setTerrain(Terrain i)
     {
     	// set the background image
-    	if(i == GE.EmptyID)
-    	{
-    		this.setVisible(false);
-    	}
-    	else if(i == GE.WarpAID || i == GE.WarpBID)
-    	{
-    		terrainImage=GE.XSpace;
-    	}
-    	else if(i == GE.WaterID)
-    	{
-    		terrainImage=GE.Water;
-    	}
-    	else if(i == GE.GrassID)
-    	{
-    		terrainImage=GE.Grass;
-    	}
-    	else if(i == GE.DirtID)
-    	{
-    		terrainImage=GE.Dirt;
-    	}
-    	else
-    		GE.printError("Error!\nNo image found for terrainID id="+i);
+    	terrain = i;
     	
-    	terrainID = i;
+    	if(terrain == null)
+    		terrainImage=GE.Empty;
+    	else
+    		terrainImage = terrain.getImage();
+    	
     	background.setIcon(terrainImage);
     }
     
@@ -269,25 +240,16 @@ public class GridObject extends JLayeredPane {
      * the accessoryID layer.
      * @param int a
      */
-    public void setAccessory(int a)
+    public void setAccessory(RPGObject a)
     {    	
     	// set the highground image
-    	if(a == GE.EmptyID)
-    	{
-    		accessoryImage=GE.Empty;
-    	}
-    	else if(a == GE.TallGrassID)
-    	{
-    		accessoryImage=GE.TallGrass;
-    	}
-    	else if(a == GE.ExitID)
-    	{
-    		accessoryImage=GE.Hideout;
-    	}
-    	else	
-    		GE.printError("Error!\nNo image found for accessoryID id="+a);
+    	accessory = a;
+    	
+    	if(accessory == null)
+    		accessoryImage = GE.Empty;
+    	else
+    		accessoryImage = accessory.getImage();
         
-    	accessoryID = a;
         highground.setIcon(accessoryImage);
     }
     
@@ -329,13 +291,13 @@ public class GridObject extends JLayeredPane {
     }
     
     /**
-     * Returns the id of the Entity
+     * Returns the RPGObject
      * that is on middle layer of the GridObject
-     * @return int entityID
+     * @return int objectID
      */
-    public int getEntity()
+    public RPGObject getObject()
     {
-        return entityID;
+        return object;
     }
     
     /**
@@ -343,9 +305,9 @@ public class GridObject extends JLayeredPane {
      * that is the lowest layer of the GridObject
      * @return int terrainID
      */
-    public int getTerrain()
+    public Terrain getTerrain()
     {
-        return terrainID;
+        return terrain;
     }
     
     /**
@@ -353,9 +315,9 @@ public class GridObject extends JLayeredPane {
      * that is the highest layer of the GridObject
      * @return int accessoryID
      */
-    public int getAccessory()
+    public RPGObject getAccessory()
     {
-    	return accessoryID;
+    	return accessory;
     }
     
     /**

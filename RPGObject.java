@@ -11,7 +11,7 @@ import javax.swing.ImageIcon;
  * - Terrain
  * - Entity
  * - Item
- * - Building
+ * - NonEntity
  * 
  * @author Austin
  *
