@@ -245,14 +245,16 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	//combatPanel constructor
     	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
     	Entity mario = new Entity(PlayerID, Player, "Mario", true, 30, 30, 11, 10, 10);
-    	Entity luigi = new Entity(PlayerID, Player, "Luigi", true, 30, 30, 10, 11, 9);
-    	Entity toad = new Entity(PlayerID, Player, "Toad", true, 15, 15, 10, 10, 15);
-    	Ability cure = new Ability("Heal", 1, 0, 10);
+    	Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, 30, 30, 10, 11, 9);
+    	Entity toad = new Entity(PlayerID, Mushroom, "Toad", true, 15, 15, 10, 10, 15);
+    	Ability cure = new Ability("Heal", 1, 0, 20);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
-		Ability headbutt = new Ability("Headbutt", 0, 0, 20);
 		luigi.abilities.add(cure);
+		luigi.abilities.add(fireball);
+		mario.abilities.add(cure);
 		mario.abilities.add(fireball);
-		toad.abilities.add(headbutt);
+		toad.abilities.add(cure);
+		toad.abilities.add(fireball);
     	characters.add(mario);
     	characters.add(luigi);
     	characters.add(toad);
@@ -1055,36 +1057,43 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	 * Checks the player's current position to see if they are
 	 * standing over any traps.
 	 */
-	public void checkForTrap(int i)
+	public void checkForTrap(RPGObject i)
 	{
-		// check for beartrap
-		if(i == BeartrapID)
+		if(i != null)
 		{
-			// inflict 10% damage of totalHealth to first player
-			characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
-		
-			// keep track of how many
-			traps++;
-		}
-		// check for whirlwind
-		else if(i == SpiralID)
-		{
-			// sends the player to a random location on the map!
-			boolean playerWasWarped = false;
-			
-			while(!playerWasWarped)
+			// check for beartrap
+			if(i.id == BeartrapID)
 			{
-				Random r = new Random();
-				int x = r.nextInt(BROWS); // 0 to MAX row
-				int y = r.nextInt(BCOLS); // 0 to MAX column
+				// keep track of how many
+				traps++;
 				
-				// make sure its a valid location. (empty!)
-				if(board[x][y].isEmptySpace())
+				// inflict 10% damage of totalHealth to first player
+				characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
+			}
+			// check for whirlwind
+			else if(i.id == SpiralID)
+			{
+				// keep track of how many
+				traps++;
+				
+				// sends the player to a random location on the map!
+				boolean playerWasWarped = false;
+				
+				while(!playerWasWarped)
 				{
-					repositionPlayer(x,y);
-					playerWasWarped = true;
-				}
-			}			
+					Random r = new Random();
+					int x = r.nextInt(BROWS); // 0 to MAX row
+					int y = r.nextInt(BCOLS); // 0 to MAX column
+					
+					// make sure its a valid location. (empty!)
+					if(board[x][y].isEmptySpace())
+					{
+						repositionPlayer(x,y);
+						((GridGUI) mapPanel).repositionScrollBarsToPlayer();
+						playerWasWarped = true;
+					}
+				}			
+			}
 		}
 		return;
 	}
@@ -1141,18 +1150,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 			itemsCollected++;
 			
 			// Is it a special item? (When picked up, it pops an information box.)
-			if(i.id == 6)
+			if(i.id == BagID)
 			{
 				// show a popup
 				((GridGUI) mapPanel).setPointsLabel("Bags: "+itemsCollected);
 			}
-			// check for beartrap
-			else if(i.id == BeartrapID)
-			{
-				// inflict 10% damage of totalHealth to first player
-				characters.get(0).setCurrentHealth(characters.get(0).getCurrentHealth() - (int)((double)characters.get(0).getMaxHealth() * 0.1));
-			}
-			
 			
 			// add item to inventory
 			// TODO
@@ -1206,7 +1208,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	public void movePlayer(int x, int y)
 	{
 		boolean player_has_moved = false;
-		RPGObject item = null;
+		RPGObject pickup = null;
 		
 		// check for boundaries
 		boolean edgeOfMap = ( 
@@ -1238,10 +1240,10 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         }
         // check if the next spot has a consumable object on it,
         // if so, pick up the item and add it to inventory
-        else if(!leftShift && board[prow+x][pcol+y].isConsumable())
+        else if(!leftShift && (board[prow+x][pcol+y].isConsumable() || board[prow+x][pcol+y].isTrap()))
         {
-        	// remember what the item was
-        	item = board[prow+x][pcol+y].getObject();
+        	// remember what the pickup was
+        	pickup = board[prow+x][pcol+y].getObject();
         	
         	// move the player
         	repositionPlayer(prow+x,pcol+y);
@@ -1300,14 +1302,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
             hops++;
         }
         // check if the player can jump over spot to a consumable item
-        else if(leftShift && board[prow+x+x][pcol+y+y].isConsumable()
+        else if(leftShift && (board[prow+x+x][pcol+y+y].isConsumable() 
+        		|| board[prow+x+x][pcol+y+y].isTrap())
         		&& ( board[prow+x][pcol+y].isHole()
         		|| board[prow+x][pcol+y].isEmptySpace()))
         {
         	// if so, we can jump and pick up the item
         	
-        	// remember the item we picked up
-        	item = board[prow+x+x][pcol+y+y].getObject();
+        	// remember the pickup that we picked up
+        	pickup = board[prow+x+x][pcol+y+y].getObject();
         	
         	repositionPlayer(prow+x+x,pcol+y+y);
             player_has_moved = true;
@@ -1319,7 +1322,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         {
         	((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 			movePlayerVision();
-			checkForItem(item);
+			checkForItem(pickup);
+			checkForTrap(pickup);
 			checkForWarp();
 			checkForExit();
 			checkForEnemies(); // starts combat if needed
@@ -1478,7 +1482,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 // randomly scatter "holes"
                 if(temp==1)
                 {
-                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
+                	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false),
                 			new NonEntity(HoleID, Hole, false, false, true, false), null);
                 }
                 // randomly scatter "rocks"
@@ -1869,15 +1873,15 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	}
 	
 	/**
-	 * Loads from file, the next mapPanel for this game.
+	 * Loads from file, the next map for this game.
 	 */
 	public void loadMap()
 	{
-    	// delete old mapPanel and make a new empty one
+    	// delete old map and make a new empty one
     	deleteGridObjects();
     	createGridObjects();
     	
-		// load a new mapPanel
+		// load a new map
 		randomizeBoard();
 		repositionPlayer(prowStart,pcolStart);
 		((GridGUI) mapPanel).repositionScrollBarsToPlayer();
