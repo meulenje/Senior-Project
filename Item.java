@@ -30,8 +30,8 @@ public class Item extends RPGObject implements Comparable<Item>{
 	
 	//get item name
 	public String getItemName()
-	{
-		return this.name;
+	{		
+			return this.name;		
 	}
 	
 	//get item description

@@ -255,6 +255,24 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
      */
     public GameEngine()
     {         
+    	    	
+    	//combatPanel constructor
+    	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
+    	Entity mario = new Entity(PlayerID, Player, "Mario", true, new Item("Spike", "Mario's spike"), 30, 30, 11, 10, 10);
+    	Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, new Item("Spike", "Luigi's spike"), 30, 30, 10, 11, 9);
+    	Entity toad = new Entity(PlayerID, Mushroom, "Toad", true,  new Item("Spike", "Toad's spike"),15, 15, 10, 10, 15);
+    	Ability cure = new Ability("Heal", 1, 0, 20);
+		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
+		luigi.abilities.add(cure);
+		luigi.abilities.add(fireball);
+		mario.abilities.add(cure);
+		mario.abilities.add(fireball);
+		toad.abilities.add(cure);
+		toad.abilities.add(fireball); 
+    	characters.add(mario);
+    	characters.add(luigi);
+    	characters.add(toad);
+    	
     	//inventoryPanel 
     	//initialize array list of items
 		itemsInBackpack = new ArrayList<Item>();
@@ -264,7 +282,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		itemsInBackpack.add(new Item("Bag", "Open to view items"));
 		itemsInBackpack.add(new Item("Chair", "Sit on"));
 		itemsInBackpack.add(new Item("Rock","Throw at pirates"));
-		itemsInBackpack.add(new Item("Spike", "Ouch"));
 		itemsInBackpack.add(new Item("WhiteBoard","Write on me"));
 		itemsInBackpack.add(new Item("Creature", "Bad dude"));
 		itemsInBackpack.add(new Item("BookCase", "Holds your books for you"));		
@@ -275,23 +292,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         itemList.setSelectedIndex(0);
         itemList.addListSelectionListener((ListSelectionListener) this);
-    	
-    	//combatPanel constructor
-    	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
-    	Entity mario = new Entity(PlayerID, Player, "Mario", true, 30, 30, 11, 10, 10);
-    	Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, 30, 30, 10, 11, 9);
-    	Entity toad = new Entity(PlayerID, Mushroom, "Toad", true, 15, 15, 10, 10, 15);
-    	Ability cure = new Ability("Heal", 1, 0, 20);
-		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
-		luigi.abilities.add(cure);
-		luigi.abilities.add(fireball);
-		mario.abilities.add(cure);
-		mario.abilities.add(fireball);
-		toad.abilities.add(cure);
-		toad.abilities.add(fireball);
-    	characters.add(mario);
-    	characters.add(luigi);
-    	characters.add(toad);
     	
         // Create the JWindow and Frame to hold the Panels
     	
@@ -1555,7 +1555,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
                 else if(temp==7)
                 {
                 	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
-                			new Entity(LavaMonsterID, LavaMonster, "LavaMonster", false, 10, 10, 5, 5, 5), null);
+                			new Entity(LavaMonsterID, LavaMonster, "LavaMonster", false,null, 10, 10, 5, 5, 5), null);
                 	numOfMonsters++;
                 }
                 // randomly make "beartraps"
@@ -2251,7 +2251,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", false, 10, 10, 10, 10, 1);
+			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", false,null, 10, 10, 10, 10, 1);
 			m.setExp(5);
 			Ability cure = new Ability("Heal", 1, 0, 0);
 			m.abilities.add(cure);
@@ -2335,66 +2335,74 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	}
 	
 	//inventory GUI methods
-		@Override
-		public void valueChanged(ListSelectionEvent arg0) 
-		{
-			
-	        ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem(itemList.getSelectedIndex()));	
-			
-		}
+	@Override
+	public void valueChanged(ListSelectionEvent arg0) 
+	{
 		
-		//return the string of the character that is selected
-			public Entity getSelectedCharacter()
+        ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem());	
+		
+	}
+		
+	//return the string of the character that is selected
+	public Entity getSelectedCharacter()
+	{
+		return characters.get(index);
+	}
+		
+	//return Item at index
+	public Item getItem(int pIndex)
+	{
+		return itemsInBackpack.get(pIndex);
+		
+	}
+	
+	//return the string of the item that is selected
+	public Item getSelectedItem()
+	{
+		return getItem(itemList.getSelectedIndex());
+	}
+		
+							
+	//navigates to the previous character selection
+	public void  navigateCharacter(String pNav)
+	{ 	
+		int size = characters.size(); 
+		//if navigating to previous character
+		if(pNav == "previous")
+		{			
+			index -= 1;
+			//if trying to navigate before first character, go to end
+			if(index < 0)
 			{
-				return characters.get(index);
+				index = size-1;
 			}
+		}
+		//if navigating to next character
+		if(pNav == "next")
+		{
+			index += 1;
+			//if no more characters in list, go to beginning 
+			if(index >= size)
+			{
+				index = 0;
+			}
+		}
 			
-		//return the string of the item that is selected
-			public Item getSelectedItem(int pIndex)
-			{
-				return itemsInBackpack.get(pIndex);
-			}
-						
-			//navigates to the previous character selection
-			public void  navigateCharacter(String pNav)
-			{ 	
-				int size = characters.size(); 
-				//if navigating to previous character
-				if(pNav == "previous")
-				{			
-					index -= 1;
-					//if trying to navigate before first character, go to end
-					if(index < 0)
-					{
-						index = size-1;
-					}
-				}
-				//if navigating to next character
-				if(pNav == "next")
-				{
-					index += 1;
-					//if no more characters in list, go to beginning 
-					if(index >= size)
-					{
-						index = 0;
-					}
-				}
-					
-			}
-			
-			//returns the item list
-			public JList<Item> getItemList()
-			{
-				return this.itemList;
-			}
-			
-			//returns an array of the list
-			public Item[] getItemArray()
-			{
-				Item[] array = new Item[itemsInBackpack.size()];
-				itemsInBackpack.toArray(array);		
-				return array; 
-			}
+	}
+	
+	//returns the item list
+	public JList<Item> getItemList()
+	{
+		return this.itemList;
+	}
+	
+	//returns an array of the list
+	public Item[] getItemArray()
+	{
+		Item[] array = new Item[itemsInBackpack.size()];
+		itemsInBackpack.toArray(array);		
+		return array; 
+	}
 		
 	
 } // end of GameEngine

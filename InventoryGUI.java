@@ -57,20 +57,18 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	//toolbar components
 	private JButton nextCharacterButton; //next character selection 
 	private JButton previousCharacterButton; //previous character selection 
-    static final private String PREVIOUS = "previous";	//button action names
-    static final private String NEXT = "next";    
+	private JButton equiptButton; // button to equipt selected item    
     private JLabel characterPicture; //character picture and name  
     private JLabel equippedImage; //image of equipped item    
     private JLabel equippedLabel; // name of equipped item
-    private JLabel equippedDescription; // description of equipped item
-    private JTextField characterName = new JTextField();    
+    private JLabel equippedDescription; // description of equipped item  
     private JLabel itemPicture; //item picture and name
     private JProgressBar healthBar; 
     private JProgressBar magicBar;
     private JProgressBar expBar;
     private BoundedRangeModel healthBarModel;  //enables flexibility of health progress bar
     private BoundedRangeModel magicBarModel; 
-    private BoundedRangeModel expBarModel; 
+    private BoundedRangeModel expBarModel;    
     
     //The IventoryGUI panel
 	public InventoryGUI(GameEngine tempEngine)
@@ -92,16 +90,24 @@ public class InventoryGUI extends JPanel implements ActionListener {
         // Todo: set toolbar not draggable
         makeToolbar(toolBar);       
         
-      //==================
+        //==================
         //Selected Item display
         //==================
-        JLabel itemDisplayTitle = new JLabel("SELECTED ITEM: ");
+        
+        //equipt button
+        equiptButton = new JButton("EQUIPT");
+        equiptButton.addActionListener(this);
+        
+        JPanel title = new JPanel();
         itemDisplay = new JPanel();    
         itemDisplay.setLayout(new BorderLayout());
+        title.setLayout(new BorderLayout());
+        title.add(new JLabel("SELECTED ITEM: ", JLabel.CENTER),BorderLayout.NORTH); 
+        title.add(itemDisplay, BorderLayout.CENTER);
         itemPicture = new JLabel();
-        itemDisplay.add(itemPicture, BorderLayout.CENTER);
-        itemDisplay.setBorder(BorderFactory.createLineBorder(Color.black));
-        itemDisplay.add(itemDisplayTitle, BorderLayout.NORTH);
+        itemDisplay.add(itemPicture, BorderLayout.WEST);
+        itemDisplay.add(equiptButton, BorderLayout.EAST);
+        itemDisplay.setBorder(BorderFactory.createLineBorder(Color.black));       
              
         
         //==================
@@ -120,40 +126,48 @@ public class InventoryGUI extends JPanel implements ActionListener {
         paperDollPanel = new JPanel();
         paperDollPanel.setLayout(new BorderLayout());
         equippedSlotPanel = new JPanel();
-        equippedSlotPanel.setLayout(new GridLayout(3,3));
-        equippedSlotPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-        JLabel equiptmentTitle = new JLabel("EQUIPPED:");               
+        equippedSlotPanel.setLayout(new BorderLayout());        
+        equippedSlotPanel.setBorder(BorderFactory.createLineBorder(Color.black));        
         equippedLabel = new JLabel(); 
         equippedDescription = new JLabel();
         equippedImage = new JLabel();
         
-        updateCharacterEquipped(GE.characters.get(0));
+        //temporary panels for alignment        
+        JPanel top = new JPanel();
+        top.setLayout(new BorderLayout());
+        JPanel left = new JPanel();
+        left.setLayout(new GridLayout(2,1));
+        JPanel right = new JPanel();
+                        
+        updateCharacterEquipped(GE.characters.get(0)); //update to default (first) character in party
+                        
+        //equipped area
+        JLabel equipTitle = new JLabel("EQUIPPED:", JLabel.CENTER);        
+        top.add(equipTitle, BorderLayout.NORTH);
+        top.add(equippedSlotPanel, BorderLayout.CENTER);      
+       	left.add(equippedLabel);
+        left.add(equippedImage);        
+        right.add(equippedDescription);
+               
+        equippedSlotPanel.add(left, BorderLayout.WEST);
+        equippedSlotPanel.add(right, BorderLayout.CENTER);
         
-        equippedSlotPanel.add(new JLabel(""));
-        equippedSlotPanel.add(equiptmentTitle);
-        equippedSlotPanel.add(new JLabel(""));
-        equippedSlotPanel.add(new JLabel(""));
-        equippedSlotPanel.add(equippedLabel);
-        equippedSlotPanel.add(equippedDescription);
-        equippedSlotPanel.add(new JLabel(""));
-        equippedSlotPanel.add(equippedImage);
-        equippedSlotPanel.add(new JLabel(""));
-        paperDollPanel.add(equippedSlotPanel, BorderLayout.SOUTH);
+        paperDollPanel.add(top, BorderLayout.SOUTH);
         
       //==================
         //item inventory list
         //==================
         
         itemScrollPane = new JScrollPane(GE.getItemList()); // add the items to the JScrollPane           
-        updateBackpackLabel(GE.getSelectedItem(0));// this just selects the first item from the list
+        updateBackpackLabel(GE.getItem(0));// this just selects the first item from the list
         updateCharacterStatsBars(GE.getSelectedCharacter());
 
                         
         //group together
         centerPanel.add(itemScrollPane, BorderLayout.WEST); 
-        centerPanel.add(rightCenterPanel, BorderLayout.CENTER);
-        rightCenterPanel.add(paperDollPanel,BorderLayout.CENTER);
-        rightCenterPanel.add(itemDisplay, BorderLayout.NORTH);
+        centerPanel.add(rightCenterPanel, BorderLayout.NORTH);
+        rightCenterPanel.add(paperDollPanel,BorderLayout.NORTH);
+        rightCenterPanel.add(title, BorderLayout.CENTER);
                        
         // apply sizing to components
 	    toolBar.setPreferredSize(new Dimension(600,50));
@@ -165,7 +179,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
                 
         this.add(toolBar, BorderLayout.NORTH);         
         
-      	this.add(centerPanel, BorderLayout.CENTER);
+      	this.add(centerPanel);
                	  
     }
 	
@@ -247,12 +261,10 @@ public class InventoryGUI extends JPanel implements ActionListener {
     }
 	// Label that shows the item name
     protected void updateCharacterLabel (Entity entity)
-    {
-    	characterName.setEditable(false);
-    	characterName.setHorizontalAlignment(JTextField.CENTER);      	
-    	characterName.setText(entity.getName());
+    {    	
     	ImageIcon icon = entity.getImage();
     	characterPicture.setIcon(icon);
+    	characterPicture.setText(entity.getName());
     	if  (icon != null) {
             
         } else {
@@ -299,11 +311,19 @@ public class InventoryGUI extends JPanel implements ActionListener {
 			updateCharacterEquipped(GE.getSelectedCharacter());
 		}
 		
+		//if next character
 		if(arg0.getSource() == nextCharacterButton)
 		{
 			GE.navigateCharacter("next");
 			updateCharacterLabel(GE.getSelectedCharacter());
 			updateCharacterStatsBars(GE.getSelectedCharacter());
+			updateCharacterEquipped(GE.getSelectedCharacter());
+		}
+		
+		//equipt button is pressed
+		if(arg0.getSource() == equiptButton)
+		{
+			GE.getSelectedCharacter().setEquippedItem(GE.getSelectedItem());
 			updateCharacterEquipped(GE.getSelectedCharacter());
 		}
 			
