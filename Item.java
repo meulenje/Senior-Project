@@ -7,12 +7,20 @@ public class Item extends RPGObject implements Comparable<Item>{
 	private String name; //name of item
 	private String description; //description of item
 	private boolean consumable; // if it is used, does it get thrown out
+	ImageIcon image; // the picture of the item  
 	
+	//constructor to initialize item with only Name and Description
+	public Item(String pName, String pDescription)
+	{
+		this.name = pName;
+		this.description = pDescription;
+		this.image = createImageIcon("images/"+pName+".png"); // where the itme images are
+	}
 	//constructor to initialize item id, and whether it is consumable
 	public Item(int pId, ImageIcon image, String pName, String pDes, boolean pCon)
 	{
 		this.id = pId;
-		this.image = image;
+		this.image = createImageIcon("images/"+pName+".png"); // where the itme images are
 		this.name = pName;
 		this.description = pDes;
 		this.consumable = pCon;
@@ -32,6 +40,12 @@ public class Item extends RPGObject implements Comparable<Item>{
 		return this.description;
 	}
 	
+	//get the item picture icon
+	public ImageIcon getItemIcon()
+	{
+		return this.image;
+	}
+	
 	//set item name
 	public void setItemName(String pName)
 	{
@@ -45,6 +59,7 @@ public class Item extends RPGObject implements Comparable<Item>{
 		return name;
 	}
 	
+	//make the item icon
 	protected ImageIcon createImageIcon(String path) 
     {       
         if (path != null) {        	

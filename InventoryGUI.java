@@ -140,7 +140,8 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	    toolBar.setLayout(new GridLayout(0,4));
 	   	
         //make the button to select previous character.
-        previousCharacterButton = makeButton("NewPointArrow",PREVIOUS, "Previous Character", "Previous");       
+        previousCharacterButton = new JButton("Previous"); 
+        previousCharacterButton.addActionListener(this);
         
         //Make a label to hold the picture of the character
         characterPicture = new JLabel(null,null, JLabel.CENTER);
@@ -148,7 +149,8 @@ public class InventoryGUI extends JPanel implements ActionListener {
         updateCharacterLabel(GE.getSelectedCharacter());
   
         //make button to select next character
-        nextCharacterButton = makeButton("NewPointArrow", NEXT, "Next Character", "Next");
+        nextCharacterButton = new JButton("Next");
+        nextCharacterButton.addActionListener(this);
         
         //make the stats area
         JLabel healthLabel = new JLabel("HP:"); // health
@@ -217,7 +219,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
 
      
     //Brings up the selected image
-    protected void updateBackpackLabel (item item) 
+    protected void updateBackpackLabel (Item item) 
     {
         ImageIcon icon = item.getItemIcon();
         itemPicture.setIcon(icon);
@@ -263,16 +265,15 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) 
 	{
-		String cmd = arg0.getActionCommand();
-		
-		if(PREVIOUS.equals(cmd))
+		//if previous character
+		if(arg0.getSource() == previousCharacterButton)
 		{
 			GE.navigateCharacter("previous");
 			updateCharacterLabel(GE.getSelectedCharacter());
 			updateCharacterStatsBars(GE.getSelectedCharacter());
 		}
 		
-		if(NEXT.equals(cmd))
+		if(arg0.getSource() == nextCharacterButton)
 		{
 			GE.navigateCharacter("next");
 			updateCharacterLabel(GE.getSelectedCharacter());

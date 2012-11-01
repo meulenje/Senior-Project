@@ -7,12 +7,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
+
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,6 +28,8 @@ import java.util.Random;
 import java.util.Stack;
 import javax.sound.midi.*;
 import javax.swing.JFrame;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  * Game Engine class
@@ -35,7 +40,7 @@ import javax.swing.JFrame;
  * @version 10/11/2012
  *
  */
-public class GameEngine implements ActionListener, FocusListener, ClockListener {
+public class GameEngine implements ActionListener, FocusListener, ClockListener, ListSelectionListener {
 	
 	
 	// Game Engine specific variables
@@ -237,12 +242,40 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	ArrayList<Entity> combatants;
 	ArrayList<Entity> characters;
 	//end combatPanel engine fields
+	
+	//InventoryGUI variables 
+	private JList<Item> itemList = new JList<Item>(); // list to h
+	private ArrayList<Item> itemsInBackpack; //array inventory items
+	
+	private int index = 0; //index to track selected character
+	
     
     /**
      * Constructor for GameEngine
      */
     public GameEngine()
-    {            
+    {         
+    	//inventoryPanel 
+    	//initialize array list of items
+		itemsInBackpack = new ArrayList<Item>();
+		itemsInBackpack.add(new Item("Book", "Something to read"));
+		itemsInBackpack.add(new Item("Gem", "A gem"));
+		itemsInBackpack.add(new Item("Beartrap", "Used to break ankles"));
+		itemsInBackpack.add(new Item("Bag", "Open to view items"));
+		itemsInBackpack.add(new Item("Chair", "Sit on"));
+		itemsInBackpack.add(new Item("Rock","Throw at pirates"));
+		itemsInBackpack.add(new Item("Spike", "Ouch"));
+		itemsInBackpack.add(new Item("WhiteBoard","Write on me"));
+		itemsInBackpack.add(new Item("Creature", "Bad dude"));
+		itemsInBackpack.add(new Item("BookCase", "Holds your books for you"));		
+		itemsInBackpack.add(new Item("Door1", "Open and walk through"));
+				
+		//initailize the list
+		itemList = new JList<Item>(getItemArray());  //JList that displays the items
+        itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        itemList.setSelectedIndex(0);
+        itemList.addListSelectionListener((ListSelectionListener) this);
+    	
     	//combatPanel constructor
     	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
     	Entity mario = new Entity(PlayerID, Player, "Mario", true, 30, 30, 11, 10, 10);
@@ -359,8 +392,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
         // --------------------------------------------------------
         // create the InventoryGUI inventoryPanel panel
-        inventoryPanel = new JPanel();
-        inventoryPanel.add(new JLabel("Sorry!\n\nThis part of the game is unfinished."));
+        inventoryPanel = new InventoryGUI(this);       
         // --------------------------------------------------------
         
         // --------------------------------------------------------
@@ -2301,6 +2333,69 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 
 		return newArray;
 	}
+	
+	//inventory GUI methods
+		@Override
+		public void valueChanged(ListSelectionEvent arg0) 
+		{
+			
+	        ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem(itemList.getSelectedIndex()));	
+			
+		}
+		
+		//return the string of the character that is selected
+			public Entity getSelectedCharacter()
+			{
+				return characters.get(index);
+			}
+			
+		//return the string of the item that is selected
+			public Item getSelectedItem(int pIndex)
+			{
+				return itemsInBackpack.get(pIndex);
+			}
+						
+			//navigates to the previous character selection
+			public void  navigateCharacter(String pNav)
+			{ 	
+				int size = characters.size(); 
+				//if navigating to previous character
+				if(pNav == "previous")
+				{			
+					index -= 1;
+					//if trying to navigate before first character, go to end
+					if(index < 0)
+					{
+						index = size-1;
+					}
+				}
+				//if navigating to next character
+				if(pNav == "next")
+				{
+					index += 1;
+					//if no more characters in list, go to beginning 
+					if(index >= size)
+					{
+						index = 0;
+					}
+				}
+					
+			}
+			
+			//returns the item list
+			public JList<Item> getItemList()
+			{
+				return this.itemList;
+			}
+			
+			//returns an array of the list
+			public Item[] getItemArray()
+			{
+				Item[] array = new Item[itemsInBackpack.size()];
+				itemsInBackpack.toArray(array);		
+				return array; 
+			}
+		
 	
 } // end of GameEngine
 // --------------------
