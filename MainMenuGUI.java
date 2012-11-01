@@ -80,6 +80,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		box.add(buttonPanel, BorderLayout.CENTER);
 		TitledBorder tb = new TitledBorder("Main Menu");
 		tb.setTitleColor(GE.foregroundColor);
+		tb.setBorder(BorderFactory.createLineBorder(GE.foregroundColor));
 		tb.setTitlePosition(2);
 		tb.setTitleFont(new Font("sansserif",Font.BOLD,16));
 		box.setBorder(tb);
@@ -105,7 +106,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		else if(source == optionsButton)
 		{
 			// view options panel
-			// TODO
+			GE.viewOptions();
 		}
 		else if(source == editorButton)
 		{

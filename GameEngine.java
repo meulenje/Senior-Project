@@ -45,7 +45,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	protected final int C_WIDTH = 25; // object image size
 	protected final int C_HEIGHT = 25; // object image size
     protected GridObject[][] board; // the maximum board size
-    protected ArrayList<QuestGUI> quests; // list of quest messages
+    protected ArrayList<QuestObject> quests; // list of quest messages
     protected Clock klok; // a timer to control other settings
     protected Sequencer musicStream; // a sequencer to play background music
     protected Sequencer soundStream; // a sequencer to play sound effects
@@ -210,6 +210,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     protected JPanel loadingScreen;
     protected JPanel animationScreen;
     protected JPanel mainmenu;
+    protected JPanel options;
     protected JTabbedPane tabs;
     protected JPanel mapPanel;
     protected JPanel combatPanel;
@@ -364,7 +365,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         
         // --------------------------------------------------------
         // create the MessageGUI quest panel
-        questPanel = new MessageGUI(this);
+        questPanel = new QuestGUI(this);
         // --------------------------------------------------------
         
         // create the TabbedPane
@@ -384,6 +385,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         mainmenu.setSize(X_DIM,Y_DIM + 60);
         // --------------------------------------------------------
 
+        // --------------------------------------------------------
+        // make the options gui
+        options = new OptionsGUI(this);
+        options.setLocation(0,0);
+        options.setSize(X_DIM,Y_DIM + 60);
+        // --------------------------------------------------------
+        
         // --------------------------------------------------------        
         animationScreen = new AnimationGUI(this);
         animationScreen.setLocation(0,0);
@@ -406,16 +414,19 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         // create layers panel
         // 0   -- is for the GamePanels (Grid, Combat, etc)
         // 100 -- is for the MainMenu
+        // 125 -- is for the Options Menu
         // 150 -- is for the Animation Screen
         // 200   -- is for the Loading Screen
         layers = new JLayeredPane();
         layers.setLayout(new BorderLayout());
         layers.add(tabs);
         layers.add(mainmenu);
+        layers.add(options);
         layers.add(animationScreen);
         layers.add(loadingScreen);
         layers.setLayer(tabs, 0);
         layers.setLayer(mainmenu, 100);
+        layers.setLayer(options, 120);
         layers.setLayer(animationScreen, 150);
         layers.setLayer(loadingScreen, 200);
         
@@ -479,7 +490,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	public void createQuestList()
 	{
 		// create list of quests
-		quests = new ArrayList<QuestGUI>();
+		quests = new ArrayList<QuestObject>();
 	}
 	
 	/**
@@ -489,7 +500,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 	{
 		quests = null;
 		// remove each of the quests
-		((MessageGUI) questPanel).removeAllQuests();
+		((QuestGUI) questPanel).removeAllQuests();
 	}
     
     /**
@@ -709,6 +720,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(false);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
+    	options.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(3);
     	questPanel.requestFocus();
@@ -723,6 +735,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(false);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
+    	options.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(2);
     	combatPanel.requestFocus();
@@ -740,6 +753,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(false);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
+    	options.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(1);
     	inventoryPanel.requestFocus();
@@ -754,6 +768,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(false);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
+    	options.setVisible(false);
     	tabs.setVisible(true);
     	tabs.setSelectedIndex(0);
     	mapPanel.requestFocus();
@@ -771,11 +786,22 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(false);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(true);
+    	options.setVisible(false);
     	tabs.setVisible(false);
     	mainmenu.requestFocus();
     	
     	// play menu music
     	playMusic(menuTheme, true);
+    }
+    
+    public void viewOptions()
+    {
+    	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	options.setVisible(true);
+    	tabs.setVisible(false);
+    	options.requestFocus();
     }
     
     /**
@@ -786,6 +812,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
     	loadingScreen.setVisible(true);
     	animationScreen.setVisible(false);
     	mainmenu.setVisible(false);
+    	options.setVisible(false);
     	tabs.setVisible(false);
     }
     
@@ -855,11 +882,11 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		questsActive++;
 		
 		// create new jpanel to add to array list
-		QuestGUI q = new QuestGUI(this,id,i,t,m,s);
+		QuestObject q = new QuestObject(this,id,i,t,m,s);
 		quests.add(q);
 		
-		// add new quest to MessageGUI
-		((MessageGUI) questPanel).addQuest(q);
+		// add new quest to QuestGUI
+		((QuestGUI) questPanel).addQuest(q);
 		
 		// popup a hint for the player if they need a reminder
 		if(showHintsEnabled)
@@ -894,7 +921,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 		try
 		{	
 			quests.remove(id);
-			((MessageGUI) questPanel).removeQuest(id);
+			((QuestGUI) questPanel).removeQuest(id);
 		}
 		catch(Exception e)
 		{
@@ -1089,6 +1116,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
 					if(board[x][y].isEmptySpace())
 					{
 						repositionPlayer(x,y);
+						movePlayerVision();
 						((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 						playerWasWarped = true;
 					}
@@ -1468,7 +1496,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
         boolean spiralPlaced = false;
         int signs = 0;
         int temp;
-        numOfMonsters = 0;
+        numOfMonsters = 0;		
         
         if(blinkOnExit) // turn off display briefly
         	((GridGUI) mapPanel).setVisible(false);
@@ -1505,7 +1533,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 			new NonEntity(BeartrapID, Beartrap, false, true, false, false), 
                 			new NonEntity(TallGrassID, TallGrass, false, false, false, false));
                 }
-                else if(temp==11 && signs<3)
+                // randomly make "sign posts"
+                else if(temp==11 && signs<3) // only allow 3 per map
                 {
                 	board[i][j].resetObject(new Terrain(GrassID, Grass, false, true, false), 
                 			new NonEntity(SignID, Sign, false, false, false, true), null);
@@ -1520,7 +1549,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener 
                 // place warp 'b'
                 else if(warpingEnabled && !warpBPlaced && temp==9 && (i >= BROWS/2))
                 {
-                	board[i][j].resetObject(new Terrain(WarpAID, XSpace, false, true, false), null, null);
+                	board[i][j].resetObject(new Terrain(WarpBID, XSpace, false, true, false), null, null);
                 	warpBPlaced = true;
                 }
                 // randomly place one exit per map
