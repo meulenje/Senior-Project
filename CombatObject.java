@@ -18,7 +18,6 @@ public class CombatObject extends JPanel implements ActionListener {
 	private int objectHeight = 50;
 	
 	// gui parts
-	private JLabel imageLabel;
 	protected JProgressBar healthBar;
 	protected JProgressBar manaBar;
 	private JLabel name;
@@ -48,6 +47,7 @@ public class CombatObject extends JPanel implements ActionListener {
         healthBar.setBackground(Color.WHITE);
         healthBar.setBorderPainted(true);
         healthBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
+        healthBar.setStringPainted(true);
         setHealthBar();
         
         // mana bar for the player
@@ -56,6 +56,7 @@ public class CombatObject extends JPanel implements ActionListener {
         manaBar.setBackground(Color.WHITE);
         manaBar.setBorderPainted(true);
         manaBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
+        manaBar.setStringPainted(true);
         setManaBar();
     	
     	// Lay a background, foreground, and highground JLabel
@@ -134,12 +135,14 @@ public class CombatObject extends JPanel implements ActionListener {
 	{
 		int healthPercent = (int) (((double)entity.getCurrentHealth() / (double)entity.getMaxHealth()) * 100);
 		healthBar.setValue(healthPercent);
+		healthBar.setString(""+entity.getCurrentHealth()+"/"+entity.getMaxHealth());
 	}
 	
 	public void setManaBar()
 	{
 		int manaPercent = (int) (((double)entity.getCurrentMana() / (double)entity.getMaxMana()) * 100);
 		manaBar.setValue(manaPercent);
+		manaBar.setString(""+entity.getCurrentMana()+"/"+entity.getMaxMana());
 	}
 	
 	@Override

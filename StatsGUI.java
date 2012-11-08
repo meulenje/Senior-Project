@@ -73,14 +73,14 @@ public class StatsGUI extends JPanel implements ActionListener{
 		position = 0;
 		TheCharacter = GE.characters.get(position);
 		for (int i = 0; i < GE.characters.size(); i++){
-			GE.characters.get(i).setlevelupPoints(5);
+			GE.characters.get(i).setLevelUpPoints(5);
 		}
 		modifiedHealth = TheCharacter.getMaxHealth();
 		modifiedAttack = TheCharacter.getAttack();
 		modifiedMana = TheCharacter.getMaxMana();
 		modifiedDefense = TheCharacter.getAttack();
 		modifiedSpeed = TheCharacter.getSpeed();
-		pointsLeft = TheCharacter.getlevelupPoints();
+		pointsLeft = TheCharacter.getLevelUpPoints();
 		
 		this.setLayout(new BorderLayout());
 		
@@ -203,7 +203,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		mainFrame.add(SpeedUp);
 		mainFrame.add(SpeedDown);
 		
-		PointsLeft = new JTextArea("" + TheCharacter.getlevelupPoints());
+		PointsLeft = new JTextArea("" + TheCharacter.getLevelUpPoints());
 		PointsLeft.setEditable(false);
 		Confirm = new JButton("Confirm");
 		Confirm.addActionListener(this);
@@ -359,7 +359,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		modifiedAttack = TheCharacter.getAttack();
 		modifiedDefense = TheCharacter.getDefense();
 		modifiedSpeed = TheCharacter.getSpeed();
-		pointsLeft = TheCharacter.getlevelupPoints();
+		pointsLeft = TheCharacter.getLevelUpPoints();
 		update();
 	}
 	
@@ -375,7 +375,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 			TheCharacter.setAttack(modifiedAttack);
 			TheCharacter.setDefense(modifiedDefense);
 			TheCharacter.setSpeed(modifiedSpeed);
-			TheCharacter.setlevelupPoints(pointsLeft);
+			TheCharacter.setLevelUpPoints(pointsLeft);
 			update();
 			return result;
 		}
@@ -385,7 +385,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 	}
 	
 	private void cycle(int inc){
-		if (pointsLeft == TheCharacter.getlevelupPoints() || confirm() ==  0){
+		if (pointsLeft == TheCharacter.getLevelUpPoints() || confirm() ==  0){
 			if (inc > 0){
 				position++;
 			}

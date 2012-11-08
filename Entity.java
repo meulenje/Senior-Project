@@ -27,21 +27,25 @@ public class Entity extends RPGObject implements Comparable<Entity>{
     public boolean isPlayer = false;
     //experience value for monsters, accumulated experience for players
     private int exp;
+    private int levelUpPoints;
     ArrayList<Ability> abilities = new ArrayList<Ability>();
  
     private Item equippedItem; //for now they may only have one equipped item at a time
 
     public Entity(int id, ImageIcon image, String name, boolean isPlayer, Item equippedItem,
-    		int currentHealth, int maxHealth, int attack, int defense, int speed) {
+    		int currentHealth, int maxHealth, int currentMana, int maxMana, int attack, int defense, int speed, int points) {
         
     	this.id = id;
     	this.image = image;
     	this.equippedItem = equippedItem;
     	this.maxHealth = maxHealth;
         this.currentHealth = currentHealth;
+        this.maxMana = maxMana;
+        this.currentMana = currentMana;
         this.attack = attack;
         this.defense = defense;
         this.speed = speed;
+        this.levelUpPoints = points;
         this.name = name;
         this.isPlayer = isPlayer;
     }
@@ -214,4 +218,15 @@ int getCurrentMana() {
 void setCurrentMana(int currentMana) {
 	this.currentMana = currentMana;
 }
+
+int getLevelUpPoints()
+{
+	return levelUpPoints;
+}
+
+void setLevelUpPoints(int points)
+{
+	this.levelUpPoints = points;
+}
+
 }

@@ -220,6 +220,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     protected JPanel mapPanel;
     protected JPanel combatPanel;
     protected JPanel inventoryPanel;
+    protected JPanel statsPanel;
     protected JPanel questPanel;
     
 	// keep track of keyboard keys being held down
@@ -258,17 +259,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     	    	
     	//combatPanel constructor
     	characters = new ArrayList<Entity>(); // currentHealth, totalHealth, attack, defense, speed
-    	Entity mario = new Entity(PlayerID, Player, "Mario", true, new Item("Spike", "Mario's spike"), 30, 30, 11, 10, 10);
-    	Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, new Item("Spike", "Luigi's spike"), 30, 30, 10, 11, 9);
-    	Entity toad = new Entity(PlayerID, Mushroom, "Toad", true,  new Item("Spike", "Toad's spike"),15, 15, 10, 10, 15);
-    	Ability cure = new Ability("Heal", 1, 0, 20);
-		Ability fireball = new Ability("Super Fireball", 0, 1, 5);
+    	Entity mario = new Entity(PlayerID, Player, "Mario", true, new Item("Spike", "Mario's spike"), 30, 30, 20,20,11, 10, 10, 5);
+    	Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, new Item("Spike", "Luigi's spike"), 30, 30, 30,30,10, 11, 9, 5);
+    	Entity toad = new Entity(PlayerID, Mushroom, "Toad", true,  new Item("Spike", "Toad's spike"),15, 15, 50,50,10, 10, 15, 5);
+    	Ability cure = new Ability("Heal", 1, 0, 20, 8);
+		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
 		luigi.abilities.add(cure);
-		luigi.abilities.add(fireball);
-		mario.abilities.add(cure);
 		mario.abilities.add(fireball);
 		toad.abilities.add(cure);
-		toad.abilities.add(fireball); 
     	characters.add(mario);
     	characters.add(luigi);
     	characters.add(toad);
@@ -395,6 +393,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         inventoryPanel = new InventoryGUI(this);       
         // --------------------------------------------------------
         
+        
+        statsPanel = new StatsGUI(this);
+        
         // --------------------------------------------------------
         // create the MessageGUI quest panel
         questPanel = new QuestGUI(this);
@@ -404,6 +405,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         tabs = new JTabbedPane();
         tabs.addTab("Map", mapPanel);
         tabs.addTab("Inventory", inventoryPanel);
+        tabs.addTab("Stats", statsPanel);
         tabs.addTab("Combat", combatPanel);
         tabs.addTab("Quests", questPanel);
         tabs.addFocusListener(this);
@@ -1102,7 +1104,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		if(monsterCount>0)
 		{
 			// populate enemies team with the number of monsters we ran into
-			initializeCombat(monsterCount);
+			initializeCombat();
 				
 			// go to combatPanel tab
 			viewCombatPanel();
@@ -1555,7 +1557,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
                 else if(temp==7)
                 {
                 	board[i][j].resetObject(new Terrain(DirtID, Dirt, false, true, false), 
-                			new Entity(LavaMonsterID, LavaMonster, "LavaMonster", false,null, 10, 10, 5, 5, 5), null);
+                			new Entity(LavaMonsterID, LavaMonster, "LavaMonster", false,null, 10, 10, 10, 10, 5, 5, 5, 5), null);
                 	numOfMonsters++;
                 }
                 // randomly make "beartraps"
@@ -2259,7 +2261,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonster, "LM", false, 10, 10, 10, 10, 1);
+			m = new Entity(LavaMonsterID, LavaMonster, "LM", false, null, 10, 10, 10, 10, 10, 10, 1, 5);
 			m.setExp(5);
 			Ability cure = new Ability("heal", 1, 0, 0, 5);
 			m.abilities.add(cure);
