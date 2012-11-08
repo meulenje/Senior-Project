@@ -13,14 +13,14 @@ public class CombatObject extends JPanel implements ActionListener {
 
 	private GameEngine GE;
 	
-	Entity entity;
+	protected Entity entity;
 	private int objectWidth = 50;
 	private int objectHeight = 50;
 	
 	// gui parts
-	
 	private JLabel imageLabel;
 	protected JProgressBar healthBar;
+	protected JProgressBar manaBar;
 	private JLabel name;
 	private JPanel imagePanel;
     protected ImageIcon backgroundImage; // grass, dirt, floor, etc...
@@ -49,6 +49,14 @@ public class CombatObject extends JPanel implements ActionListener {
         healthBar.setBorderPainted(true);
         healthBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
         setHealthBar();
+        
+        // mana bar for the player
+        manaBar = new JProgressBar(0);
+        manaBar.setForeground(Color.BLUE);
+        manaBar.setBackground(Color.WHITE);
+        manaBar.setBorderPainted(true);
+        manaBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
+        setManaBar();
     	
     	// Lay a background, foreground, and highground JLabel
     	background = new JLabel();
@@ -71,7 +79,8 @@ public class CombatObject extends JPanel implements ActionListener {
     	imagePanel.setOpaque(false); // transparent background
     	imagePanel.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT + 15));
     	imagePanel.add(layer, BorderLayout.CENTER);
-    	imagePanel.add(healthBar, BorderLayout.SOUTH);
+    	imagePanel.add(healthBar, BorderLayout.NORTH);
+    	imagePanel.add(manaBar, BorderLayout.SOUTH);
     	
     	setForeground();
     	setBackground(bg);    	
@@ -127,6 +136,12 @@ public class CombatObject extends JPanel implements ActionListener {
 		healthBar.setValue(healthPercent);
 	}
 	
+	public void setManaBar()
+	{
+		int manaPercent = (int) (((double)entity.getCurrentMana() / (double)entity.getMaxMana()) * 100);
+		manaBar.setValue(manaPercent);
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
@@ -134,3 +149,4 @@ public class CombatObject extends JPanel implements ActionListener {
 	}
 
 } // end of CombatObject
+
