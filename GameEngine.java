@@ -1963,8 +1963,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		questsTotal++;
 	}
 	
-	public void initializeCombat(int numOfEnemies) {
-		enemies = initializeEnemies(numOfEnemies);
+	public void initializeCombat() {
+		enemies = initializeEnemies(0);
 		actor = null;
 		event = null;
 		combatOver = false;
@@ -1997,13 +1997,18 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 	public void setupTurn(Entity character, ArrayList<Entity> targets) {
 		if (!combatOver) {
-			((CombatGUI) combatPanel).attackTargets.removeAllItems(); // attacks
-			((CombatGUI) combatPanel).abilityTargets.removeAllItems(); // abilities
-			((CombatGUI) combatPanel).itemTargets.removeAllItems(); // items
+			((CombatGUI) combatPanel).targets.removeAllItems();
 			((CombatGUI) combatPanel).abilities.removeAllItems();
-			((CombatGUI) combatPanel).items.removeAllItems();
 
-			for (CombatObject obj : ((CombatGUI) combatPanel).objects) {
+			for (CombatObject obj : ((CombatGUI) combatPanel).enemies) {
+				if (obj.entity.equals(character)) {
+					obj.setCurrentTurn(true);
+				} else {
+					obj.setCurrentTurn(false);
+				}
+			}
+			
+			for (CombatObject obj : ((CombatGUI) combatPanel).characters) {
 				if (obj.entity.equals(character)) {
 					obj.setCurrentTurn(true);
 				} else {
@@ -2020,23 +2025,18 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 				((CombatGUI) combatPanel).abilities.addItem(ability.getName());
 			}
 			for (Entity target : targets) {
-				((CombatGUI) combatPanel).attackTargets.addItem(target.getName());
-				((CombatGUI) combatPanel).abilityTargets.addItem(target.getName());
-				((CombatGUI) combatPanel).itemTargets.addItem(target.getName());
+				((CombatGUI) combatPanel).targets.addItem(target.getName());
 			}
-		}else{
-			((CombatGUI)combatPanel).update();
-			System.out.println("akdbnasdjknaskdjasd");
-			((CombatGUI)combatPanel).endCombat(combatResult, accumulatedExp);
+		} else {
+			((CombatGUI) combatPanel).update();
+			((CombatGUI) combatPanel).endCombat(combatResult, accumulatedExp);
 		}
 
 	}
 
 	public void endTurn() {
-		((CombatGUI) combatPanel).appendStatus(event);
 
 		// clean out dead combatants
-		characters = cleanCharacterList(characters);
 		enemies = cleanMonsterList(enemies);
 		combatants = mergeCombatantArrays(enemies, characters);
 
@@ -2050,7 +2050,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 			combatResult = -1;
 		}
 		// peek at next Entity in stack to make sure they are alive
-		if (!turnStack.empty() && !turnStack.peek().alive()) {
+		while (!turnStack.empty() && !turnStack.peek().alive()) {
 			turnStack.pop();
 		}
 
@@ -2060,15 +2060,16 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 				turnStack.push(e);
 			}
 		}
-
 		((CombatGUI) combatPanel).update();
+
 	}
 
 	public void monsterTurn(Entity m) {
 
 		String action = m.monsterTurn();
 		if (action.equals("attack")) {
-			event = executeAttack(m, characters.get(0));
+			executeAttack(m, characters.get(0));
+
 		} else {
 			/**
 			 * event = executeAbility(m, 0, enemies, characters,
@@ -2088,7 +2089,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 		// actions for character
 		if (action.equals("Attack")) {
-			event = executeAttack(actor, combatants.get(target));
+			executeAttack(actor, combatants.get(target));
 		}
 
 		else if (action.equals("Wait")) {
@@ -2108,9 +2109,13 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		else {
 			Ability activeAbility = actor.getAbilityByName(action);
 			if (activeAbility.friendly()) {
-				event = executeAbility(actor, target, enemies, characters, activeAbility);
+				executeAbility(actor,
+						((CombatGUI) combatPanel).targets.getSelectedIndex(),
+						enemies, characters, activeAbility);
 			} else {
-				event = executeAbility(actor, target, enemies, characters, activeAbility);
+				executeAbility(actor,
+						((CombatGUI) combatPanel).targets.getSelectedIndex(),
+						enemies, characters, activeAbility);
 			}
 		}
 
@@ -2118,7 +2123,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 	}
 
-	public String executeAttack(Entity source, Entity target) {
+	public void executeAttack(Entity source, Entity target) {
 		int calculatedDamage = 0;
 		int attackVal = source.getAttack() + randomNumberGenerator.nextInt(6);
 		int defenseVal = target.getDefense() + randomNumberGenerator.nextInt(6);
@@ -2129,8 +2134,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		}
 
 		target.setCurrentHealth(target.getCurrentHealth() - calculatedDamage);
-		return (source.getName() + "'s attack hit " + target.getName()
+		String s = (source.getName() + "'s attack hit " + target.getName()
 				+ " for " + calculatedDamage + " damage!");
+		((CombatGUI) combatPanel).appendStatus(s);
 	}
 
 	/*
@@ -2246,15 +2252,16 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		return combatants;
 	}
 
-	public ArrayList<Entity> initializeEnemies(int numOfEnemies) {
+	public ArrayList<Entity> initializeEnemies(int zoneID) {
 		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
-		int numberOfEnemies = randomNumberGenerator.nextInt(numOfEnemies+7) + 1;
+		// int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
+		int numberOfEnemies = 8;
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", false,null, 10, 10, 10, 10, 1);
+			m = new Entity(LavaMonster, "LM", false, 10, 10, 10, 10, 1);
 			m.setExp(5);
-			Ability cure = new Ability("Heal", 1, 0, 0);
+			Ability cure = new Ability("heal", 1, 0, 0, 5);
 			m.abilities.add(cure);
 			m.setName(m.getName() + " " + i);
 			monsterArray.add(m);
@@ -2262,33 +2269,26 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		return monsterArray;
 	}
 
-	public boolean endCombat(ArrayList<Entity> characters, int experience, int result)
-	{
+	public boolean endCombat(ArrayList<Entity> characters, int experience,
+			int result) {
+
 		boolean returnVal = false;
 		if (result == 0) {
 			// code to handle running away (nothing happens)
 			returnVal = true;
 		} else {
-			if (result == 1) 
-			{
-				for (Entity character : characters) 
-				{
+			if (result == 1) {
+				for (Entity character : characters) {
 					character.setExp(character.getExp() + experience);
 					((CombatGUI) combatPanel).appendStatus(character.getName()
 							+ " has earned " + experience + " experience!");
 				}
-				
-				// clean up enemies from board
-				// turn them into bags to pickup
-				removeDefeatedEnemies(new Item(BagID,Bag,"Bag","A bag that holds items.",true));
-				
 				returnVal = true;
-			} 
-			else 
-			{
+			} else {
 				returnVal = false;
 			}
 		}
+		// viewMapPanel();
 		return returnVal;
 	}
 
@@ -2296,7 +2296,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		ArrayList<Entity> newArray = new ArrayList<Entity>();
 
 		for (Entity e : entities) {
-			if (e.getCurrentHealth() > 0) {
+			if (e.alive()) {
 				newArray.add(e);
 			} else {
 				((CombatGUI) combatPanel).appendStatus(e.getName()
