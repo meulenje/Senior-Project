@@ -122,7 +122,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     protected boolean mappingEnabled = false;
     protected int playerVisionRange = 3;
     protected boolean warpingEnabled = true;
-    protected boolean blinkOnExit = false;
     protected boolean clearStatsPerLevel = false;
     protected int monsterGridSpeed = 2; // monster moves after X seconds
     protected double percentChanceOfEncounter = 0.0; // when entering a Encounterable space, there is a small chance the player will run into a monster
@@ -208,7 +207,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     private JCheckBoxMenuItem enableSoundItem;
     private JCheckBoxMenuItem enableHintsItem;
     private JCheckBoxMenuItem enableFogItem;
-    private JCheckBoxMenuItem enableBlinkItem;
     private JCheckBoxMenuItem enableWarpItem;
     private JCheckBoxMenuItem enableMappingItem;
     protected JLayeredPane layers;
@@ -314,7 +312,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         enableHintsItem = new JCheckBoxMenuItem("Show Hints");
         enableFogItem = new JCheckBoxMenuItem("Fog of War");
         enableMappingItem = new JCheckBoxMenuItem("Show Visited");
-        enableBlinkItem = new JCheckBoxMenuItem("Blink Loading");
         enableWarpItem = new JCheckBoxMenuItem("Warps");
         
         // add listeners
@@ -337,7 +334,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         enableSoundItem.addActionListener(this);
         enableHintsItem.addActionListener(this);
         enableFogItem.addActionListener(this);
-        enableBlinkItem.addActionListener(this);
         enableWarpItem.addActionListener(this);
         enableMappingItem.addActionListener(this);
         optionsMenu.add(enableMusicItem);
@@ -345,14 +341,12 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         optionsMenu.add(enableHintsItem);
         optionsMenu.add(enableFogItem);
         optionsMenu.add(enableMappingItem);
-        optionsMenu.add(enableBlinkItem);
         optionsMenu.add(enableWarpItem);
         
         enableMusicItem.setState(musicEnabled);
         enableSoundItem.setState(soundEnabled);
         enableHintsItem.setState(showHintsEnabled);
         enableFogItem.setState(fogOfWar);
-        enableBlinkItem.setState(blinkOnExit);
         enableWarpItem.setState(warpingEnabled);
         enableMappingItem.setState(mappingEnabled); 
         // disable unnecessary options
@@ -376,28 +370,30 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         
         
         
-        
+        // TABS
 
         // --------------------------------------------------------       
-        // create the GridGui mapPanel panel
+        // create the GridGui mapPanel tab
         mapPanel = new GridGUI(this);
         // --------------------------------------------------------
         
         // --------------------------------------------------------
-        // create the CombatGUI combatPanel panel
+        // create the CombatGUI combatPanel tab
         combatPanel = new CombatGUI(this);
         // --------------------------------------------------------
 
         // --------------------------------------------------------
-        // create the InventoryGUI inventoryPanel panel
+        // create the InventoryGUI inventoryPanel tab
         inventoryPanel = new InventoryGUI(this);       
         // --------------------------------------------------------
         
-        
+        // --------------------------------------------------------
+        // create the StatsGUI statsPanel tab
         statsPanel = new StatsGUI(this);
+        // --------------------------------------------------------
         
         // --------------------------------------------------------
-        // create the MessageGUI quest panel
+        // create the QuestGUI questPanel tab
         questPanel = new QuestGUI(this);
         // --------------------------------------------------------
         
@@ -426,7 +422,8 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         options.setSize(X_DIM,Y_DIM + 60);
         // --------------------------------------------------------
         
-        // --------------------------------------------------------        
+        // --------------------------------------------------------  
+        // make the animation screen
         animationScreen = new AnimationGUI(this);
         animationScreen.setLocation(0,0);
         animationScreen.setSize(X_DIM,Y_DIM + 60);
@@ -756,7 +753,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     	mainmenu.setVisible(false);
     	options.setVisible(false);
     	tabs.setVisible(true);
-    	tabs.setSelectedIndex(3);
+    	tabs.setSelectedIndex(4);
     	questPanel.requestFocus();
     	klok.pause();
     }
@@ -771,7 +768,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     	mainmenu.setVisible(false);
     	options.setVisible(false);
     	tabs.setVisible(true);
-    	tabs.setSelectedIndex(2);
+    	tabs.setSelectedIndex(3);
     	combatPanel.requestFocus();
     	klok.pause();
     	
@@ -792,6 +789,23 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
     	tabs.setSelectedIndex(1);
     	inventoryPanel.requestFocus();
     	klok.pause();
+    	
+    	// TODO : call .update()
+    }
+    
+    public void viewStatsPanel()
+    {
+    	loadingScreen.setVisible(false);
+    	animationScreen.setVisible(false);
+    	mainmenu.setVisible(false);
+    	options.setVisible(false);
+    	tabs.setVisible(true);
+    	tabs.setSelectedIndex(2);
+    	statsPanel.requestFocus();
+    	klok.pause();
+    	
+    	// update the view
+    	((StatsGUI) statsPanel).update();
     }
     
     /**
@@ -1530,10 +1544,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         boolean spiralPlaced = false;
         int signs = 0;
         int temp;
-        numOfMonsters = 0;		
-        
-        if(blinkOnExit) // turn off display briefly
-        	((GridGUI) mapPanel).setVisible(false);
+        numOfMonsters = 0;
         
         for (int i=0; i<BROWS; i++)
         {
@@ -1616,9 +1627,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
             }
         }
         
-        if(blinkOnExit) // show display
-        	((GridGUI) mapPanel).setVisible(true);
-        
         if(fogOfWar)
         	setFog(true);
         
@@ -1700,13 +1708,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
         		enableMappingItem.setEnabled(true);
         	}
         }
-        else if(Trigger.getSource() == enableBlinkItem)
-        {
-        	if(blinkOnExit)
-        		blinkOnExit = false;
-        	else
-        		blinkOnExit = true;
-        }
         else if(Trigger.getSource() == enableWarpItem)
         {
         	if(warpingEnabled)
@@ -1755,9 +1756,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 			else if(tab == 2)
 			{
 				klok.pause();
-				combatPanel.requestFocus();
+				statsPanel.requestFocus();
 			}
 			else if(tab == 3)
+			{
+				klok.pause();
+				combatPanel.requestFocus();
+			}
+			else if(tab == 4)
 			{
 				klok.pause();
 				questPanel.requestFocus();
@@ -1999,24 +2005,36 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 
 	public void setupTurn(Entity character, ArrayList<Entity> targets) {
 		if (!combatOver) {
-			((CombatGUI) combatPanel).targets.removeAllItems();
+			((CombatGUI) combatPanel).attackTargets.removeAllItems(); // attacks
+			((CombatGUI) combatPanel).abilityTargets.removeAllItems(); // abilities
+			((CombatGUI) combatPanel).itemTargets.removeAllItems(); // items
 			((CombatGUI) combatPanel).abilities.removeAllItems();
+			((CombatGUI) combatPanel).items.removeAllItems();
 
-			for (CombatObject obj : ((CombatGUI) combatPanel).enemies) {
-				if (obj.entity.equals(character)) {
+			for (CombatObject obj : ((CombatGUI) combatPanel).enemies) 
+			{
+				if (obj.entity.equals(character)) 
+				{
 					obj.setCurrentTurn(true);
-				} else {
+				} 
+				else 
+				{
 					obj.setCurrentTurn(false);
 				}
 			}
 			
-			for (CombatObject obj : ((CombatGUI) combatPanel).characters) {
-				if (obj.entity.equals(character)) {
+			for (CombatObject obj : ((CombatGUI) combatPanel).characters) 
+			{
+				if (obj.entity.equals(character)) 
+				{
 					obj.setCurrentTurn(true);
-				} else {
+				} 
+				else 
+				{
 					obj.setCurrentTurn(false);
 				}
 			}
+
 
 			if (!character.isPlayer) {
 				monsterTurn(character);
@@ -2027,11 +2045,14 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 				((CombatGUI) combatPanel).abilities.addItem(ability.getName());
 			}
 			for (Entity target : targets) {
-				((CombatGUI) combatPanel).targets.addItem(target.getName());
+				((CombatGUI) combatPanel).attackTargets.addItem(target.getName());
+				((CombatGUI) combatPanel).abilityTargets.addItem(target.getName());
+				((CombatGUI) combatPanel).itemTargets.addItem(target.getName());
 			}
-		} else {
-			((CombatGUI) combatPanel).update();
-			((CombatGUI) combatPanel).endCombat(combatResult, accumulatedExp);
+		}else{
+			((CombatGUI)combatPanel).update();
+			System.out.println("akdbnasdjknaskdjasd");
+			((CombatGUI)combatPanel).endCombat(combatResult, accumulatedExp);
 		}
 
 	}
@@ -2111,13 +2132,9 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		else {
 			Ability activeAbility = actor.getAbilityByName(action);
 			if (activeAbility.friendly()) {
-				executeAbility(actor,
-						((CombatGUI) combatPanel).targets.getSelectedIndex(),
-						enemies, characters, activeAbility);
+				executeAbility(actor, target, enemies, characters, activeAbility);
 			} else {
-				executeAbility(actor,
-						((CombatGUI) combatPanel).targets.getSelectedIndex(),
-						enemies, characters, activeAbility);
+				executeAbility(actor, target, enemies, characters, activeAbility);
 			}
 		}
 
@@ -2309,21 +2326,6 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 		return newArray;
 	}
 
-	private ArrayList<Entity> cleanCharacterList(ArrayList<Entity> entities) {
-		ArrayList<Entity> newArray = new ArrayList<Entity>();
-
-		for (Entity e : entities) {
-			if (e.getCurrentHealth() > 0) {
-				newArray.add(e);
-			} else {
-				((CombatGUI) combatPanel).appendStatus(e.getName()
-						+ " was slain!");
-				newArray.add(e);
-			}
-		}
-		return newArray;
-	}
-
 	private ArrayList<Entity> mergeCombatantArrays(
 			ArrayList<? extends Entity> a, ArrayList<? extends Entity> b) {
 		ArrayList<Entity> newArray = new ArrayList<Entity>();
@@ -2341,9 +2343,7 @@ public class GameEngine implements ActionListener, FocusListener, ClockListener,
 	@Override
 	public void valueChanged(ListSelectionEvent arg0) 
 	{
-		
         ((InventoryGUI)(inventoryPanel)).updateBackpackLabel(getSelectedItem());	
-		
 	}
 		
 	//return the string of the character that is selected
