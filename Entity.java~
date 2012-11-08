@@ -16,8 +16,6 @@ public class Entity extends RPGObject implements Comparable<Entity>{
 
     private int maxHealth;
     private int currentHealth;
-	private int maxMana;
-    private int currentMana;
     private int attack;
     private int defense;
     private int speed;
@@ -197,21 +195,5 @@ return exp;
 
 public void setExp(int exp) {
 this.exp = exp;
-}
-
-int getMaxMana() {
-	return maxMana;
-}
-
-void setMaxMana(int maxMana) {
-	this.maxMana = maxMana;
-}
-
-int getCurrentMana() {
-	return currentMana;
-}
-
-void setCurrentMana(int currentMana) {
-	this.currentMana = currentMana;
 }
 }

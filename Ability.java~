@@ -1,5 +1,6 @@
 package rpg;
 
+
 public class Ability {
 	
 	private String name;
@@ -10,15 +11,12 @@ public class Ability {
 	//0=single target, 1=splash
 	private int scope;
 	private int modifier;
-	
-	private int cost;
 
-	public Ability(String name, int type, int scope, int modifier, int cost){
+	public Ability(String name, int type, int scope, int modifier){
 		this.setName(name);
 		this.setType(type);
 		this.setScope(scope);
 		this.setModifier(modifier);
-		this.setCost(cost);
 	}
 
 	String getName() {
@@ -60,13 +58,4 @@ public class Ability {
 		}
 		return returnVal;
 	}
-
-	int getCost() {
-		return cost;
-	}
-
-	void setCost(int cost) {
-		this.cost = cost;
-	}
 }
-
