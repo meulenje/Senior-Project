@@ -439,6 +439,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		} else if (a.getSource() == fleeButton) {
 			action = 2; // remember what they chose
 			GE.playerTurn("Flee", 0);
+			viewStatusPanel();
 		} else if (a.getSource() == abilityButton) {
 			action = 3; // remember what they chose
 			if (abilities.getItemCount() > 0) {
@@ -475,10 +476,15 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			viewActionMenu();
 			action = 0;
 		} else if (a.getSource() == okButton) {
+			
+			//combat will close
 			if (combatOver) {
 				cleanEnemies();
 				GE.viewMapPanel();
-			} else if (GE.combatOver) {
+			}
+			
+			//combat will display one more status update
+			else if (GE.combatOver) {
 				GE.endCombat(GE.characters, GE.accumulatedExp, GE.combatResult);
 				combatOver = true;
 				
