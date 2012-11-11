@@ -63,6 +63,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 
 	// flag that combat is over
 	boolean combatOver;
+	boolean fled = false;
 
 	// specific buttons for actions
 	private JButton attackButton;
@@ -155,6 +156,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionAttack = new JPanel();
 		actionAttack.setLayout(new GridLayout(1, 3, 20, 40));
 		attackTargets = new JComboBox<String>(); // pass String[] of list to this object
+		attackTargets.addActionListener(this);
 		actionAttack.setSize(actionWidth, actionHeight);
 		actionAttack.setLocation(10, 10);
 		cancelAttackButton = new JButton("Back"); // back button
@@ -173,6 +175,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionAbility.setLocation(10, 10);
 		abilities = new JComboBox<String>(); // pass String[] of list to this object
 		abilityTargets = new JComboBox<String>();
+		abilityTargets.addActionListener(this);
 		cancelAbilityButton = new JButton("Back"); // back button
 		cancelAbilityButton.addActionListener(this);
 		submitAbilityButton = new JButton("Cast!"); // submit button
@@ -190,6 +193,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		actionItem.setLocation(10, 10);
 		items = new JComboBox<String>(); // pass String[] of list to this object
 		itemTargets = new JComboBox<String>();
+		itemTargets.addActionListener(this);
 		cancelItemButton = new JButton("Back"); // back button
 		cancelItemButton.addActionListener(this);
 		submitItemButton = new JButton("Use!"); // submit button
@@ -269,6 +273,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		enemies.removeAll(enemies);
 		
 		combatOver = false;
+		fled = false;
 
 		// function to populate player's side
 		populatePlayerTeam();
@@ -304,6 +309,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	public void populateEnemyTeam() {
 		for (Entity c : GE.enemies) {
 			CombatObject temp = new CombatObject(GE, c, GE.Grass);
+			temp.manaBar.setVisible(false);
 			enemySide.add(temp);
 			enemies.add(temp);
 		}
@@ -427,6 +433,41 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		okButton.setEnabled(false);
 		viewStatusPanel();
 	}
+	
+	public void paintCurrentTargetBorder(CombatObject target){
+		for(CombatObject obj : enemies){
+			if(obj.equals(target) && !obj.currentTurn){
+				obj.setCurrentTarget(true);
+			}else if(!obj.currentTurn){
+				obj.setCurrentTarget(false);
+			}
+		}
+		
+		for(CombatObject obj : characters){
+			if(obj.equals(target) && !obj.currentTurn){
+				obj.setCurrentTarget(true);
+			}else if (!obj.currentTurn){
+				obj.setCurrentTarget(false);
+			}
+		}
+	}
+	
+	public CombatObject getCombatObjectByName(String name){
+		CombatObject returnVal = null;
+		for(CombatObject obj : characters){
+			if(obj.entity.getName().equals(name)){
+				returnVal = obj;
+			}
+		}
+		
+		for(CombatObject obj : enemies){
+			if(obj.entity.getName().equals(name)){
+				returnVal = obj;
+			}
+		}
+		
+		return returnVal;
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent a) {
@@ -475,10 +516,23 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			// back out, and show the main action menu
 			viewActionMenu();
 			action = 0;
+			
+		//highlight attack target
+		} else if (a.getSource() == attackTargets){
+			//paintCurrentTargetBorder(getCombatObjectByName(attackTargets.getSelectedItem().toString()));
+		
+		//highlight ability target
+		} else if (a.getSource() == abilityTargets){
+			//paintCurrentTargetBorder(getCombatObjectByName(abilityTargets.getSelectedItem().toString()));
+		
+		//highlight item target
+		} else if (a.getSource() == itemTargets){
+			//paintCurrentTargetBorder(getCombatObjectByName(itemTargets.getSelectedItem().toString()));
+		
 		} else if (a.getSource() == okButton) {
 			
 			//combat will close
-			if (combatOver) {
+			if (combatOver || fled) {
 				cleanEnemies();
 				GE.viewMapPanel();
 			}

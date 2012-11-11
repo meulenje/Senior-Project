@@ -1904,7 +1904,6 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		} else {
 			((CombatGUI) combatPanel).update();
-			System.out.println("akdbnasdjknaskdjasd");
 			((CombatGUI) combatPanel).endCombat(combatResult, accumulatedExp);
 		}
 
@@ -2006,6 +2005,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (attemptToFlee()) {
 				((CombatGUI) combatPanel).appendStatus("You have fled successfully!");
 				combatOver = true;
+				((CombatGUI) combatPanel).fled = true;
 				combatResult = 0;
 			} else {
 				((CombatGUI) combatPanel).appendStatus("Your attempt to flee failed!");
@@ -2077,9 +2077,14 @@ public class GameEngine implements ActionListener, FocusListener,
 					calculatedDamage = 0;
 				}
 
-				enemies.get(targetID).setCurrentHealth(
-						enemies.get(targetID).getCurrentHealth()
-								- calculatedDamage);
+				int netHealth = enemies.get(targetID).getCurrentHealth() - calculatedDamage;
+
+				if (netHealth < 0) {
+					netHealth = 0;
+				}
+				
+				enemies.get(targetID).setCurrentHealth(netHealth);
+				
 				result = (source.getName() + "'s " + ability.getName()
 						+ " hit " + enemies.get(targetID).getName() + " for "
 						+ calculatedDamage + " damage!");
@@ -2107,7 +2112,12 @@ public class GameEngine implements ActionListener, FocusListener,
 				}
 
 				for (Entity e : enemies) {
-					e.setCurrentHealth(e.getCurrentHealth() - calculatedDamage);
+					int netHealth = e.getCurrentHealth() - calculatedDamage;
+					if(netHealth < 0){
+						netHealth = 0;
+					}
+					
+					e.setCurrentHealth(netHealth);
 					result = (source.getName() + "'s " + ability.getName()
 							+ " hit all enemies for " + calculatedDamage + " damage!");
 				}
