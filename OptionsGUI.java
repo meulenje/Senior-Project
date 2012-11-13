@@ -27,7 +27,6 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	private JCheckBox musicEnabled;
     private JCheckBox soundEnabled;
     private JCheckBox windowResizeable;
-    private JCheckBox blinkOnExit;
 	private JCheckBox showHintsEnabled;
 	
     private JButton backgroundColor;
@@ -62,7 +61,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		// -----
 		
 		// List of CheckBoxes
-		JPanel boxes = new JPanel(new GridLayout(5,0,5,15));
+		JPanel boxes = new JPanel(new GridLayout(4,0,5,15));
 		boxes.setOpaque(false);
 		boxes.setBorder(new TitledBorder(BorderFactory.createLineBorder(GE.highlightColor),
 				"Gameplay", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
@@ -75,13 +74,9 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	    soundEnabled.setOpaque(false);
 	    boxes.add(soundEnabled);
 	    
-	    windowResizeable = new JCheckBox("Window Mode");
+	    windowResizeable = new JCheckBox("Full Screen");
 	    windowResizeable.setOpaque(false);
 	    boxes.add(windowResizeable);
-	    
-	    blinkOnExit = new JCheckBox("Blink Loading");
-	    blinkOnExit.setOpaque(false);
-	    boxes.add(blinkOnExit);
 	    
 		showHintsEnabled = new JCheckBox("Show Hints");
 		showHintsEnabled.setOpaque(false);
@@ -184,7 +179,6 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		musicEnabled.setSelected(GE.musicEnabled);
 	    soundEnabled.setSelected(GE.soundEnabled);
 	    windowResizeable.setSelected(GE.windowResizeable);
-	    blinkOnExit.setSelected(GE.blinkOnExit);
 		showHintsEnabled.setSelected(GE.showHintsEnabled);
 		
 		backgroundColor.setBackground(GE.backgroundColor);
@@ -206,7 +200,6 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		GE.musicEnabled = musicEnabled.isSelected();
 	    GE.soundEnabled = soundEnabled.isSelected();
 	    GE.windowResizeable = windowResizeable.isSelected();
-	    GE.blinkOnExit = blinkOnExit.isSelected();
 		GE.showHintsEnabled = showHintsEnabled.isSelected();
 		
 		GE.backgroundColor = backgroundColor.getBackground();
@@ -238,7 +231,6 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	    GE.mappingEnabled = false;
 	    GE.playerVisionRange = 3;
 	    GE.warpingEnabled = true;
-	    GE.blinkOnExit = false;
 	    GE.clearStatsPerLevel = false;
 	    GE.monsterGridSpeed = 2; // monster moves after X seconds
 	    GE.percentChanceOfEncounter = 0.05; // % chance of battle 

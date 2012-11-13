@@ -4,12 +4,9 @@ package rpg;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoundedRangeModel;
 import javax.swing.ImageIcon;
@@ -18,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.JToolBar;
 
 /**
@@ -188,6 +184,7 @@ public class InventoryGUI extends JPanel implements ActionListener {
 	{         	      
 		//toolbar properties
 	    toolBar.setLayout(new GridLayout(0,4));
+	    toolBar.setFloatable(false);
 	   	
         //make the button to select previous character.
         previousCharacterButton = new JButton("Previous"); 
@@ -275,11 +272,18 @@ public class InventoryGUI extends JPanel implements ActionListener {
     //update the equipped slot
     protected void updateCharacterEquipped(Entity entity)
     {
-    	equippedLabel.setText(entity.getEquipped().getItemName());
-    	equippedDescription.setText(entity.getEquipped().getItemDescription());
-    	equippedImage.setIcon(entity.getEquipped().image);
-    	
-    	
+    	if(entity.getEquipped() != null)
+    	{
+    		equippedLabel.setText(entity.getEquipped().getItemName());
+        	equippedDescription.setText(entity.getEquipped().getItemDescription());
+        	equippedImage.setIcon(entity.getEquipped().image);
+    	}
+    	else
+    	{
+    		equippedLabel.setText("");
+        	equippedDescription.setText("");
+        	equippedImage.setIcon(GE.Empty);
+    	}    	
     }
     
 
@@ -291,10 +295,10 @@ public class InventoryGUI extends JPanel implements ActionListener {
     	expBarModel = expBar.getModel();
     	expBarModel.setMaximum(entity.getMaxHealth());
     	magicBarModel = magicBar.getModel();
-    	magicBarModel.setMaximum(entity.getMaxHealth());
+    	magicBarModel.setMaximum(entity.getMaxMana());
 	 	healthBarModel.setValue(GE.getSelectedCharacter().getCurrentHealth());
     	expBar.setValue(GE.getSelectedCharacter().getCurrentHealth()); //TODO: magic and expierence progress bars only use health
-	 	magicBar.setValue(GE.getSelectedCharacter().getCurrentHealth()); 
+	 	magicBar.setValue(GE.getSelectedCharacter().getCurrentMana()); 
 
     }
    
@@ -326,8 +330,5 @@ public class InventoryGUI extends JPanel implements ActionListener {
 			GE.getSelectedCharacter().setEquippedItem(GE.getSelectedItem());
 			updateCharacterEquipped(GE.getSelectedCharacter());
 		}
-			
-		
-	}	
-
+	}
 }

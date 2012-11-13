@@ -27,6 +27,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	public boolean isPlayer = false;
 	// experience value for monsters, accumulated experience for players
 	private int exp;
+    private int level;
 	private int levelUpPoints;
 	ArrayList<Ability> abilities = new ArrayList<Ability>();
 
@@ -36,7 +37,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	public Entity(int id, ImageIcon image, String name, boolean isPlayer,
 			Item equippedItem, int currentHealth, int maxHealth,
 			int currentMana, int maxMana, int attack, int defense, int speed,
-			int points) {
+			int points, int level) {
 
 		this.id = id;
 		this.image = image;
@@ -51,6 +52,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 		this.levelUpPoints = points;
 		this.name = name;
 		this.isPlayer = isPlayer;
+        this.level = level;
 	}
 
 	// monster combat AI.
@@ -85,13 +87,15 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	}
 
 	public int compareTo(Entity other) {
-		return (this.speed - other.getSpeed());
+		return (getSpeed() - other.getSpeed());
 	}
 
 	/**
 	 * @return the attack
 	 */
 	public int getAttack() {
+		if(equippedItem != null)
+			return attack + equippedItem.getAttack();
 		return attack;
 	}
 
@@ -100,8 +104,26 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 *            item the item equipped
 	 * 
 	 */
-	public void setEquippedItem(Item item) {
-		this.equippedItem = item;
+	public void setEquippedItem(Item item) 
+	{
+		if(!item.isConsumable())
+		{
+			// remove old item and modifiers, if possible
+			
+			// apply modifiers to the entity, if possible
+			this.equippedItem = item;
+		}
+		else
+		{
+			// apply modifiers to the entity but do not replace equipped item
+			maxHealth += item.getMaxHealth();
+			setCurrentHealth(currentHealth += item.getCurrentHealth());
+			maxMana += item.getMaxMana();
+			setCurrentMana(currentMana += item.getCurrentMana());
+			attack += item.getAttack();
+			defense += item.getDefense();
+			speed += item.getSpeed();
+		}
 	}
 
 	/**
@@ -116,6 +138,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * @return the defense
 	 */
 	public int getDefense() {
+		if(equippedItem != null)
+			return defense + equippedItem.getDefense();
 		return defense;
 	}
 
@@ -146,6 +170,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * @return the speed
 	 */
 	public int getSpeed() {
+		if(equippedItem != null)
+			return speed + equippedItem.getSpeed();
 		return speed;
 	}
 
@@ -161,6 +187,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * @return the maxHealth
 	 */
 	public int getMaxHealth() {
+		if(equippedItem != null)
+			return maxHealth + equippedItem.getMaxHealth();
 		return maxHealth;
 	}
 
@@ -176,6 +204,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * @return the currentHealth
 	 */
 	public int getCurrentHealth() {
+		if(equippedItem != null)
+			return currentHealth + equippedItem.getCurrentHealth();
 		return currentHealth;
 	}
 
@@ -191,7 +221,12 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 *            the currentHealth to set
 	 */
 	public void setCurrentHealth(int currentHealth) {
-		this.currentHealth = currentHealth;
+		if(currentHealth >= this.maxHealth)
+			this.currentHealth = this.maxHealth;
+		else if(currentHealth <= 0)
+			this.currentHealth = 0;
+		else	
+			this.currentHealth = currentHealth;
 	}
 
 	public Ability getAbilityByName(String name) {
@@ -213,7 +248,13 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 		this.exp = exp;
 	}
 
+	public void incExp(int exp) {
+		this.exp += exp;
+	}
+
 	int getMaxMana() {
+		if(equippedItem != null)
+			return maxMana + equippedItem.getMaxMana();
 		return maxMana;
 	}
 
@@ -222,11 +263,18 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	}
 
 	int getCurrentMana() {
+		if(equippedItem != null)
+			return currentMana + equippedItem.getCurrentMana();
 		return currentMana;
 	}
 
 	void setCurrentMana(int currentMana) {
-		this.currentMana = currentMana;
+		if(currentMana >= this.maxMana)
+			this.currentMana = this.maxMana;
+		else if(currentMana <= 0)
+			this.currentMana = 0;
+		else	
+			this.currentMana = currentMana;
 	}
 
 	int getLevelUpPoints() {
@@ -237,4 +285,11 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 		this.levelUpPoints = points;
 	}
 
+	int getLevel() {
+		return level;
+	}
+	
+	void incLevel(){
+		level++;
+	}
 }

@@ -5,21 +5,28 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
+@SuppressWarnings("serial")
 public class StatsGUI extends JPanel implements ActionListener{
 	
 	private GameEngine GE;
 	
-	protected JPanel ScrollBar;
+	protected JPanel TopBar;
+	
+	protected JToolBar ScrollBar;
 	protected JButton previousCharacterButton;
 	protected JButton nextCharacterButton;
 	
+	protected JPanel expPanel;
+	protected JLabel expLabel;
+	protected JProgressBar expBar;
+	
 	protected JPanel mainFrame;
 	protected JTextArea charName;
+	protected JLabel picture;
 	
 	protected JPanel HealthPanel;
 	protected JTextArea HealthLabel;
 	protected JTextArea HealthAmount;
-	protected JTextArea HealthCurrent;
 	protected JProgressBar HealthBar;
 	protected JButton HealthUp;
 	protected JButton HealthDown;
@@ -27,7 +34,6 @@ public class StatsGUI extends JPanel implements ActionListener{
 	protected JPanel ManaPanel;
 	protected JTextArea ManaLabel;
 	protected JTextArea ManaAmount;
-	protected JTextArea ManaCurrent;
 	protected JProgressBar ManaBar;
 	protected JButton ManaUp;
 	protected JButton ManaDown;
@@ -46,6 +52,11 @@ public class StatsGUI extends JPanel implements ActionListener{
 	protected JTextArea SpeedAmount;
 	protected JButton SpeedUp;
 	protected JButton SpeedDown;
+	
+	protected JPanel AbilitiesPanel;
+	protected JLabel AbilitiesLabel;
+	protected JScrollPane AbilitiesBox;
+	protected ArrayList<JLabel> Abilities;
 	
 	protected JTextArea PointsLeft;
 	protected JButton Confirm;
@@ -84,20 +95,41 @@ public class StatsGUI extends JPanel implements ActionListener{
 		
 		this.setLayout(new BorderLayout());
 		
-		ScrollBar = new JPanel();
+		ScrollBar = new JToolBar();
+		ScrollBar.setFloatable(false);
+		TopBar = new JPanel();
+		TopBar.setLayout(new BorderLayout());
 		
-	    ScrollBar.setLayout(new BorderLayout());
-		charName = new JTextArea(TheCharacter.getName());
+	    ScrollBar.setLayout(new GridLayout(0,4));
+		charName = new JTextArea(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
 		charName.setEditable(false);
-		ScrollBar.add(charName, BorderLayout.CENTER);
-        previousCharacterButton = new JButton("<==");   
+        picture = new JLabel();
+        picture.setIcon(TheCharacter.getImage());
+        previousCharacterButton = new JButton("Previous");   
         previousCharacterButton.addActionListener(this);
-        ScrollBar.add(previousCharacterButton, BorderLayout.WEST);
-        nextCharacterButton = new JButton("==>");
+        nextCharacterButton = new JButton("Next");
         nextCharacterButton.addActionListener(this);
-        ScrollBar.add(nextCharacterButton, BorderLayout.EAST);
+        ScrollBar.add(previousCharacterButton);
+        ScrollBar.add(picture);
+        ScrollBar.add(charName);
+        ScrollBar.add(nextCharacterButton);
         
-        this.add(ScrollBar, BorderLayout.NORTH);
+        expPanel = new JPanel();
+        expLabel = new JLabel("Expierience:");
+        expBar = new JProgressBar(0);
+        expBar.setForeground(Color.green);
+        expBar.setBackground(Color.white);
+        int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getexpNeeded()) * 100);
+		expBar.setValue(expPercent);
+		expBar.setStringPainted(true);
+		expBar.setString("" + TheCharacter.getExp() + "/" + GE.getexpNeeded());
+		expPanel.add(expLabel, BorderLayout.WEST);
+		expPanel.add(expBar, BorderLayout.CENTER);
+		
+		TopBar.add(ScrollBar, BorderLayout.NORTH);
+		TopBar.add(expPanel, BorderLayout.SOUTH);
+		
+        this.add(TopBar, BorderLayout.NORTH);
         
 		mainFrame = new JPanel (new GridLayout(6,4));
 		
@@ -106,11 +138,11 @@ public class StatsGUI extends JPanel implements ActionListener{
 		HealthLabel.setEditable(false);
 		info1 = "" + TheCharacter.getCurrentHealth();
 		info2 = "" + TheCharacter.getMaxHealth();
-		HealthCurrent = new JTextArea(info1 + "/" + info2);
-		HealthCurrent.setEditable(false);
 		HealthBar = new JProgressBar(0);
 		HealthBar.setForeground(Color.red);
 		HealthBar.setBackground(Color.white);
+		HealthBar.setStringPainted(true);
+		HealthBar.setString(info1 + "/" + info2);
 		HealthAmount = new JTextArea("" + GE.characters.get(position).getMaxHealth());
 		HealthAmount.setEditable(false);
 		HealthUp = new JButton("+");
@@ -121,7 +153,6 @@ public class StatsGUI extends JPanel implements ActionListener{
 		HealthDown.setEnabled(false);
 		
 		HealthPanel.add(HealthLabel);
-		HealthPanel.add(HealthCurrent);
 		HealthPanel.add(HealthBar);
 		mainFrame.add(HealthPanel);
 		mainFrame.add(HealthAmount);
@@ -132,11 +163,11 @@ public class StatsGUI extends JPanel implements ActionListener{
 		ManaLabel = new JTextArea("Mana: ");
 		info1 = "" + TheCharacter.getCurrentMana();
 		info2 = "" + TheCharacter.getMaxMana();
-		ManaCurrent = new JTextArea(info1 + "/" + info2);
-		ManaCurrent.setEditable(false);
 		ManaBar = new JProgressBar(0);
 		ManaBar.setForeground(Color.blue);
 		ManaBar.setBackground(Color.white);
+		ManaBar.setStringPainted(true);
+		ManaBar.setString(info1 + "/" + info2);
 		ManaLabel.setEditable(false);
 		ManaAmount = new JTextArea("" + GE.characters.get(position).getMaxMana());
 		ManaAmount.setEditable(false);
@@ -148,7 +179,6 @@ public class StatsGUI extends JPanel implements ActionListener{
 		ManaDown.setEnabled(false);
 		
 		ManaPanel.add(ManaLabel);
-		ManaPanel.add(ManaCurrent);
 		ManaPanel.add(ManaBar);
 		mainFrame.add(ManaPanel);
 		mainFrame.add(ManaAmount);
@@ -203,7 +233,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		mainFrame.add(SpeedUp);
 		mainFrame.add(SpeedDown);
 		
-		PointsLeft = new JTextArea("" + TheCharacter.getLevelUpPoints());
+		PointsLeft = new JTextArea("Points Left: " + TheCharacter.getLevelUpPoints());
 		PointsLeft.setEditable(false);
 		Confirm = new JButton("Confirm");
 		Confirm.addActionListener(this);
@@ -216,14 +246,30 @@ public class StatsGUI extends JPanel implements ActionListener{
 		mainFrame.add(Confirm);
 		mainFrame.add(Reset);
 		
+		AbilitiesPanel = new JPanel();
+		AbilitiesLabel = new JLabel("Abilities:");
+		AbilitiesBox = new JScrollPane();
+		Abilities = new ArrayList<JLabel>();
+		for (int i = 0; i < TheCharacter.abilities.size(); i++){
+			JLabel x = new JLabel(TheCharacter.abilities.get(i).getName() + "   " + 
+					TheCharacter.abilities.get(i).getCost() );
+			Abilities.add(x);
+		}
+		for (int b = 0; b < Abilities.size(); b++){
+			AbilitiesBox.add(Abilities.get(b));
+		}
+		AbilitiesPanel.add(AbilitiesBox, BorderLayout.CENTER);
+		AbilitiesPanel.add(AbilitiesLabel, BorderLayout.NORTH);
+		
 		this.add(mainFrame, BorderLayout.CENTER);
+		this.add(AbilitiesPanel, BorderLayout.EAST);
 		this.setVisible(true);
 		
 		update();
 		
 	}
 	
-	private void update(){
+	void update(){
 		String info1 = "";
 		String info2 = "";
 		if (pointsLeft == 0){
@@ -282,21 +328,27 @@ public class StatsGUI extends JPanel implements ActionListener{
 		}
 		info1 = "" + TheCharacter.getCurrentHealth();
 		info2 = "" + TheCharacter.getMaxHealth();
-		HealthCurrent.setText(info1 + "/" + info2);
+		HealthBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getCurrentMana();
 		info2 = "" + TheCharacter.getMaxMana();
-		ManaCurrent.setText(info1 + "/" + info2);
-		charName.setText(TheCharacter.getName());
+		ManaBar.setString(info1 + "/" + info2);
+		info1 = "" + TheCharacter.getExp();
+		info2 = "" + GE.getexpNeeded();
+		expBar.setString(info1 + "/" + info2);
+		charName.setText(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
 		HealthAmount.setText("" + modifiedHealth);
 		ManaAmount.setText("" + modifiedMana);
 		AttackAmount.setText("" + modifiedAttack);
 		DefenseAmount.setText("" + modifiedDefense);
 		SpeedAmount.setText("" + modifiedSpeed);
-		PointsLeft.setText("" + pointsLeft);
+		PointsLeft.setText("Pointe Left: " + pointsLeft);
 		int healthPercent = (int) (((double)TheCharacter.getCurrentHealth() / (double)TheCharacter.getMaxHealth()) * 100);
 		HealthBar.setValue(healthPercent);
 		int manaPercent = (int) (((double)TheCharacter.getCurrentMana() / (double)TheCharacter.getMaxMana()) * 100);
 		ManaBar.setValue(manaPercent);
+		int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getexpNeeded()) * 100);
+		expBar.setValue(expPercent);
+		picture.setIcon(TheCharacter.getImage());
 	}
 	
 	private void modification(String stat, int plusminus){
