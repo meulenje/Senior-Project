@@ -119,10 +119,10 @@ public class StatsGUI extends JPanel implements ActionListener{
         expBar = new JProgressBar(0);
         expBar.setForeground(Color.green);
         expBar.setBackground(Color.white);
-        int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getexpNeeded()) * 100);
+        int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getExpNeeded(TheCharacter)) * 100);
 		expBar.setValue(expPercent);
 		expBar.setStringPainted(true);
-		expBar.setString("" + TheCharacter.getExp() + "/" + GE.getexpNeeded());
+		expBar.setString("" + TheCharacter.getExp() + "/" + GE.getExpNeeded(TheCharacter));
 		expPanel.add(expLabel, BorderLayout.WEST);
 		expPanel.add(expBar, BorderLayout.CENTER);
 		
@@ -333,7 +333,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		info2 = "" + TheCharacter.getMaxMana();
 		ManaBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getExp();
-		info2 = "" + GE.getexpNeeded();
+		info2 = "" + GE.getExpNeeded(TheCharacter);
 		expBar.setString(info1 + "/" + info2);
 		charName.setText(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
 		HealthAmount.setText("" + modifiedHealth);
@@ -346,7 +346,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		HealthBar.setValue(healthPercent);
 		int manaPercent = (int) (((double)TheCharacter.getCurrentMana() / (double)TheCharacter.getMaxMana()) * 100);
 		ManaBar.setValue(manaPercent);
-		int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getexpNeeded()) * 100);
+		int expPercent = (int) (((double)TheCharacter.getExp() / (double)GE.getExpNeeded(TheCharacter)) * 100);
 		expBar.setValue(expPercent);
 		picture.setIcon(TheCharacter.getImage());
 	}
@@ -405,7 +405,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		update();
 	}
 	
-	private void reset(){
+	public void reset(){
 		modifiedHealth = TheCharacter.getMaxHealth();
 		modifiedMana = TheCharacter.getMaxMana();
 		modifiedAttack = TheCharacter.getAttack();

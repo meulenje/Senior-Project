@@ -1,9 +1,10 @@
 package rpg;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
@@ -20,6 +21,7 @@ public class CombatObject extends JPanel implements ActionListener {
 	// gui parts
 	protected JProgressBar healthBar;
 	protected JProgressBar manaBar;
+	private JPanel barPanel;
 	private JLabel name;
 	private JPanel imagePanel;
 	protected ImageIcon backgroundImage; // grass, dirt, floor, etc...
@@ -59,6 +61,12 @@ public class CombatObject extends JPanel implements ActionListener {
 		manaBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
 		manaBar.setStringPainted(true);
 		setManaBar();
+		
+		//panel to hold bars
+		barPanel = new JPanel();
+		barPanel.setLayout(new GridLayout(2, 1));
+		barPanel.add(healthBar);
+		barPanel.add(manaBar);
 
 		// Lay a background, foreground, and highground JLabel
 		background = new JLabel();
@@ -77,13 +85,12 @@ public class CombatObject extends JPanel implements ActionListener {
 		layer.setSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
 
 		imagePanel = new JPanel();
-		imagePanel.setLayout(new BorderLayout());
+		imagePanel.setLayout(new GridLayout(1, 2));
 		imagePanel.setOpaque(false); // transparent background
 		imagePanel
 				.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT + 15));
 		imagePanel.add(layer, BorderLayout.CENTER);
-		imagePanel.add(healthBar, BorderLayout.NORTH);
-		imagePanel.add(manaBar, BorderLayout.SOUTH);
+		imagePanel.add(barPanel, BorderLayout.SOUTH);
 
 		setForeground();
 		setBackground(bg);

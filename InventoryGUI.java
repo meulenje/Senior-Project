@@ -179,6 +179,12 @@ public class InventoryGUI extends JPanel implements ActionListener {
                	  
     }
 	
+	protected void update(){
+		updateCharacterLabel(GE.getSelectedCharacter());
+		updateCharacterStatsBars(GE.getSelectedCharacter());
+		updateCharacterEquipped(GE.getSelectedCharacter());
+	}
+	
 	//make the navigation toolbar
 	protected void makeToolbar(JToolBar toolBar) 
 	{         	      

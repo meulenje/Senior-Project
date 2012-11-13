@@ -251,6 +251,11 @@ public class GameEngine implements ActionListener, FocusListener,
 	private JList<Item> itemList = new JList<Item>(); // list to h
 	private ArrayList<Item> itemsInBackpack; // array inventory items
 	private int index = 0; // index to track selected character
+	
+	// Level up variables
+	protected int base = 10;
+	protected int factor = 2;
+	protected int pointsPerLevel = 5;
 
 	/**
 	 * Constructor for GameEngine
@@ -258,11 +263,13 @@ public class GameEngine implements ActionListener, FocusListener,
 	public GameEngine() {
 
 		// combatPanel constructor
-		characters = new ArrayList<Entity>(); // currentHealth, totalHealth,
-												// attack, defense, speed
-		Entity mario = new Entity(PlayerID, Player, "Mario", true, null, 30, 30, 20, 20, 11, 10, 10, 5,1);
-		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, null, 30, 30, 30, 30, 10, 11, 9, 5,1);
-		Entity toad = new Entity(PlayerID, Mushroom, "Toad", true, null, 15, 15, 50, 50, 10, 10, 15, 5,1);
+		characters = new ArrayList<Entity>(); 
+		Entity mario = new Entity(PlayerID, Player, "Mario", true, null, 30,
+				30, 20, 20, 11, 10, 10, 5, 1);
+		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, null,
+				30, 30, 30, 30, 10, 11, 9, 5, 1);
+		Entity toad = new Entity(PlayerID, Mushroom, "Toad", true, null, 15,
+				15, 50, 50, 10, 10, 15, 5, 1);
 		Ability cure = new Ability("Heal", 1, 0, 20, 8);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
 		luigi.abilities.add(cure);
@@ -275,13 +282,18 @@ public class GameEngine implements ActionListener, FocusListener,
 		// inventoryPanel
 		// initialize array list of items
 		itemsInBackpack = new ArrayList<Item>();
-		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom", "Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, Rock, "Rock", "Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem", "Increases Max Mana by 10 MP", false, 0, 0, 10, 0, 0, 5, 0));
-		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield", "Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5, 5, 0));
-		
-		
+		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
+				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
+				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
+		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
+				"Gives you 30 MP!", true, 0, 30, 0, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
+				"Increases Max Mana by 10 MP", false, 0, 0, 10, 0, 0, 5, 0));
+		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
+				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
+				5, 0));
+
 		// initailize the list
 		itemList = new JList<Item>(getItemArray()); // JList that displays the
 													// items
@@ -419,11 +431,11 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setLocation(0, 0);
 		options.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
-		
+
 		// --------------------------------------------------------
 		// make the game over gui
 		gameover = new GameOverGUI(this);
-		gameover.setLocation(0,0);
+		gameover.setLocation(0, 0);
 		gameover.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
 
@@ -541,8 +553,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * A function to start a new game. This is not the function to start the
 	 * next level!
 	 */
-	public void newGame() 
-	{
+	public void newGame() {
 		// choose player
 		// TODO
 
@@ -705,8 +716,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            b
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printYesNoQuestion(String b) 
-	{
+	public int printYesNoQuestion(String b) {
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -730,8 +740,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            [] choices
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printCustomQuestion(String question, Object[] choices) 
-	{
+	public int printCustomQuestion(String question, Object[] choices) {
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -750,8 +759,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Quests
 	 */
-	public void viewQuestPanel() 
-	{
+	public void viewQuestPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -766,8 +774,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Combat
 	 */
-	public void viewCombatPanel() 
-	{
+	public void viewCombatPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -785,8 +792,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Inventory
 	 */
-	public void viewInventoryPanel() 
-	{
+	public void viewInventoryPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -798,8 +804,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		klok.pause();
 	}
 
-	public void viewStatsPanel() 
-	{
+	public void viewStatsPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -817,8 +822,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Map
 	 */
-	public void viewMapPanel() 
-	{
+	public void viewMapPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -836,8 +840,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Main Menu
 	 */
-	public void viewMainMenu() 
-	{
+	public void viewMainMenu() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -850,8 +853,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		playMusic(menuTheme, true);
 	}
 
-	public void viewOptions() 
-	{
+	public void viewOptions() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -860,9 +862,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabs.setVisible(false);
 		options.requestFocus();
 	}
-	
-	public void viewGameOverScreen()
-	{
+
+	public void viewGameOverScreen() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(true);
@@ -870,7 +871,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setVisible(false);
 		tabs.setVisible(false);
 		options.requestFocus();
-		
+
 		// pause clock
 		klok.pause();
 	}
@@ -878,8 +879,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Loading Screen
 	 */
-	public void viewLoadingScreen() 
-	{
+	public void viewLoadingScreen() {
 		loadingScreen.setVisible(true);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -1117,8 +1117,7 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		encounters += monsterCount; // count the number
 
-		if (monsterCount > 0) 
-		{
+		if (monsterCount > 0) {
 			// populate enemies team with the number of monsters we ran into
 			initializeCombat();
 
@@ -1230,37 +1229,34 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 		return;
 	}
-	
+
 	/**
-	 * This method will scan the player's health bar. If all players
-	 * are at <=0 health points, then its game over!
+	 * This method will scan the player's health bar. If all players are at <=0
+	 * health points, then its game over!
 	 */
-	public void checkForGameOver()
-	{
+	public void checkForGameOver() {
 		int numOfCharacters = 0;
 		int numOfDead = 0;
-		
-		for(Entity c : characters)
-		{
+
+		for (Entity c : characters) {
 			numOfCharacters++; // count the total
-			
-			if(!c.alive()) // count the dead
+
+			if (!c.alive()) // count the dead
 				numOfDead++;
 		}
-		
+
 		// if all are dead, then show game over
-		if(numOfDead>0 && numOfDead == numOfCharacters)
-		{
+		if (numOfDead > 0 && numOfDead == numOfCharacters) {
 			// play music
 			playMusic(gameOver, true);
-			
+
 			// display a warning
 			printInfo("Oh no!\n\nYour last player has died!");
-			
+
 			// GAME OVER
 			viewGameOverScreen();
 		}
-				
+
 	}
 
 	/**
@@ -1560,7 +1556,7 @@ public class GameEngine implements ActionListener, FocusListener,
 					board[i][j].resetObject(new Terrain(DirtID, Dirt, false,
 							true, false), new Entity(LavaMonsterID,
 							LavaMonster, "LavaMonster", false, null, 10, 10,
-							10, 10, 5, 5, 5, 5,1), null);
+							10, 10, 5, 5, 5, 5, 1), null);
 					numOfMonsters++;
 				}
 				// randomly make "beartraps"
@@ -1710,9 +1706,11 @@ public class GameEngine implements ActionListener, FocusListener,
 			} else if (tab == 1) {
 				klok.pause();
 				inventoryPanel.requestFocus();
+				((InventoryGUI)inventoryPanel).update();
 			} else if (tab == 2) {
 				klok.pause();
 				statsPanel.requestFocus();
+				((StatsGUI)statsPanel).reset();
 			} else if (tab == 3) {
 				klok.pause();
 				combatPanel.requestFocus();
@@ -1928,6 +1926,11 @@ public class GameEngine implements ActionListener, FocusListener,
 			turnStack.push(e);
 		}
 
+		// keep popping dead combatants
+		while (!turnStack.peek().alive()) {
+			turnStack.pop();
+		}
+
 		Entity a = turnStack.peek();
 
 		setupTurn(a, combatants);
@@ -1974,8 +1977,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				((CombatGUI) combatPanel).itemTargets.addItem(target.getName());
 			}
 		} else {
-			((CombatGUI) combatPanel).update();			
-			System.out.println("akdbnasdjknaskdjasd");
+			((CombatGUI) combatPanel).update();
 			((CombatGUI) combatPanel).endCombat(combatResult, accumulatedExp);
 		}
 
@@ -2025,7 +2027,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		while (!turnStack.empty() && !turnStack.peek().alive()) {
 			turnStack.pop();
 		}
-		
+
 		((CombatGUI) combatPanel).update();
 		checkForGameOver();
 	}
@@ -2075,11 +2077,14 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		else if (action.equals("Flee")) {
 			if (attemptToFlee()) {
-				((CombatGUI) combatPanel).appendStatus("You have fled successfully!");
+				((CombatGUI) combatPanel).fled = true;
+				((CombatGUI) combatPanel)
+						.appendStatus("You have fled successfully!");
 				combatOver = true;
 				combatResult = 0;
 			} else {
-				((CombatGUI) combatPanel).appendStatus("Your attempt to flee failed!");
+				((CombatGUI) combatPanel)
+						.appendStatus("Your attempt to flee failed!");
 			}
 		}
 
@@ -2235,13 +2240,13 @@ public class GameEngine implements ActionListener, FocusListener,
 	public ArrayList<Entity> initializeEnemies(int zoneID) {
 		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
 		// int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
-		int numberOfEnemies = 8;
+		int numberOfEnemies = 2;
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
 			m = new Entity(LavaMonsterID, LavaMonster, "LM", false, null, 10,
-					10, 10, 10, 10, 10, 1, 5,1);
-			m.setExp(5);
+					10, 10, 10, 10, 10, 1, 5, 1);
+			m.setExp(6);
 			Ability cure = new Ability("heal", 1, 0, 0, 5);
 			m.abilities.add(cure);
 			m.setName(m.getName() + " " + i);
@@ -2261,14 +2266,29 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (result == 1) {
 				playMusic(victory, false); // fanfare
 				for (Entity character : characters) {
-					character.setExp(character.getExp() + experience);
-					((CombatGUI) combatPanel).appendStatus(character.getName()
-							+ " has earned " + experience + " experience!");
+					if (character.alive()) {
+						character.setExp(character.getExp() + experience);
+						((CombatGUI) combatPanel).appendStatus(character
+								.getName()
+								+ " has earned "
+								+ experience
+								+ " experience!");
+						
+						//character has leveled up
+						if(character.getExp() >= getExpNeeded(character)){
+							levelUpCharacter(character);
+							((CombatGUI) combatPanel).appendStatus(character
+									.getName()
+									+ " has reached level "
+									+ character.getLevel()
+									+ "!");
+						}
+					}
 				}
-				
+
 				// remove defeated enemies from grid
 				removeDefeatedEnemies(null);
-				
+
 				returnVal = true;
 			} else {
 				returnVal = false;
@@ -2363,10 +2383,23 @@ public class GameEngine implements ActionListener, FocusListener,
 		return array;
 	}
 
-	public double getexpNeeded() 
-	{
-		// TODO Auto-generated method stub
-		return 1000;
+	//base = amount of experience required to level the first time
+	//factor = factor by with required exp will grow (multipication)
+	public int getExpNeeded(Entity entity) {
+		
+		int returnVal = base;
+		
+		for(int i=1; i<entity.getLevel(); i++){
+			returnVal *= factor;
+		}
+		
+		return returnVal;	
+	}
+	
+	public void levelUpCharacter(Entity entity){
+		entity.setExp(entity.getExp() - getExpNeeded(entity)); 
+		entity.incLevel();
+		entity.setLevelUpPoints(entity.getLevelUpPoints() + pointsPerLevel);
 	}
 
 } // end of GameEngine

@@ -535,6 +535,8 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			if (combatOver || fled) {
 				cleanEnemies();
 				GE.viewMapPanel();
+				GE.endCombat(GE.characters, 0, GE.combatResult);
+				combatOver = true;
 			}
 			
 			//combat will display one more status update
