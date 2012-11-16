@@ -1,12 +1,11 @@
 package rpg;
 import javax.swing.*;
-import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public class StatsGUI extends JPanel implements ActionListener{
+public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 	
 	private GameEngine GE;
 	
@@ -264,6 +263,8 @@ public class StatsGUI extends JPanel implements ActionListener{
 		this.add(mainFrame, BorderLayout.CENTER);
 		this.add(AbilitiesPanel, BorderLayout.EAST);
 		this.setVisible(true);
+		this.addKeyListener(this);  // This class has its own key listeners.
+        this.setFocusable(true);    // Allow panel to get focus
 		
 		update();
 		
@@ -436,7 +437,7 @@ public class StatsGUI extends JPanel implements ActionListener{
 		}
 	}
 	
-	private void cycle(int inc){
+	public void cycle(int inc){
 		if (pointsLeft == TheCharacter.getLevelUpPoints() || confirm() ==  0){
 			if (inc > 0){
 				position++;
@@ -501,17 +502,50 @@ public class StatsGUI extends JPanel implements ActionListener{
 			cycle(-1);
 		}
 	}
-	
-	/*public static void main(String[] args){
-		Entity testChar = new Character("Tiff", 140, 140, 10, 15, 20);
-		System.out.println(testChar.getMaxHealth());
-		LevelUp testLevelup = new LevelUp(testChar);
-		while (testLevelup.isRunning == true){
-			continue;
-		}
-		if (testLevelup.isRunning == false){
-			testChar = testLevelup.confirm();
-		}
-		System.out.println(testChar.getMaxHealth());
-	}*/
+
+	@Override
+	public void keyPressed(KeyEvent k)
+	{
+		int key = k.getKeyCode();
+
+        if (key == 73 ) // 'i'
+        {
+        	// shortcut to "Inventory Tab"
+        	GE.viewInventoryPanel();
+        }
+        else if (key == 67 ) // 'c'
+        {
+        	// shortcut to "Combat Tab"
+        	GE.viewCombatPanel();
+        }
+        else if (key == 77) // 'm'
+        {
+        	// shortcut to "Map Tab"
+        	GE.viewMapPanel();
+        }
+        else if (key == 83) // 's'
+        {
+        	// shortcut to "Stats Tab"
+        	GE.viewStatsPanel();
+        }
+        else if (key == 81) // 'q'
+        {
+        	// shortcut to "Quest Tab"
+        	GE.viewQuestPanel();
+        }
+        else if(key == 27) // ESC to pause game
+			GE.pauseGame();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -145,6 +145,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 
 		itemButton = new JButton("Item");
 		itemButton.addActionListener(this);
+		itemButton.setEnabled(false); // DELETE ME
 		actionMenu.add(itemButton);
 
 		fleeButton = new JButton("Flee");
@@ -534,8 +535,21 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			//combat will close
 			if (combatOver || fled) {
 				cleanEnemies();
-				GE.viewMapPanel();
+				
 				GE.endCombat(GE.characters, 0, GE.combatResult);
+				GE.viewMapPanel();
+				
+				// apply points now?
+				if(GE.hasLeveledUp)
+				{
+					String temp = "One of your characters has leveled up!\n\nWould you like to spend your points now?";
+					int result2 = GE.printYesNoQuestion(temp);
+					if (result2 == 0)
+						GE.viewStatsPanel();
+					
+					GE.hasLeveledUp = false;
+				}
+				
 				combatOver = true;
 			}
 			

@@ -7,6 +7,9 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoundedRangeModel;
 import javax.swing.ImageIcon;
@@ -28,7 +31,7 @@ import javax.swing.JToolBar;
  *
  */
 
-public class InventoryGUI extends JPanel implements ActionListener {
+public class InventoryGUI extends JPanel implements ActionListener, KeyListener {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -176,14 +179,10 @@ public class InventoryGUI extends JPanel implements ActionListener {
         this.add(toolBar, BorderLayout.NORTH);         
         
       	this.add(centerPanel);
+      	this.addKeyListener(this);  // This class has its own key listeners.
+        this.setFocusable(true);    // Allow panel to get focus
                	  
     }
-	
-	protected void update(){
-		updateCharacterLabel(GE.getSelectedCharacter());
-		updateCharacterStatsBars(GE.getSelectedCharacter());
-		updateCharacterEquipped(GE.getSelectedCharacter());
-	}
 	
 	//make the navigation toolbar
 	protected void makeToolbar(JToolBar toolBar) 
@@ -249,6 +248,13 @@ public class InventoryGUI extends JPanel implements ActionListener {
         toolBar.add(nextCharacterButton);        
         
     }
+	
+	protected void update()
+	{
+		updateCharacterLabel(GE.getSelectedCharacter());
+		updateCharacterStatsBars(GE.getSelectedCharacter());
+		updateCharacterEquipped(GE.getSelectedCharacter());
+	}
         
     //Brings up the selected image
     protected void updateBackpackLabel (Item item) 
@@ -336,5 +342,51 @@ public class InventoryGUI extends JPanel implements ActionListener {
 			GE.getSelectedCharacter().setEquippedItem(GE.getSelectedItem());
 			updateCharacterEquipped(GE.getSelectedCharacter());
 		}
+	}
+
+	@Override
+	public void keyPressed(KeyEvent k)
+	{
+		int key = k.getKeyCode();
+
+        if (key == 73 ) // 'i'
+        {
+        	// shortcut to "Inventory Tab"
+        	GE.viewInventoryPanel();
+        }
+        else if (key == 67 ) // 'c'
+        {
+        	// shortcut to "Combat Tab"
+        	GE.viewCombatPanel();
+        }
+        else if (key == 77) // 'm'
+        {
+        	// shortcut to "Map Tab"
+        	GE.viewMapPanel();
+        }
+        else if (key == 83) // 's'
+        {
+        	// shortcut to "Stats Tab"
+        	GE.viewStatsPanel();
+        }
+        else if (key == 81) // 'q'
+        {
+        	// shortcut to "Quest Tab"
+        	GE.viewQuestPanel();
+        }
+        else if(key == 27) // ESC to pause game
+			GE.pauseGame();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }

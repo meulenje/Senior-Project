@@ -21,6 +21,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	private int attack;
 	private int defense;
 	private int speed;
+	protected boolean hasMoved = true; // for Grid Movement only
+	private String behaviorType; 
 	private String name;
 	private Random RNG = new Random();
 	// is this entity object a player
@@ -34,7 +36,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	private Item equippedItem; // for now they may only have one equipped item
 								// at a time
 
-	public Entity(int id, ImageIcon image, String name, boolean isPlayer,
+	public Entity(int id, ImageIcon image, String name, String behaviorType, boolean isPlayer,
 			Item equippedItem, int currentHealth, int maxHealth,
 			int currentMana, int maxMana, int attack, int defense, int speed,
 			int points, int level) {
@@ -53,6 +55,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 		this.name = name;
 		this.isPlayer = isPlayer;
         this.level = level;
+        this.behaviorType = behaviorType;
 	}
 
 	// monster combat AI.
@@ -291,5 +294,27 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	
 	void incLevel(){
 		level++;
+	}
+	
+	/**
+	 * There are many different types of behavior. Behavior determines
+	 * the movement on the grid, and the attack style in battle for
+	 * enemies. Players are not affected by behaviors.
+	 * @return behaviorType
+	 */
+	String getBehaviorType()
+	{
+		return this.behaviorType;
+	}
+	
+	/**
+	 * There are many different types of behavior. Behavior determines
+	 * the movement on the grid, and the attack style in battle for
+	 * enemies. Players are not affected by behaviors.
+	 * @param type
+	 */
+	void setBehaviorType(String type)
+	{
+		this.behaviorType = type;
 	}
 }

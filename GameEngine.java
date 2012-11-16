@@ -57,10 +57,6 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected Sequencer soundStream; // a sequencer to play sound effects
 	protected int clockSpeed = 1000; // time between ticks in milliseconds
 
-	/**
-	 * Reference Grid BCOLS - X_DIM |-----------------------| BROWS| | | | | | |
-	 * | | | | | | Y_DIM| | | | |-----------------------|
-	 */
 	// GridGUI specific variables
 	protected int BCOLS = 25; // board default column size
 	protected int BROWS = 25; // board default row size
@@ -68,6 +64,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
 	protected int prow = 0; // player's row position
 	protected int pcol = 0; // player's col position
+	protected int erow = 0;
+	protected int ecol = 0;
 	protected int prowStart = BROWS - 1; // initial start position
 	protected int pcolStart = 0; // initial start position
 	protected int[][] gridLayer1; // Terrain layer
@@ -109,14 +107,14 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected Color highlightColor = Color.blue;
 
 	// special mapPanel features
-	protected boolean showHintsEnabled = false;
-	protected boolean fogOfWar = false;
-	protected boolean mappingEnabled = false;
-	protected int playerVisionRange = 3;
+	protected boolean showHintsEnabled = true;
+	protected boolean fogOfWar = true;
+	protected boolean mappingEnabled = true;
+	protected int playerVisionRange = 5;
 	protected boolean warpingEnabled = true;
 	protected boolean clearStatsPerLevel = false;
 	protected int monsterGridSpeed = 2; // monster moves after X seconds
-	protected double percentChanceOfEncounter = 0.0; // when entering a
+	protected double percentChanceOfEncounter = 0.05; // when entering a
 														// Encounterable space,
 														// there is a small
 														// chance the player
@@ -251,11 +249,12 @@ public class GameEngine implements ActionListener, FocusListener,
 	private JList<Item> itemList = new JList<Item>(); // list to h
 	private ArrayList<Item> itemsInBackpack; // array inventory items
 	private int index = 0; // index to track selected character
-	
+
 	// Level up variables
 	protected int base = 10;
 	protected int factor = 2;
 	protected int pointsPerLevel = 5;
+	protected boolean hasLeveledUp = false;
 
 	/**
 	 * Constructor for GameEngine
@@ -263,13 +262,11 @@ public class GameEngine implements ActionListener, FocusListener,
 	public GameEngine() {
 
 		// combatPanel constructor
-		characters = new ArrayList<Entity>(); 
-		Entity mario = new Entity(PlayerID, Player, "Mario", true, null, 30,
-				30, 20, 20, 11, 10, 10, 5, 1);
-		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", true, null,
-				30, 30, 30, 30, 10, 11, 9, 5, 1);
-		Entity toad = new Entity(PlayerID, Mushroom, "Toad", true, null, 15,
-				15, 50, 50, 10, 10, 15, 5, 1);
+		characters = new ArrayList<Entity>(); // currentHealth, totalHealth,
+												// attack, defense, speed
+		Entity mario = new Entity(PlayerID, Player, "Mario", "", true, null, 30, 30, 30, 30, 12, 10, 10, 5,1);
+		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", "", true, null, 30, 30, 30, 30, 10, 11, 9, 5,1);
+		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null, 15, 15, 50, 50, 10, 10, 15, 5,1);
 		Ability cure = new Ability("Heal", 1, 0, 20, 8);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
 		luigi.abilities.add(cure);
@@ -282,18 +279,13 @@ public class GameEngine implements ActionListener, FocusListener,
 		// inventoryPanel
 		// initialize array list of items
 		itemsInBackpack = new ArrayList<Item>();
-		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
-				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
-				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
-				"Gives you 30 MP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
-				"Increases Max Mana by 10 MP", false, 0, 0, 10, 0, 0, 5, 0));
-		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
-				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
-				5, 0));
-
+		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom", "Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, Rock, "Rock", "Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
+		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem", "Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield", "Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5, 5, 0));
+		
+		
 		// initailize the list
 		itemList = new JList<Item>(getItemArray()); // JList that displays the
 													// items
@@ -431,11 +423,11 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setLocation(0, 0);
 		options.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
-
+		
 		// --------------------------------------------------------
 		// make the game over gui
 		gameover = new GameOverGUI(this);
-		gameover.setLocation(0, 0);
+		gameover.setLocation(0,0);
 		gameover.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
 
@@ -495,7 +487,6 @@ public class GameEngine implements ActionListener, FocusListener,
 		// on every tick, event() will be called.
 		klok = new Clock();
 		klok.register(this); // The Engine listens to the Clock
-		klok.register((GridGUI) mapPanel); // the Grid listens to the Clock
 		klok.setRate(clockSpeed); // time passes per tick by this speed in
 									// milliseconds
 
@@ -553,9 +544,13 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * A function to start a new game. This is not the function to start the
 	 * next level!
 	 */
-	public void newGame() {
+	public void newGame() 
+	{
 		// choose player
 		// TODO
+		
+		// restore all player's health and magic
+		restoreAllCharacters();
 
 		// choose maps/levels
 		// TODO
@@ -584,9 +579,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		// reset clock
 		klok.pause();
 		klok.currentTime = 0;
-
-		// view the mapPanel
-		viewMapPanel();
+		klok.run(Clock.FOREVER);
 	}
 
 	/**
@@ -716,7 +709,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            b
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printYesNoQuestion(String b) {
+	public int printYesNoQuestion(String b) 
+	{
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -740,7 +734,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            [] choices
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printCustomQuestion(String question, Object[] choices) {
+	public int printCustomQuestion(String question, Object[] choices) 
+	{
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -759,7 +754,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Quests
 	 */
-	public void viewQuestPanel() {
+	public void viewQuestPanel() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -774,7 +770,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Combat
 	 */
-	public void viewCombatPanel() {
+	public void viewCombatPanel() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -792,7 +789,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Inventory
 	 */
-	public void viewInventoryPanel() {
+	public void viewInventoryPanel() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -802,9 +800,13 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabs.setSelectedIndex(1);
 		inventoryPanel.requestFocus();
 		klok.pause();
+		
+		// update the view
+		((InventoryGUI) inventoryPanel).update();
 	}
 
-	public void viewStatsPanel() {
+	public void viewStatsPanel() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -822,7 +824,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Map
 	 */
-	public void viewMapPanel() {
+	public void viewMapPanel() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -840,7 +843,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Main Menu
 	 */
-	public void viewMainMenu() {
+	public void viewMainMenu() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -853,7 +857,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		playMusic(menuTheme, true);
 	}
 
-	public void viewOptions() {
+	public void viewOptions() 
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -862,8 +867,9 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabs.setVisible(false);
 		options.requestFocus();
 	}
-
-	public void viewGameOverScreen() {
+	
+	public void viewGameOverScreen()
+	{
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(true);
@@ -871,7 +877,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setVisible(false);
 		tabs.setVisible(false);
 		options.requestFocus();
-
+		
 		// pause clock
 		klok.pause();
 	}
@@ -879,7 +885,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Loading Screen
 	 */
-	public void viewLoadingScreen() {
+	public void viewLoadingScreen() 
+	{
 		loadingScreen.setVisible(true);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -959,7 +966,11 @@ public class GameEngine implements ActionListener, FocusListener,
 			int result = printCustomQuestion("New Quest available!", options);
 			if (result == 0)
 				viewQuestPanel();
+			else
+				viewMapPanel();
 		}
+		else
+			viewMapPanel();
 	}
 
 	/**
@@ -1018,7 +1029,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * This function should be called after combat is finished and the player
 	 * has won in combat. Not if they fled or died.
 	 */
-	public void removeDefeatedEnemies(Item i) {
+	public void removeDefeatedEnemies(RPGObject i) {
 		// remove any enemy objects that are NSWE from the player's current
 		// position
 		if (prow != BROWS - 1 && board[prow + 1][pcol].isMonster())
@@ -1117,7 +1128,8 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		encounters += monsterCount; // count the number
 
-		if (monsterCount > 0) {
+		if (monsterCount > 0) 
+		{
 			// populate enemies team with the number of monsters we ran into
 			initializeCombat();
 
@@ -1134,17 +1146,15 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * traps.
 	 */
 	public void checkForTrap(RPGObject i) {
-		if (i != null) {
+		if (i != null && board[prow][pcol].isTrap()) {
 			// check for beartrap
 			if (i.id == BeartrapID) {
 				// keep track of how many
 				traps++;
 
-				// inflict 10% damage of totalHealth to first player
-				characters.get(0).setCurrentHealth(
-						characters.get(0).getCurrentHealth()
-								- (int) ((double) characters.get(0)
-										.getMaxHealth() * 0.1));
+				// inflict 10% damage of totalHealth to all players
+				for(Entity e : characters)
+					e.setCurrentHealth(e.getCurrentHealth() - (int) ((double) e.getMaxHealth() * 0.1));
 			}
 			// check for whirlwind
 			else if (i.id == SpiralID) {
@@ -1229,34 +1239,37 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 		return;
 	}
-
+	
 	/**
-	 * This method will scan the player's health bar. If all players are at <=0
-	 * health points, then its game over!
+	 * This method will scan the player's health bar. If all players
+	 * are at <=0 health points, then its game over!
 	 */
-	public void checkForGameOver() {
-		int numOfCharacters = 0;
-		int numOfDead = 0;
-
-		for (Entity c : characters) {
-			numOfCharacters++; // count the total
-
-			if (!c.alive()) // count the dead
-				numOfDead++;
+	public void checkForGameOver()
+	{
+		boolean allDead = true;
+		
+		for(Entity c : characters)
+		{
+			if(c.alive()) // anybody alive?
+			{
+				allDead = false;
+				break;
+			}
 		}
-
+		
 		// if all are dead, then show game over
-		if (numOfDead > 0 && numOfDead == numOfCharacters) {
+		if(allDead)
+		{
 			// play music
-			playMusic(gameOver, true);
-
+			playMusic(gameOver, false);
+			
 			// display a warning
 			printInfo("Oh no!\n\nYour last player has died!");
-
+			
 			// GAME OVER
 			viewGameOverScreen();
 		}
-
+				
 	}
 
 	/**
@@ -1341,7 +1354,15 @@ public class GameEngine implements ActionListener, FocusListener,
 			// don't move the player
 
 			// read the sign
-			printInfo("The sign reads...\n\n\'Hold \'A\' to charge your laser.\'");
+			Random rand = new Random();
+			switch(rand.nextInt(4))
+			{
+			case 0: printInfo("The sign reads...\n\n\'Run from battle if your party is weakened!\'"); break;
+			case 1: printInfo("The sign reads...\n\n\'Use the arrow keys to move faster!\nHold left-shift to jump!'"); break;
+			case 2: printInfo("The sign reads...\n\n\'Use your attribute points when you level up!\'"); break;
+			case 3: printInfo("The sign reads...\n\n\'Equip items to increase your combat strength!'"); break;
+			}
+			
 		}
 		// check if the next spot is pushable like a rock
 		else if (!leftShift && board[prow + x][pcol + y].isPushable()) {
@@ -1419,6 +1440,9 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (showHintsEnabled && board[prow + x][pcol + y].isHole())
 				printInfo("You can hop over holes by\nholding down the left-shift key.");
 		}
+		
+		// are they dead yet?
+		checkForGameOver();
 
 		return;
 	} // end of movePlayer()
@@ -1430,6 +1454,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * @return void
 	 */
 	public void movePlayerVision() {
+		makeExitGlow();
 		if (fogOfWar) // only works on if fog is enabled
 		{
 			for (int i = 0; i < BROWS; i++) {
@@ -1480,6 +1505,177 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		}
 	} // end of movePlayerVision()
+	
+	public void moveEnemies()
+	{
+		// Scan for enemies, if you find one, make him move.
+		if(numOfMonsters > 0 && klok.currentTime != 0 && klok.currentTime % monsterGridSpeed == 0)
+		{
+			// mark all enemies as, "has not moved", before we begin
+			for (int i=0; i<BROWS; i++)
+	            for (int j=0; j<BCOLS; j++)
+	            	if(board[i][j].isMonster() && ((Entity)board[i][j].object).hasMoved)
+	            		((Entity)board[i][j].object).hasMoved = false;
+			
+			// check for unmoved enemies, then start to move them, and mark them "has moved" true.
+	        for (int i=0; i<BROWS; i++)
+	        {
+	            for (int j=0; j<BCOLS; j++)
+	            {
+	            	// find an enemy
+	            	if(klok.currentTime>0 && board[i][j].isMonster() && !((Entity)board[i][j].object).hasMoved)
+	            	{
+	            		// get their behavior type
+	            		String type = ((Entity)board[i][j].object).getBehaviorType();
+	            		
+	            		
+	            		if( type.equalsIgnoreCase("Aggressive")) // chase player on sight, attacks and use abilities
+	            		{
+	            			if(withinPlayerSight(i,j))
+	            			{
+	            				int[] direction = getDirectionToLocation(i,j,prow,pcol);
+	            				int x = direction[0];
+	            				int y = direction[1];
+	            				if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
+	            						&& board[i+x][j+y].isEmptySpace())
+	            				{
+	    	            			// move in direction
+	    	            			((Entity)board[i][j].object).hasMoved = true;
+	    	            			board[i+x][j+y].setObject(board[i][j].getObject());
+	    	            			board[i][j].setObject(null);
+	    	            		}
+	            			}
+	            		}
+	            		else if( type.equals("Defensive")) // stands ground, attacks and use abilities
+	            		{
+	            			// No movement
+	            		}
+	            		else if( type.equals("Speedy") || type.equals("Coward")) 
+	            		{
+	            			// Speedy: run from player, gang on single target until dead
+	            			// Coward: run from player, flee from fights
+	            			if(withinPlayerSight(i,j))
+	            			{
+	            				int[] direction = getDirectionToLocation(i,j,prow,pcol);
+	            				int x = -direction[0];
+	            				int y = -direction[1];
+	            				if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
+	            						&& board[i+x][j+y].isEmptySpace())
+	            				{
+	    	            			// move in direction
+	    	            			((Entity)board[i][j].object).hasMoved = true;
+	    	            			board[i+x][j+y].setObject(board[i][j].getObject());
+	    	            			board[i][j].setObject(null);
+	    	            		}
+	            			}
+	            		}
+	            		else if( type.equals("Tricky")) // random movement, random actions
+	            		{
+	            			Random rand = new Random();
+	            			int direction = rand.nextInt(4);
+	            			int x = 0, y = 0;
+	            			
+	            			if(direction==0)
+	            				y--;
+	            			else if(direction==1)
+	            				x++;
+	            			else if(direction==2)
+	            				y++;
+	            			else
+	            				x--;
+	            			
+	            			// try to move in the random direction
+		            		if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
+		            						&& board[i+x][j+y].isEmptySpace())
+		            		{
+		            			// move randomly
+		            			((Entity)board[i][j].object).hasMoved = true;
+		            			board[i+x][j+y].setObject(board[i][j].getObject());
+		            			board[i][j].setObject(null);
+		            		}
+	            		}
+	            		else if( type.equals("Boss")) // stands by exit, splash abilities, heals self
+	            		{
+	            			// TODO
+	            		}
+	            		else // no preference
+	            		{
+	            			// move the monster left, if possible
+		            		if(j!=0 && board[i][j-1].isEmptySpace())
+		            		{
+		            			// move left
+		            			((Entity)board[i][j].object).hasMoved = true;
+		            			board[i][j-1].setObject(board[i][j].getObject());
+		            			board[i][j].setObject(null);
+		            		}
+		            		else if(i!=BROWS-1 && board[i][j+1].isEmptySpace())
+		            		{
+		            			// else move right
+		            			((Entity)board[i][j].object).hasMoved = true;
+		            			board[i][j+1].setObject(board[i][j].getObject());
+		            			board[i][j].setObject(null);
+		            		}
+	            		}
+	            	}
+	            }
+	        }
+	        // check around for enemies again
+	        checkForEnemies();
+		}
+	}
+	
+	/**
+	 * Tells you wether or not the location given is within the bounds
+	 * of the player's sight in fog of war.
+	 * @param x
+	 * @param y
+	 * @return boolean
+	 */
+	public boolean withinPlayerSight(int x, int y)
+	{
+		if (x < prow + playerVisionRange
+				&& x > prow - playerVisionRange
+				&& y < pcol + playerVisionRange
+				&& y > pcol - playerVisionRange) {
+			// inside vision range
+			return true;
+		} else // out of vision range
+		{
+			return false;
+		}
+	}
+	
+	public int[] getDirectionToLocation(int currentRow, int currentCol, int targetRow, int targetCol)
+	{
+		int[] direction = {0,0};
+		
+		boolean xneg = false;
+		boolean yneg = false;
+		int y = targetRow - currentRow;
+		int x = targetCol - currentCol;
+		
+		if(x<0)
+		{
+			x=-x;
+			xneg = true;
+		}
+		if(y<0)
+		{
+			y=-y;
+			yneg = true;
+		}
+		
+		if(x >= y && !xneg)
+			direction[1] = 1; // right
+		else if(x >= y && xneg)
+			direction[1] = -1; // left
+		else if(y >= x && !yneg)
+			direction[0] = 1; // down
+		else if(y >= x && yneg)
+			direction[0] = -1; // up
+		
+		return direction;
+	}
 
 	/**
 	 * Sets all of the mapPanel's tiles visible or invisible
@@ -1516,6 +1712,50 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		}
 	}
+	
+	public void makeExitGlow() {
+		if (fogOfWar) // only works on if fog is enabled
+		{
+			for (int i = 0; i < BROWS; i++) {
+				for (int j = 0; j < BCOLS; j++) {
+					// if its inside of the player's vision range, then set
+					// visible
+					if (i < erow + 2
+							&& i > erow - 2
+							&& j < ecol + 2
+							&& j > ecol - 2) {
+						// inside vision range
+						board[i][j].setFog(EmptyID);
+						board[i][j].setVisible(true);
+					} else if (i == erow + 2
+							&& j < ecol + 2
+							&& j > ecol - 2) {
+						// edge of lower vision
+						board[i][j].setFog(FogBottomID);
+						board[i][j].setVisible(true);
+					} else if (i == erow - 2
+							&& j < ecol + 2
+							&& j > ecol - 2) {
+						// edge of upper vision
+						board[i][j].setFog(FogTopID);
+						board[i][j].setVisible(true);
+					} else if (j == ecol + 2
+							&& i < erow + 2
+							&& i > erow - 2) {
+						// edge of right-side vision
+						board[i][j].setFog(FogRightID);
+						board[i][j].setVisible(true);
+					} else if (j == ecol - 2
+							&& i < erow + 2
+							&& i > erow - 2) {
+						// edge of left-side vision
+						board[i][j].setFog(FogLeftID);
+						board[i][j].setVisible(true);
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * Randomizes the current board with new images and ids
@@ -1530,7 +1770,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		boolean doorPlaced = false;
 		boolean warpAPlaced = false;
 		boolean warpBPlaced = false;
-		boolean spiralPlaced = false;
+		boolean spiralPlaced = true;
 		int signs = 0;
 		int temp;
 		numOfMonsters = 0;
@@ -1555,8 +1795,8 @@ public class GameEngine implements ActionListener, FocusListener,
 				else if (temp == 7) {
 					board[i][j].resetObject(new Terrain(DirtID, Dirt, false,
 							true, false), new Entity(LavaMonsterID,
-							LavaMonster, "LavaMonster", false, null, 10, 10,
-							10, 10, 5, 5, 5, 5, 1), null);
+							LavaMonster, "LavaMonster", "Aggressive", false, null, 10, 10,
+							10, 10, 5, 5, 5, 5,1), null);
 					numOfMonsters++;
 				}
 				// randomly make "beartraps"
@@ -1578,23 +1818,25 @@ public class GameEngine implements ActionListener, FocusListener,
 				}
 				// place warp 'a'
 				else if (warpingEnabled && !warpAPlaced && temp == 8) {
-					board[i][j].resetObject(new Terrain(WarpAID, XSpace, false,
+					board[i][j].resetObject(new Terrain(WarpAID, Spiral, false,
 							true, false), null, null);
 					warpAPlaced = true;
 				}
 				// place warp 'b'
 				else if (warpingEnabled && !warpBPlaced && temp == 9
 						&& (i >= BROWS / 2)) {
-					board[i][j].resetObject(new Terrain(WarpBID, XSpace, false,
+					board[i][j].resetObject(new Terrain(WarpBID, Spiral, false,
 							true, false), null, null);
 					warpBPlaced = true;
 				}
 				// randomly place one exit per map
 				else if (!doorPlaced && (temp == 10 || (i == 3 && j == 3))) {
 					board[i][j].resetObject(new Terrain(GrassID, Grass, true,
-							true, false), null, new NonEntity(ExitID, Hideout,
+							true, false), null, new NonEntity(ExitID, GlowingGem,
 							false, false, false, false));
 					doorPlaced = true;
+					erow = i;
+					ecol = j;
 				}
 				// randomly place one spiral, if necessary
 				else if (!spiralPlaced && temp == 23) {
@@ -1624,6 +1866,35 @@ public class GameEngine implements ActionListener, FocusListener,
 			setFog(true);
 
 		return;
+	}
+	
+	/**
+	 * Sets all the characters' health and magic to their max.
+	 */
+	public void restoreAllCharacters()
+	{
+		for(Entity i : characters)
+		{
+			i.setCurrentHealth(i.getMaxHealth());
+			i.setCurrentMana(i.getMaxMana());
+		}
+	}
+	
+	/**
+	 * Sets a single character's health and magic to their max.
+	 * @param name
+	 */
+	public void restoreCharacter(String name)
+	{
+		for(Entity i : characters)
+		{
+			if(i.getName().equals(name))
+			{
+				i.setCurrentHealth(i.getMaxHealth());
+				i.setCurrentMana(i.getMaxMana());
+				break;
+			}
+		}
 	}
 
 	@Override
@@ -1706,11 +1977,14 @@ public class GameEngine implements ActionListener, FocusListener,
 			} else if (tab == 1) {
 				klok.pause();
 				inventoryPanel.requestFocus();
-				((InventoryGUI)inventoryPanel).update();
+				((InventoryGUI) inventoryPanel).update();
 			} else if (tab == 2) {
 				klok.pause();
 				statsPanel.requestFocus();
-				((StatsGUI)statsPanel).reset();
+				((StatsGUI) statsPanel).reset();
+				((StatsGUI) statsPanel).update();
+				((StatsGUI) statsPanel).cycle(1);
+				((StatsGUI) statsPanel).cycle(-1);
 			} else if (tab == 3) {
 				klok.pause();
 				combatPanel.requestFocus();
@@ -1737,6 +2011,10 @@ public class GameEngine implements ActionListener, FocusListener,
 		int hp = (int) (((double) characters.get(0).getCurrentHealth() / (double) characters
 				.get(0).getMaxHealth()) * 100);
 		((GridGUI) mapPanel).updateHealthBar(hp);
+		
+		// move enemies on the map if possible
+		moveEnemies();
+		
 		return false;
 	}
 
@@ -1894,8 +2172,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		resetStatistics();
 
 		// add new quest to messageGUI
-		addQuest(questsTotal, Hideout, "Find the Exit",
-				"Try to find the exit in this level.", "Started");
+		addQuest(questsTotal, GlowingGem, "Find the Gem!",
+				"Try to find the rare glowing gem in this level. Watch out for lava monsters!", "Started");
 
 		questsTotal++;
 	}
@@ -2220,8 +2498,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	public boolean attemptToFlee() {
 		boolean result;
 
-		int roll = randomNumberGenerator.nextInt(3);
-		if (roll == 2) {
+		int roll = randomNumberGenerator.nextInt(3); // 0,1,2
+		if (roll != 2) {
 			result = true;
 		} else {
 			result = false;
@@ -2244,7 +2522,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonsterID, LavaMonster, "LM", false, null, 10,
+			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", "Aggressive", false, null, 10,
 					10, 10, 10, 10, 10, 1, 5, 1);
 			m.setExp(6);
 			Ability cure = new Ability("heal", 1, 0, 0, 5);
@@ -2260,7 +2538,9 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		boolean returnVal = false;
 		if (result == 0) {
-			// code to handle running away (nothing happens)
+			// code to handle running away
+			// remove defeated enemies from grid
+			removeDefeatedEnemies(null);
 			returnVal = true;
 		} else {
 			if (result == 1) {
@@ -2277,6 +2557,7 @@ public class GameEngine implements ActionListener, FocusListener,
 						//character has leveled up
 						if(character.getExp() >= getExpNeeded(character)){
 							levelUpCharacter(character);
+							hasLeveledUp = true;
 							((CombatGUI) combatPanel).appendStatus(character
 									.getName()
 									+ " has reached level "
