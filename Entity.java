@@ -24,7 +24,6 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	protected boolean hasMoved = true; // for Grid Movement only
 	private String behaviorType; 
 	private String name;
-	private Random RNG = new Random();
 	// is this entity object a player
 	public boolean isPlayer = false;
 	// experience value for monsters, accumulated experience for players
@@ -35,6 +34,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 
 	private Item equippedItem; // for now they may only have one equipped item
 								// at a time
+	
+	private Random randomNumberGenerator = new Random();
 
 	public Entity(int id, ImageIcon image, String name, String behaviorType, boolean isPlayer,
 			Item equippedItem, int currentHealth, int maxHealth,
@@ -58,18 +59,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
         this.behaviorType = behaviorType;
 	}
 
-	// monster combat AI.
-	public String monsterTurn() {
-		if (this.hasHealingAbility() == true
-				&& this.getCurrentHealth() < (this.getMaxHealth() * .5)
-				&& RNG.nextInt(10) > 7) {
-			return "heal";
-		} else {
-			return "attack";
-		}
-	}
-
-	private boolean hasHealingAbility() {
+	public boolean hasHealingAbility() {
 		boolean returnVal = false;
 		if (!this.abilities.isEmpty()) {
 			for (Ability a : this.abilities) {
@@ -294,6 +284,42 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	
 	void incLevel(){
 		level++;
+	}
+	
+	//returns random healing ability
+	public Ability findHealingAbility(){
+		Ability returnVal = null;
+		ArrayList<Ability> found = new ArrayList<Ability>();
+		
+		for(Ability a : abilities){
+			if(a.friendly()){
+				found.add(a);
+			}
+		}
+		
+		if(!found.isEmpty()){
+			int random = randomNumberGenerator.nextInt(found.size());
+			returnVal = found.get(random);
+		}
+		return returnVal;
+	}
+	
+	//returns random damaging ability
+	public Ability findDamagingAbility(){
+		Ability returnVal = null;
+		ArrayList<Ability> found = new ArrayList<Ability>();
+		
+		for(Ability a : abilities){
+			if(!a.friendly()){
+				found.add(a);
+			}
+		}
+		
+		if(!found.isEmpty()){
+			int random = randomNumberGenerator.nextInt(found.size());
+			returnVal = found.get(random);
+		}
+		return returnVal;
 	}
 	
 	/**

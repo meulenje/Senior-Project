@@ -264,12 +264,15 @@ public class GameEngine implements ActionListener, FocusListener,
 		// combatPanel constructor
 		characters = new ArrayList<Entity>(); // currentHealth, totalHealth,
 												// attack, defense, speed
-		Entity mario = new Entity(PlayerID, Player, "Mario", "", true, null, 30, 30, 30, 30, 12, 10, 10, 5,1);
-		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", "", true, null, 30, 30, 30, 30, 10, 11, 9, 5,1);
-		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null, 15, 15, 50, 50, 10, 10, 15, 5,1);
-		Ability cure = new Ability("Heal", 1, 0, 20, 8);
+		Entity mario = new Entity(PlayerID, Player, "Mario", "", true, null,
+				30, 30, 30, 30, 12, 10, 10, 5, 1);
+		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", "", true,
+				null, 30, 30, 30, 30, 10, 11, 9, 5, 1);
+		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null,
+				15, 15, 50, 50, 10, 10, 15, 5, 1);
+		Ability cure = new Ability("Healing Mushroom", 1, 0, 20, 8);
 		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
-		luigi.abilities.add(cure);
+		luigi.abilities.add(fireball);
 		mario.abilities.add(fireball);
 		toad.abilities.add(cure);
 		characters.add(mario);
@@ -279,13 +282,18 @@ public class GameEngine implements ActionListener, FocusListener,
 		// inventoryPanel
 		// initialize array list of items
 		itemsInBackpack = new ArrayList<Item>();
-		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom", "Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, Rock, "Rock", "Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem", "Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield", "Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5, 5, 0));
-		
-		
+		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
+				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
+				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
+		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
+				"Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
+				"Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
+				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
+				5, 0));
+
 		// initailize the list
 		itemList = new JList<Item>(getItemArray()); // JList that displays the
 													// items
@@ -423,11 +431,11 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setLocation(0, 0);
 		options.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
-		
+
 		// --------------------------------------------------------
 		// make the game over gui
 		gameover = new GameOverGUI(this);
-		gameover.setLocation(0,0);
+		gameover.setLocation(0, 0);
 		gameover.setSize(X_DIM, Y_DIM + 60);
 		// --------------------------------------------------------
 
@@ -544,11 +552,10 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * A function to start a new game. This is not the function to start the
 	 * next level!
 	 */
-	public void newGame() 
-	{
+	public void newGame() {
 		// choose player
 		// TODO
-		
+
 		// restore all player's health and magic
 		restoreAllCharacters();
 
@@ -709,8 +716,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            b
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printYesNoQuestion(String b) 
-	{
+	public int printYesNoQuestion(String b) {
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -734,8 +740,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 *            [] choices
 	 * @return int 0 means YES, 1 means NO, -1 means they clicked "X" close
 	 */
-	public int printCustomQuestion(String question, Object[] choices) 
-	{
+	public int printCustomQuestion(String question, Object[] choices) {
 		// pause time if on the map
 		if (tabs.getSelectedIndex() == 0)
 			klok.pause();
@@ -754,8 +759,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Quests
 	 */
-	public void viewQuestPanel() 
-	{
+	public void viewQuestPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -770,8 +774,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Combat
 	 */
-	public void viewCombatPanel() 
-	{
+	public void viewCombatPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -789,8 +792,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Inventory
 	 */
-	public void viewInventoryPanel() 
-	{
+	public void viewInventoryPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -800,13 +802,12 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabs.setSelectedIndex(1);
 		inventoryPanel.requestFocus();
 		klok.pause();
-		
+
 		// update the view
 		((InventoryGUI) inventoryPanel).update();
 	}
 
-	public void viewStatsPanel() 
-	{
+	public void viewStatsPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -824,8 +825,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view Map
 	 */
-	public void viewMapPanel() 
-	{
+	public void viewMapPanel() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -843,8 +843,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Main Menu
 	 */
-	public void viewMainMenu() 
-	{
+	public void viewMainMenu() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -857,8 +856,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		playMusic(menuTheme, true);
 	}
 
-	public void viewOptions() 
-	{
+	public void viewOptions() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -867,9 +865,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabs.setVisible(false);
 		options.requestFocus();
 	}
-	
-	public void viewGameOverScreen()
-	{
+
+	public void viewGameOverScreen() {
 		loadingScreen.setVisible(false);
 		animationScreen.setVisible(false);
 		gameover.setVisible(true);
@@ -877,7 +874,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		options.setVisible(false);
 		tabs.setVisible(false);
 		options.requestFocus();
-		
+
 		// pause clock
 		klok.pause();
 	}
@@ -885,8 +882,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	/**
 	 * Forces player to view the Loading Screen
 	 */
-	public void viewLoadingScreen() 
-	{
+	public void viewLoadingScreen() {
 		loadingScreen.setVisible(true);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -968,8 +964,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				viewQuestPanel();
 			else
 				viewMapPanel();
-		}
-		else
+		} else
 			viewMapPanel();
 	}
 
@@ -1128,8 +1123,7 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		encounters += monsterCount; // count the number
 
-		if (monsterCount > 0) 
-		{
+		if (monsterCount > 0) {
 			// populate enemies team with the number of monsters we ran into
 			initializeCombat();
 
@@ -1153,8 +1147,9 @@ public class GameEngine implements ActionListener, FocusListener,
 				traps++;
 
 				// inflict 10% damage of totalHealth to all players
-				for(Entity e : characters)
-					e.setCurrentHealth(e.getCurrentHealth() - (int) ((double) e.getMaxHealth() * 0.1));
+				for (Entity e : characters)
+					e.setCurrentHealth(e.getCurrentHealth()
+							- (int) ((double) e.getMaxHealth() * 0.1));
 			}
 			// check for whirlwind
 			else if (i.id == SpiralID) {
@@ -1239,37 +1234,34 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 		return;
 	}
-	
+
 	/**
-	 * This method will scan the player's health bar. If all players
-	 * are at <=0 health points, then its game over!
+	 * This method will scan the player's health bar. If all players are at <=0
+	 * health points, then its game over!
 	 */
-	public void checkForGameOver()
-	{
+	public void checkForGameOver() {
 		boolean allDead = true;
-		
-		for(Entity c : characters)
-		{
-			if(c.alive()) // anybody alive?
+
+		for (Entity c : characters) {
+			if (c.alive()) // anybody alive?
 			{
 				allDead = false;
 				break;
 			}
 		}
-		
+
 		// if all are dead, then show game over
-		if(allDead)
-		{
+		if (allDead) {
 			// play music
 			playMusic(gameOver, false);
-			
+
 			// display a warning
 			printInfo("Oh no!\n\nYour last player has died!");
-			
+
 			// GAME OVER
 			viewGameOverScreen();
 		}
-				
+
 	}
 
 	/**
@@ -1355,14 +1347,21 @@ public class GameEngine implements ActionListener, FocusListener,
 
 			// read the sign
 			Random rand = new Random();
-			switch(rand.nextInt(4))
-			{
-			case 0: printInfo("The sign reads...\n\n\'Run from battle if your party is weakened!\'"); break;
-			case 1: printInfo("The sign reads...\n\n\'Use the arrow keys to move faster!\nHold left-shift to jump!'"); break;
-			case 2: printInfo("The sign reads...\n\n\'Use your attribute points when you level up!\'"); break;
-			case 3: printInfo("The sign reads...\n\n\'Equip items to increase your combat strength!'"); break;
+			switch (rand.nextInt(4)) {
+			case 0:
+				printInfo("The sign reads...\n\n\'Run from battle if your party is weakened!\'");
+				break;
+			case 1:
+				printInfo("The sign reads...\n\n\'Use the arrow keys to move faster!\nHold left-shift to jump!'");
+				break;
+			case 2:
+				printInfo("The sign reads...\n\n\'Use your attribute points when you level up!\'");
+				break;
+			case 3:
+				printInfo("The sign reads...\n\n\'Equip items to increase your combat strength!'");
+				break;
 			}
-			
+
 		}
 		// check if the next spot is pushable like a rock
 		else if (!leftShift && board[prow + x][pcol + y].isPushable()) {
@@ -1440,7 +1439,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (showHintsEnabled && board[prow + x][pcol + y].isHole())
 				printInfo("You can hop over holes by\nholding down the left-shift key.");
 		}
-		
+
 		// are they dead yet?
 		checkForGameOver();
 
@@ -1505,138 +1504,146 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		}
 	} // end of movePlayerVision()
-	
-	public void moveEnemies()
-	{
+
+	public void moveEnemies() {
 		// Scan for enemies, if you find one, make him move.
-		if(numOfMonsters > 0 && klok.currentTime != 0 && klok.currentTime % monsterGridSpeed == 0)
-		{
+		if (numOfMonsters > 0 && klok.currentTime != 0
+				&& klok.currentTime % monsterGridSpeed == 0) {
 			// mark all enemies as, "has not moved", before we begin
-			for (int i=0; i<BROWS; i++)
-	            for (int j=0; j<BCOLS; j++)
-	            	if(board[i][j].isMonster() && ((Entity)board[i][j].object).hasMoved)
-	            		((Entity)board[i][j].object).hasMoved = false;
-			
-			// check for unmoved enemies, then start to move them, and mark them "has moved" true.
-	        for (int i=0; i<BROWS; i++)
-	        {
-	            for (int j=0; j<BCOLS; j++)
-	            {
-	            	// find an enemy
-	            	if(klok.currentTime>0 && board[i][j].isMonster() && !((Entity)board[i][j].object).hasMoved)
-	            	{
-	            		// get their behavior type
-	            		String type = ((Entity)board[i][j].object).getBehaviorType();
-	            		
-	            		
-	            		if( type.equalsIgnoreCase("Aggressive")) // chase player on sight, attacks and use abilities
-	            		{
-	            			if(withinPlayerSight(i,j))
-	            			{
-	            				int[] direction = getDirectionToLocation(i,j,prow,pcol);
-	            				int x = direction[0];
-	            				int y = direction[1];
-	            				if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
-	            						&& board[i+x][j+y].isEmptySpace())
-	            				{
-	    	            			// move in direction
-	    	            			((Entity)board[i][j].object).hasMoved = true;
-	    	            			board[i+x][j+y].setObject(board[i][j].getObject());
-	    	            			board[i][j].setObject(null);
-	    	            		}
-	            			}
-	            		}
-	            		else if( type.equals("Defensive")) // stands ground, attacks and use abilities
-	            		{
-	            			// No movement
-	            		}
-	            		else if( type.equals("Speedy") || type.equals("Coward")) 
-	            		{
-	            			// Speedy: run from player, gang on single target until dead
-	            			// Coward: run from player, flee from fights
-	            			if(withinPlayerSight(i,j))
-	            			{
-	            				int[] direction = getDirectionToLocation(i,j,prow,pcol);
-	            				int x = -direction[0];
-	            				int y = -direction[1];
-	            				if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
-	            						&& board[i+x][j+y].isEmptySpace())
-	            				{
-	    	            			// move in direction
-	    	            			((Entity)board[i][j].object).hasMoved = true;
-	    	            			board[i+x][j+y].setObject(board[i][j].getObject());
-	    	            			board[i][j].setObject(null);
-	    	            		}
-	            			}
-	            		}
-	            		else if( type.equals("Tricky")) // random movement, random actions
-	            		{
-	            			Random rand = new Random();
-	            			int direction = rand.nextInt(4);
-	            			int x = 0, y = 0;
-	            			
-	            			if(direction==0)
-	            				y--;
-	            			else if(direction==1)
-	            				x++;
-	            			else if(direction==2)
-	            				y++;
-	            			else
-	            				x--;
-	            			
-	            			// try to move in the random direction
-		            		if(!((i == BROWS - 1 && x > 0) || (j == BCOLS - 1 && y > 0) || (i == 0 && x < 0) || (j == 0 && y < 0))
-		            						&& board[i+x][j+y].isEmptySpace())
-		            		{
-		            			// move randomly
-		            			((Entity)board[i][j].object).hasMoved = true;
-		            			board[i+x][j+y].setObject(board[i][j].getObject());
-		            			board[i][j].setObject(null);
-		            		}
-	            		}
-	            		else if( type.equals("Boss")) // stands by exit, splash abilities, heals self
-	            		{
-	            			// TODO
-	            		}
-	            		else // no preference
-	            		{
-	            			// move the monster left, if possible
-		            		if(j!=0 && board[i][j-1].isEmptySpace())
-		            		{
-		            			// move left
-		            			((Entity)board[i][j].object).hasMoved = true;
-		            			board[i][j-1].setObject(board[i][j].getObject());
-		            			board[i][j].setObject(null);
-		            		}
-		            		else if(i!=BROWS-1 && board[i][j+1].isEmptySpace())
-		            		{
-		            			// else move right
-		            			((Entity)board[i][j].object).hasMoved = true;
-		            			board[i][j+1].setObject(board[i][j].getObject());
-		            			board[i][j].setObject(null);
-		            		}
-	            		}
-	            	}
-	            }
-	        }
-	        // check around for enemies again
-	        checkForEnemies();
+			for (int i = 0; i < BROWS; i++)
+				for (int j = 0; j < BCOLS; j++)
+					if (board[i][j].isMonster()
+							&& ((Entity) board[i][j].object).hasMoved)
+						((Entity) board[i][j].object).hasMoved = false;
+
+			// check for unmoved enemies, then start to move them, and mark them
+			// "has moved" true.
+			for (int i = 0; i < BROWS; i++) {
+				for (int j = 0; j < BCOLS; j++) {
+					// find an enemy
+					if (klok.currentTime > 0 && board[i][j].isMonster()
+							&& !((Entity) board[i][j].object).hasMoved) {
+						// get their behavior type
+						String type = ((Entity) board[i][j].object)
+								.getBehaviorType();
+
+						if (type.equalsIgnoreCase("Aggressive")) // chase player
+																	// on sight,
+																	// attacks
+																	// and use
+																	// abilities
+						{
+							if (withinPlayerSight(i, j)) {
+								int[] direction = getDirectionToLocation(i, j,
+										prow, pcol);
+								int x = direction[0];
+								int y = direction[1];
+								if (!((i == BROWS - 1 && x > 0)
+										|| (j == BCOLS - 1 && y > 0)
+										|| (i == 0 && x < 0) || (j == 0 && y < 0))
+										&& board[i + x][j + y].isEmptySpace()) {
+									// move in direction
+									((Entity) board[i][j].object).hasMoved = true;
+									board[i + x][j + y].setObject(board[i][j]
+											.getObject());
+									board[i][j].setObject(null);
+								}
+							}
+						} else if (type.equals("Defensive")) // stands ground,
+																// attacks and
+																// use abilities
+						{
+							// No movement
+						} else if (type.equals("Speedy")
+								|| type.equals("Coward")) {
+							// Speedy: run from player, gang on single target
+							// until dead
+							// Coward: run from player, flee from fights
+							if (withinPlayerSight(i, j)) {
+								int[] direction = getDirectionToLocation(i, j,
+										prow, pcol);
+								int x = -direction[0];
+								int y = -direction[1];
+								if (!((i == BROWS - 1 && x > 0)
+										|| (j == BCOLS - 1 && y > 0)
+										|| (i == 0 && x < 0) || (j == 0 && y < 0))
+										&& board[i + x][j + y].isEmptySpace()) {
+									// move in direction
+									((Entity) board[i][j].object).hasMoved = true;
+									board[i + x][j + y].setObject(board[i][j]
+											.getObject());
+									board[i][j].setObject(null);
+								}
+							}
+						} else if (type.equals("Tricky")) // random movement,
+															// random actions
+						{
+							Random rand = new Random();
+							int direction = rand.nextInt(4);
+							int x = 0, y = 0;
+
+							if (direction == 0)
+								y--;
+							else if (direction == 1)
+								x++;
+							else if (direction == 2)
+								y++;
+							else
+								x--;
+
+							// try to move in the random direction
+							if (!((i == BROWS - 1 && x > 0)
+									|| (j == BCOLS - 1 && y > 0)
+									|| (i == 0 && x < 0) || (j == 0 && y < 0))
+									&& board[i + x][j + y].isEmptySpace()) {
+								// move randomly
+								((Entity) board[i][j].object).hasMoved = true;
+								board[i + x][j + y].setObject(board[i][j]
+										.getObject());
+								board[i][j].setObject(null);
+							}
+						} else if (type.equals("Boss")) // stands by exit,
+														// splash abilities,
+														// heals self
+						{
+							// TODO
+						} else // no preference
+						{
+							// move the monster left, if possible
+							if (j != 0 && board[i][j - 1].isEmptySpace()) {
+								// move left
+								((Entity) board[i][j].object).hasMoved = true;
+								board[i][j - 1].setObject(board[i][j]
+										.getObject());
+								board[i][j].setObject(null);
+							} else if (i != BROWS - 1
+									&& board[i][j + 1].isEmptySpace()) {
+								// else move right
+								((Entity) board[i][j].object).hasMoved = true;
+								board[i][j + 1].setObject(board[i][j]
+										.getObject());
+								board[i][j].setObject(null);
+							}
+						}
+					}
+				}
+			}
+			// check around for enemies again
+			checkForEnemies();
 		}
 	}
-	
+
 	/**
-	 * Tells you wether or not the location given is within the bounds
-	 * of the player's sight in fog of war.
+	 * Tells you wether or not the location given is within the bounds of the
+	 * player's sight in fog of war.
+	 * 
 	 * @param x
 	 * @param y
 	 * @return boolean
 	 */
-	public boolean withinPlayerSight(int x, int y)
-	{
-		if (x < prow + playerVisionRange
-				&& x > prow - playerVisionRange
-				&& y < pcol + playerVisionRange
-				&& y > pcol - playerVisionRange) {
+	public boolean withinPlayerSight(int x, int y) {
+		if (x < prow + playerVisionRange && x > prow - playerVisionRange
+				&& y < pcol + playerVisionRange && y > pcol - playerVisionRange) {
 			// inside vision range
 			return true;
 		} else // out of vision range
@@ -1644,36 +1651,34 @@ public class GameEngine implements ActionListener, FocusListener,
 			return false;
 		}
 	}
-	
-	public int[] getDirectionToLocation(int currentRow, int currentCol, int targetRow, int targetCol)
-	{
-		int[] direction = {0,0};
-		
+
+	public int[] getDirectionToLocation(int currentRow, int currentCol,
+			int targetRow, int targetCol) {
+		int[] direction = { 0, 0 };
+
 		boolean xneg = false;
 		boolean yneg = false;
 		int y = targetRow - currentRow;
 		int x = targetCol - currentCol;
-		
-		if(x<0)
-		{
-			x=-x;
+
+		if (x < 0) {
+			x = -x;
 			xneg = true;
 		}
-		if(y<0)
-		{
-			y=-y;
+		if (y < 0) {
+			y = -y;
 			yneg = true;
 		}
-		
-		if(x >= y && !xneg)
+
+		if (x >= y && !xneg)
 			direction[1] = 1; // right
-		else if(x >= y && xneg)
+		else if (x >= y && xneg)
 			direction[1] = -1; // left
-		else if(y >= x && !yneg)
+		else if (y >= x && !yneg)
 			direction[0] = 1; // down
-		else if(y >= x && yneg)
+		else if (y >= x && yneg)
 			direction[0] = -1; // up
-		
+
 		return direction;
 	}
 
@@ -1712,7 +1717,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		}
 	}
-	
+
 	public void makeExitGlow() {
 		if (fogOfWar) // only works on if fog is enabled
 		{
@@ -1720,34 +1725,24 @@ public class GameEngine implements ActionListener, FocusListener,
 				for (int j = 0; j < BCOLS; j++) {
 					// if its inside of the player's vision range, then set
 					// visible
-					if (i < erow + 2
-							&& i > erow - 2
-							&& j < ecol + 2
+					if (i < erow + 2 && i > erow - 2 && j < ecol + 2
 							&& j > ecol - 2) {
 						// inside vision range
 						board[i][j].setFog(EmptyID);
 						board[i][j].setVisible(true);
-					} else if (i == erow + 2
-							&& j < ecol + 2
-							&& j > ecol - 2) {
+					} else if (i == erow + 2 && j < ecol + 2 && j > ecol - 2) {
 						// edge of lower vision
 						board[i][j].setFog(FogBottomID);
 						board[i][j].setVisible(true);
-					} else if (i == erow - 2
-							&& j < ecol + 2
-							&& j > ecol - 2) {
+					} else if (i == erow - 2 && j < ecol + 2 && j > ecol - 2) {
 						// edge of upper vision
 						board[i][j].setFog(FogTopID);
 						board[i][j].setVisible(true);
-					} else if (j == ecol + 2
-							&& i < erow + 2
-							&& i > erow - 2) {
+					} else if (j == ecol + 2 && i < erow + 2 && i > erow - 2) {
 						// edge of right-side vision
 						board[i][j].setFog(FogRightID);
 						board[i][j].setVisible(true);
-					} else if (j == ecol - 2
-							&& i < erow + 2
-							&& i > erow - 2) {
+					} else if (j == ecol - 2 && i < erow + 2 && i > erow - 2) {
 						// edge of left-side vision
 						board[i][j].setFog(FogLeftID);
 						board[i][j].setVisible(true);
@@ -1795,8 +1790,8 @@ public class GameEngine implements ActionListener, FocusListener,
 				else if (temp == 7) {
 					board[i][j].resetObject(new Terrain(DirtID, Dirt, false,
 							true, false), new Entity(LavaMonsterID,
-							LavaMonster, "LavaMonster", "Aggressive", false, null, 10, 10,
-							10, 10, 5, 5, 5, 5,1), null);
+							LavaMonster, "LavaMonster", "Aggressive", false,
+							null, 10, 10, 10, 10, 5, 5, 5, 5, 1), null);
 					numOfMonsters++;
 				}
 				// randomly make "beartraps"
@@ -1832,8 +1827,8 @@ public class GameEngine implements ActionListener, FocusListener,
 				// randomly place one exit per map
 				else if (!doorPlaced && (temp == 10 || (i == 3 && j == 3))) {
 					board[i][j].resetObject(new Terrain(GrassID, Grass, true,
-							true, false), null, new NonEntity(ExitID, GlowingGem,
-							false, false, false, false));
+							true, false), null, new NonEntity(ExitID,
+							GlowingGem, false, false, false, false));
 					doorPlaced = true;
 					erow = i;
 					ecol = j;
@@ -1867,29 +1862,25 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		return;
 	}
-	
+
 	/**
 	 * Sets all the characters' health and magic to their max.
 	 */
-	public void restoreAllCharacters()
-	{
-		for(Entity i : characters)
-		{
+	public void restoreAllCharacters() {
+		for (Entity i : characters) {
 			i.setCurrentHealth(i.getMaxHealth());
 			i.setCurrentMana(i.getMaxMana());
 		}
 	}
-	
+
 	/**
 	 * Sets a single character's health and magic to their max.
+	 * 
 	 * @param name
 	 */
-	public void restoreCharacter(String name)
-	{
-		for(Entity i : characters)
-		{
-			if(i.getName().equals(name))
-			{
+	public void restoreCharacter(String name) {
+		for (Entity i : characters) {
+			if (i.getName().equals(name)) {
 				i.setCurrentHealth(i.getMaxHealth());
 				i.setCurrentMana(i.getMaxMana());
 				break;
@@ -2011,10 +2002,10 @@ public class GameEngine implements ActionListener, FocusListener,
 		int hp = (int) (((double) characters.get(0).getCurrentHealth() / (double) characters
 				.get(0).getMaxHealth()) * 100);
 		((GridGUI) mapPanel).updateHealthBar(hp);
-		
+
 		// move enemies on the map if possible
 		moveEnemies();
-		
+
 		return false;
 	}
 
@@ -2172,8 +2163,12 @@ public class GameEngine implements ActionListener, FocusListener,
 		resetStatistics();
 
 		// add new quest to messageGUI
-		addQuest(questsTotal, GlowingGem, "Find the Gem!",
-				"Try to find the rare glowing gem in this level. Watch out for lava monsters!", "Started");
+		addQuest(
+				questsTotal,
+				GlowingGem,
+				"Find the Gem!",
+				"Try to find the rare glowing gem in this level. Watch out for lava monsters!",
+				"Started");
 
 		questsTotal++;
 	}
@@ -2312,31 +2307,154 @@ public class GameEngine implements ActionListener, FocusListener,
 
 	public void monsterTurn(Entity m) {
 
-		String action = m.monsterTurn();
-		if (action.equals("attack")) {
-			int attackTargets = characters.size();
-			int attackTargetIndex = randomNumberGenerator
-					.nextInt(attackTargets);
-			Entity attackTarget = characters.get(attackTargetIndex);
-
-			while (!attackTarget.alive()) {
-				attackTargetIndex = randomNumberGenerator
-						.nextInt(attackTargets);
-				attackTarget = characters.get(attackTargetIndex);
+		String behavior = m.getBehaviorType();
+		Entity attackTarget = null;
+		int healTarget;
+		
+		//Aggressive
+		if (behavior.equals("Aggressive")) {
+			attackTarget = findWeakestCharacter();
+			executeAttack(m, attackTarget);
+		
+		//Defensive
+		} else if (behavior.equals("Defensive")) {
+			attackTarget = findRandomCharacter();
+			healTarget = enemies.indexOf(findWeakestEnemy());
+			
+			int action = randomNumberGenerator.nextInt(2);
+			
+			if(action == 0 && m.hasHealingAbility()){
+				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
+			}else{
+				executeAttack(m, attackTarget);
 			}
 
+		//Speedy
+		} else if (behavior.equals("Speedy")) {
+			attackTarget = findWeakestCharacter();
 			executeAttack(m, attackTarget);
 
-		} else {
-			/**
-			 * event = executeAbility(m, 0, enemies, characters,
-			 * actor.abilities.get(0));
-			 **/
+		//Coward
+		} else if (behavior.equals("Coward")) {
+			int action = randomNumberGenerator.nextInt(3);
+			
+			//heal
+			if(action == 0 && m.hasHealingAbility()){
+				healTarget = enemies.indexOf(m);
+				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
+			
+			//flee
+			}else if(action == 1){
+				//monster flee
+				executeAttack(m, attackTarget);
+				
+			//attack
+			}else{
+				executeAttack(m, attackTarget);
+			}
+			
+		//Tricky
+		} else if (behavior.equals("Tricky")) {
+			attackTarget = findRandomCharacter();
+			healTarget = enemies.indexOf(findRandomEnemy());
+			int action = randomNumberGenerator.nextInt(3);
+			
+			//heal
+			if(action == 0 && m.hasHealingAbility()){
+				healTarget = enemies.indexOf(findWeakestEnemy());
+				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
+			
+			//ability
+			}else if(action == 1){
+				executeAbility(m, characters.indexOf(attackTarget), characters, enemies, m.findDamagingAbility());
+			
+			//attack
+			}else{
+				executeAttack(m, attackTarget);
+			}
+
+		//Boss
+		} else if (behavior.equals("Boss")) {
+			attackTarget = findWeakestCharacter();
+			healTarget = enemies.indexOf(m);
+			int action = randomNumberGenerator.nextInt(3);
+			
+			//heal
+			if(action == 0 && m.hasHealingAbility()){
+				healTarget = enemies.indexOf(findWeakestEnemy());
+				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
+			
+			//ability
+			}else if(action == 1){
+				executeAbility(m, characters.indexOf(attackTarget), characters, enemies, m.findDamagingAbility());
+			
+			//attack
+			}else{
+				executeAttack(m, attackTarget);
+			}
 		}
 
 		turnStack.pop();
 		endTurn();
 	}
+
+	// find character with the lowest health
+	private Entity findWeakestCharacter() {
+		Entity target = characters.get(0);
+
+		for (Entity e : characters) {
+			if (e.getCurrentHealth() < target.getCurrentHealth()) {
+				if (e.alive()) {
+					target = e;
+				}
+			}
+		}
+
+		return target;
+	}
+
+	// find enemy with the lowest health
+	private Entity findWeakestEnemy() {
+		Entity target = enemies.get(0);
+
+		for (Entity e : enemies) {
+			if (e.getCurrentHealth() < target.getCurrentHealth()) {
+				if (e.alive()) {
+					target = e;
+				}
+			}
+		}
+
+		return target;
+	}
+
+	// find random character
+	private Entity findRandomCharacter() {
+		int attackTargets = characters.size();
+		int attackTargetIndex = randomNumberGenerator.nextInt(attackTargets);
+		Entity attackTarget = characters.get(attackTargetIndex);
+
+		while (!attackTarget.alive()) {
+			attackTargetIndex = randomNumberGenerator.nextInt(attackTargets);
+			attackTarget = characters.get(attackTargetIndex);
+		}
+
+		return attackTarget;
+	}
+	
+	// find random enemy
+		private Entity findRandomEnemy() {
+			int attackTargets = enemies.size();
+			int attackTargetIndex = randomNumberGenerator.nextInt(attackTargets);
+			Entity attackTarget = enemies.get(attackTargetIndex);
+
+			while (!attackTarget.alive()) {
+				attackTargetIndex = randomNumberGenerator.nextInt(attackTargets);
+				attackTarget = enemies.get(attackTargetIndex);
+			}
+
+			return attackTarget;
+		}
 
 	public void playerTurn(String action, int target) {
 
@@ -2422,7 +2540,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (ability.getScope() == 0) {
 				int calculatedDamage = 0;
 				int attackVal = source.getAttack()
-						+ randomNumberGenerator.nextInt(6);
+						+ randomNumberGenerator.nextInt(6) + ability.getModifier();
 				int defenseVal = enemies.get(targetID).getDefense()
 						+ randomNumberGenerator.nextInt(6);
 
@@ -2452,7 +2570,7 @@ public class GameEngine implements ActionListener, FocusListener,
 
 				int calculatedDamage = 0;
 				int attackVal = source.getAttack()
-						+ randomNumberGenerator.nextInt(6);
+						+ randomNumberGenerator.nextInt(6) + ability.getModifier();
 				int defenseVal = avgDefense + randomNumberGenerator.nextInt(6);
 
 				calculatedDamage = attackVal - (defenseVal / 2);
@@ -2472,7 +2590,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		// healing ability
 		case 1:
 			int amountHealed = source.getAttack()
-					+ randomNumberGenerator.nextInt(6);
+					+ randomNumberGenerator.nextInt(6) + ability.getModifier();
 			combatants.get(targetID).setCurrentHealth(
 					combatants.get(targetID).getCurrentHealth() + amountHealed);
 			if (combatants.get(targetID).getCurrentHealth() > combatants.get(
@@ -2518,15 +2636,17 @@ public class GameEngine implements ActionListener, FocusListener,
 	public ArrayList<Entity> initializeEnemies(int zoneID) {
 		ArrayList<Entity> monsterArray = new ArrayList<Entity>();
 		// int numberOfEnemies = randomNumberGenerator.nextInt(5) + 1;
-		int numberOfEnemies = 2;
+		int numberOfEnemies = 4;
 		Entity m;
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
-			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster", "Aggressive", false, null, 10,
-					10, 10, 10, 10, 10, 1, 5, 1);
+			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster",
+					"Tricky", false, null, 10, 10, 10, 10, 10, 10, 1, 5, 1);
 			m.setExp(6);
-			Ability cure = new Ability("heal", 1, 0, 0, 5);
-			m.abilities.add(cure);
+			Ability mend = new Ability("Mending Flame", 1, 0, 0, 5);
+			Ability flameLash = new Ability("Flame Lash", 0, 0, 0, 5);
+			m.abilities.add(mend);
+			m.abilities.add(flameLash);
 			m.setName(m.getName() + " " + i);
 			monsterArray.add(m);
 		}
@@ -2553,16 +2673,15 @@ public class GameEngine implements ActionListener, FocusListener,
 								+ " has earned "
 								+ experience
 								+ " experience!");
-						
-						//character has leveled up
-						if(character.getExp() >= getExpNeeded(character)){
+
+						// character has leveled up
+						if (character.getExp() >= getExpNeeded(character)) {
 							levelUpCharacter(character);
 							hasLeveledUp = true;
 							((CombatGUI) combatPanel).appendStatus(character
 									.getName()
 									+ " has reached level "
-									+ character.getLevel()
-									+ "!");
+									+ character.getLevel() + "!");
 						}
 					}
 				}
@@ -2664,21 +2783,21 @@ public class GameEngine implements ActionListener, FocusListener,
 		return array;
 	}
 
-	//base = amount of experience required to level the first time
-	//factor = factor by with required exp will grow (multipication)
+	// base = amount of experience required to level the first time
+	// factor = factor by with required exp will grow (multipication)
 	public int getExpNeeded(Entity entity) {
-		
+
 		int returnVal = base;
-		
-		for(int i=1; i<entity.getLevel(); i++){
+
+		for (int i = 1; i < entity.getLevel(); i++) {
 			returnVal *= factor;
 		}
-		
-		return returnVal;	
+
+		return returnVal;
 	}
-	
-	public void levelUpCharacter(Entity entity){
-		entity.setExp(entity.getExp() - getExpNeeded(entity)); 
+
+	public void levelUpCharacter(Entity entity) {
+		entity.setExp(entity.getExp() - getExpNeeded(entity));
 		entity.incLevel();
 		entity.setLevelUpPoints(entity.getLevelUpPoints() + pointsPerLevel);
 	}
