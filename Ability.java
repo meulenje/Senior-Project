@@ -1,7 +1,10 @@
 package rpg;
 
-public class Ability {
+import java.io.Serializable;
+
+public class Ability implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
 	private String name;
 	
 	//0=damage, 1=heal

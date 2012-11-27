@@ -25,9 +25,10 @@ import javax.swing.JScrollPane;
  * @version 10/11/2012
  * 
  */
-@SuppressWarnings("serial")
-public class GridGUI extends JPanel implements KeyListener, ActionListener, ClockListener {
 
+public class GridGUI extends JPanel implements KeyListener, ActionListener {
+
+	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to Engine
 
 	// gui parts
@@ -240,7 +241,7 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
 	}
 	
 	@Override
-	public void keyPressed(KeyEvent k)
+	public void keyPressed(final KeyEvent k)
 	{
 		int key = k.getKeyCode();
 		
@@ -372,46 +373,5 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Cloc
         	// increment the players coordinates
         	GE.movePlayer(0,1);
         }
-	}
-
-
-	@Override
-	public boolean event(int tick) 
-	{
-		// This function will be called, every clock tick.
-		
-		// Scan for monsters, if you find one, make him move.
-		if(GE.numOfMonsters > 0 && GE.klok.currentTime != 0
-				&& GE.klok.currentTime % GE.monsterGridSpeed == 0)
-		{
-	        for (int i=0; i<GE.BROWS; i++)
-	        {
-	            for (int j=0; j<GE.BCOLS; j++)
-	            {
-	            	// find a monster
-	            	if(GE.klok.currentTime>0 && GE.board[i][j].isMonster())
-	            	{
-	            		// move the monster left, if possible
-	            		if(j!=0 && GE.board[i][j-1].isEmptySpace())
-	            		{
-	            			// move left
-	            			GE.board[i][j-1].setObject(GE.board[i][j].getObject());
-	            			GE.board[i][j].setObject(null);
-	            		}
-	            		else if(i!=GE.BROWS-1 && GE.board[i+1][j].isEmptySpace())
-	            		{
-	            			// move down
-	            			GE.board[i+1][j].setObject(GE.board[i][j].getObject());
-	            			GE.board[i][j].setObject(null); 
-	            		}
-	            	}
-	            }
-	        }
-	        // check around for enemies again
-	        GE.checkForEnemies();
-	        
-	        return true;
-		}
-		return false;
 	}
 } // end of GridGUI

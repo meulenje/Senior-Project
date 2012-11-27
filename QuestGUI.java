@@ -16,9 +16,9 @@ import javax.swing.JScrollPane;
  * @version 10/11/2012
  *
  */
-@SuppressWarnings("serial")
 public class QuestGUI extends JPanel implements KeyListener {
 
+	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to engine
 	
 	// gui parts
@@ -88,6 +88,11 @@ public class QuestGUI extends JPanel implements KeyListener {
         {
         	// shortcut to "Map Tab"
         	GE.viewMapPanel();
+        }
+        else if (key == 83) // 's'
+        {
+        	// shortcut to "Stats Tab"
+        	GE.viewStatsPanel();
         }
         else if(key == 27) // ESC to pause game
 			GE.pauseGame();

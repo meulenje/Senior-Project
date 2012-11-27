@@ -13,9 +13,10 @@ import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
-@SuppressWarnings("serial")
+
 public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 
+	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to engine
 	
 	private JButton continueButton;
@@ -75,14 +76,12 @@ public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 		if(source == continueButton)
 		{
 			// try again!
-			// GE.restartGame();
-			// TODO
 			GE.newGame();
 		}
 		else if(source == quitButton)
 		{
 			// quit
-			GE.viewMainMenu();
+			GE.endGame();
 		}
 	}
 
@@ -94,26 +93,22 @@ public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 		// shortcut keys to certain actions
 		if(keyCode == 49 || keyCode == 89 || keyCode == 10) // 1,y,ENTER = continueButton
 		{
-			// GE.restartGame();
-			// TODO
 			GE.newGame();
 		}
 		else if(keyCode == 50 || keyCode == 81 || keyCode == 78 || keyCode == 27) // 2,q,n,ESC = Quit
 		{
-			GE.viewMainMenu();
+			GE.endGame();
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent k) {
-		// TODO Auto-generated method stub
-		
+		// Auto-generated method stub
 	}
 
 	@Override
 	public void keyTyped(KeyEvent k) {
-		// TODO Auto-generated method stub
-		
+		// Auto-generated method stub
 	}
 
 }

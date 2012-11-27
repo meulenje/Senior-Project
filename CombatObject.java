@@ -3,15 +3,14 @@ package rpg;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
-@SuppressWarnings("serial")
 public class CombatObject extends JPanel implements ActionListener {
 
+	private static final long serialVersionUID = 1L;
+	
 	private GameEngine GE;
 
 	protected Entity entity;
@@ -101,10 +100,10 @@ public class CombatObject extends JPanel implements ActionListener {
 		wrapper.setLayout(new BorderLayout());
 		wrapper.setPreferredSize(new Dimension(objectWidth, objectHeight));
 		wrapper.add(name, BorderLayout.NORTH);
-		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 20)),
+		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 1)),
 				BorderLayout.WEST);
 		wrapper.add(imagePanel, BorderLayout.CENTER);
-		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 20)),
+		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 1)),
 				BorderLayout.EAST);
 		wrapper.add(
 				Box.createRigidArea(new Dimension(objectWidth, GE.C_HEIGHT)),

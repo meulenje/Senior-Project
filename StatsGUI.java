@@ -4,9 +4,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-@SuppressWarnings("serial")
 public class StatsGUI extends JPanel implements ActionListener, KeyListener {
-	
+
+	private static final long serialVersionUID = 1L;
 	private GameEngine GE;
 	
 	protected JPanel TopBar;

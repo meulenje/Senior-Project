@@ -34,7 +34,6 @@ import javax.swing.JToolBar;
 public class InventoryGUI extends JPanel implements ActionListener, KeyListener {
 	
 	private static final long serialVersionUID = 1L;
-	
 	private GameEngine GE; // link back to game engine
 	
 	//gui components:

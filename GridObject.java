@@ -14,31 +14,28 @@ import javax.swing.JLayeredPane;
  * @version 10/11/2012
  * 
  */
-@SuppressWarnings("serial")
+
 public class GridObject extends JLayeredPane {
-	
-	private GameEngine GE; // link back to Engine
+
+	private static final long serialVersionUID = 1L;
 	
 	protected Terrain terrain; // background object
 	protected RPGObject object; // Object on this locaiton
 	protected RPGObject accessory; // highground object
-    private int fogID;
     
     protected ImageIcon terrainImage; // grass, dirt, floor, etc...
     protected ImageIcon objectImage; // player, enemy, rock, etc...
     protected ImageIcon accessoryImage; // tall grass, roofs, extra effects, etc...
     protected ImageIcon fogImage; // partially visible layer for fogID effect
+    
     protected JLabel background; // container to hold terrainID image
     protected JLabel foreground; // container to hold objectID image
     protected JLabel highground; // container to hold accessoryID image
     protected JLabel fogLayer; // only holds fogID for blurry vision
     
     // GridObject Constructor
-    public GridObject(GameEngine tempEngine, Terrain t, RPGObject o, RPGObject a)
-    {
-    	// link to back Engine
-    	GE = tempEngine;
-    	
+    public GridObject(GameEngine GE, Terrain t, RPGObject o, RPGObject a)
+    {    	
     	// Lay a background, foreground, and highground JLabel
     	background = new JLabel();
     	background.setSize(GE.C_WIDTH, GE.C_HEIGHT);
@@ -66,7 +63,7 @@ public class GridObject extends JLayeredPane {
     	setTerrain(t);
     	setObject(o);
     	setAccessory(a);
-    	setFog(GE.EmptyID);
+    	setFog(null);
     	
     } // end of constructor
     
@@ -147,6 +144,19 @@ public class GridObject extends JLayeredPane {
     }
     
     /**
+     * isPlayer
+     * Returns true if the location contains the player.
+     * @return
+     */
+    public boolean isPlayer()
+    {
+    	if(object!=null && object instanceof Entity)
+    		if(((Entity)object).isPlayer)
+    			return true;
+    	return false;
+    }
+    
+    /**
      * isExit
      * Returns true if the location is the finish/exit
      * @return
@@ -210,7 +220,7 @@ public class GridObject extends JLayeredPane {
     	
     	// grab the image from the entity
     	if(object == null)
-    		objectImage=GE.Empty;
+    		objectImage=null;
     	else
     		objectImage = object.getImage();
     	
@@ -228,7 +238,7 @@ public class GridObject extends JLayeredPane {
     	terrain = i;
     	
     	if(terrain == null)
-    		terrainImage=GE.Empty;
+    		terrainImage=null;
     	else
     		terrainImage = terrain.getImage();
     	
@@ -246,7 +256,7 @@ public class GridObject extends JLayeredPane {
     	accessory = a;
     	
     	if(accessory == null)
-    		accessoryImage = GE.Empty;
+    		accessoryImage = null;
     	else
     		accessoryImage = accessory.getImage();
         
@@ -257,37 +267,10 @@ public class GridObject extends JLayeredPane {
      * Determines what fogID piece is displayed on the fourth layer
      * @param f
      */
-    public void setFog(int f)
-    {
-    	if(f==GE.FogCenterID)
-    	{
-    		fogImage = GE.FogCenter;
-    	}
-    	else if(f==GE.FogTopID)
-    	{
-    		fogImage = GE.FogTop;
-    	}
-    	else if(f==GE.FogBottomID)
-    	{
-    		fogImage = GE.FogBottom;
-    	}
-    	else if(f==GE.FogLeftID)
-    	{
-    		fogImage = GE.FogLeft;
-    	}
-    	else if(f==GE.FogRightID)
-    	{
-    		fogImage = GE.FogRight;
-    	}
-    	else if(f==GE.EmptyID)
-    	{
-    		fogImage = GE.Empty;
-    	}
-    	else
-    		GE.printError("Error!\nNo image found for fogID id="+f);
-    	
-    	fogID = f;
-    	fogLayer.setIcon(fogImage);
+    public void setFog(ImageIcon fog)
+    {    	
+    	fogImage = fog;
+    	fogLayer.setIcon(fog);
     }
     
     /**
@@ -321,11 +304,11 @@ public class GridObject extends JLayeredPane {
     }
     
     /**
-     * Returns the id of the fogID layer
+     * Returns the image of the fogID layer
      */
-    public int getFog()
+    public ImageIcon getFog()
     {
-    	return fogID;
+    	return fogImage;
     }
     
 } // end of GridObject

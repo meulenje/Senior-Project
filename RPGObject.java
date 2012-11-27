@@ -1,5 +1,7 @@
 package rpg;
 
+import java.io.Serializable;
+
 import javax.swing.ImageIcon;
 
 /**
@@ -16,8 +18,9 @@ import javax.swing.ImageIcon;
  * @author Austin
  *
  */
-public abstract class RPGObject {
+public abstract class RPGObject implements Serializable {
 
+	private static final long serialVersionUID = 1L;
 	protected int id;
 	protected ImageIcon image;
 	

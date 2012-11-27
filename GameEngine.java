@@ -2,19 +2,7 @@ package rpg;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import javax.swing.Box;
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
-import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.ListSelectionModel;
+import javax.swing.*;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -22,6 +10,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -43,6 +36,9 @@ import javax.swing.event.ListSelectionListener;
 public class GameEngine implements ActionListener, FocusListener,
 		ClockListener, ListSelectionListener {
 
+	// Game Objects
+	private GameObjects GO;
+	
 	// Game Engine specific variables
 	protected final int MAXIMUMSIZE = 100; // Max board size for rows and
 											// columns
@@ -79,7 +75,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected int FogBottomID = 2;
 	protected int FogLeftID = 3;
 	protected int FogRightID = 4;
-	protected int PlayerID = 1;
+	protected int PlayerID = 1024;
 	protected int ExitID = 2;
 	protected int WarpAID = -8;
 	protected int WarpBID = -9;
@@ -92,6 +88,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected int TallGrassID = 1;
 	protected int WaterID = -3;
 	protected int BagID = 6;
+	protected int ChestID = 66;
 	protected int SpikeID = 7;
 	protected int MushroomID = 8;
 	protected int BeartrapID = 9;
@@ -110,11 +107,12 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected boolean showHintsEnabled = true;
 	protected boolean fogOfWar = true;
 	protected boolean mappingEnabled = true;
+	protected boolean exitGlowEnabled = true;
 	protected int playerVisionRange = 5;
 	protected boolean warpingEnabled = true;
 	protected boolean clearStatsPerLevel = false;
 	protected int monsterGridSpeed = 2; // monster moves after X seconds
-	protected double percentChanceOfEncounter = 0.05; // when entering a
+	protected double percentChanceOfEncounter = 0.10; // when entering a
 														// Encounterable space,
 														// there is a small
 														// chance the player
@@ -158,8 +156,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected ImageIcon FogRight = new ImageIcon("images/FogRight.png");
 	protected ImageIcon FogBottom = new ImageIcon("images/FogBottom.png");
 	protected ImageIcon Player = new ImageIcon("images/PlayerFront.gif");
-	protected ImageIcon PlayerOutline = new ImageIcon(
-			"images/PlayerOutline.png");
+	protected ImageIcon PlayerOutline = new ImageIcon("images/PlayerOutline.png");
 	protected ImageIcon GlowingGem = new ImageIcon("images/Gem.gif");
 	protected ImageIcon LavaMonster = new ImageIcon("images/LavaMonster.gif");
 	protected ImageIcon Pirate = new ImageIcon("images/Pirate.gif");
@@ -177,10 +174,10 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected ImageIcon Hideout = new ImageIcon("images/Hideout.png");
 	protected ImageIcon Sign = new ImageIcon("images/Sign.png");
 	protected ImageIcon Bag = new ImageIcon("images/Bag.png");
+	protected ImageIcon Chest = new ImageIcon("images/TreasureChest.png");
 	protected ImageIcon Backpack = new ImageIcon("images/Backpack.png");
 	protected ImageIcon Book = new ImageIcon("images/Book.png");
-	protected ImageIcon InventoryIcon = new ImageIcon(
-			"images/InventoryIcon.jpg");
+	protected ImageIcon InventoryIcon = new ImageIcon("images/InventoryIcon.jpg");
 	protected ImageIcon ListIcon = new ImageIcon("images/ListIcon.jpg");
 	protected ImageIcon RPGLogo = new ImageIcon("images/RPGLogo.png");
 	protected ImageIcon GameOverImage = new ImageIcon("images/GameOver.png");
@@ -203,7 +200,6 @@ public class GameEngine implements ActionListener, FocusListener,
 	private JMenuItem statsItem;
 	private JMenuItem newItem;
 	private JMenuItem saveItem;
-	private JMenuItem loadItem;
 	protected JMenuItem time;
 	private JCheckBoxMenuItem enableMusicItem;
 	private JCheckBoxMenuItem enableSoundItem;
@@ -260,47 +256,6 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * Constructor for GameEngine
 	 */
 	public GameEngine() {
-
-		// combatPanel constructor
-		characters = new ArrayList<Entity>(); // currentHealth, totalHealth,
-												// attack, defense, speed
-		Entity mario = new Entity(PlayerID, Player, "Mario", "", true, null,
-				30, 30, 30, 30, 12, 10, 10, 5, 1);
-		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", "", true,
-				null, 30, 30, 30, 30, 10, 11, 9, 5, 1);
-		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null,
-				15, 15, 50, 50, 10, 10, 15, 5, 1);
-		Ability cure = new Ability("Healing Mushroom", 1, 0, 20, 8);
-		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
-		luigi.abilities.add(fireball);
-		mario.abilities.add(fireball);
-		toad.abilities.add(cure);
-		characters.add(mario);
-		characters.add(luigi);
-		characters.add(toad);
-
-		// inventoryPanel
-		// initialize array list of items
-		itemsInBackpack = new ArrayList<Item>();
-		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
-				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
-				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
-				"Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
-				"Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
-				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
-				5, 0));
-
-		// initailize the list
-		itemList = new JList<Item>(getItemArray()); // JList that displays the
-													// items
-		itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		itemList.setSelectedIndex(0);
-		itemList.addListSelectionListener((ListSelectionListener) this);
-
 		// Create the JWindow and Frame to hold the Panels
 
 		// program window
@@ -316,7 +271,6 @@ public class GameEngine implements ActionListener, FocusListener,
 		quitItem = new JMenuItem("Quit");
 		newItem = new JMenuItem("New Game");
 		saveItem = new JMenuItem("Save Game");
-		loadItem = new JMenuItem("Load Game");
 		teleportItem = new JMenuItem("Teleport to Start");
 		statsItem = new JMenuItem("Report Stats");
 		enableMusicItem = new JCheckBoxMenuItem("Play Music");
@@ -329,8 +283,6 @@ public class GameEngine implements ActionListener, FocusListener,
 		// add listeners
 		newItem.addActionListener(this);
 		fileMenu.add(newItem);
-		loadItem.addActionListener(this);
-		fileMenu.add(loadItem);
 		saveItem.addActionListener(this);
 		fileMenu.add(saveItem);
 		fileMenu.addSeparator();
@@ -380,40 +332,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		// place the menu bar
 		window.setJMenuBar(menubar);
 
-		// TABS
-
-		// --------------------------------------------------------
-		// create the GridGui mapPanel tab
-		mapPanel = new GridGUI(this);
-		// --------------------------------------------------------
-
-		// --------------------------------------------------------
-		// create the CombatGUI combatPanel tab
-		combatPanel = new CombatGUI(this);
-		// --------------------------------------------------------
-
-		// --------------------------------------------------------
-		// create the InventoryGUI inventoryPanel tab
-		inventoryPanel = new InventoryGUI(this);
-		// --------------------------------------------------------
-
-		// --------------------------------------------------------
-		// create the StatsGUI statsPanel tab
-		statsPanel = new StatsGUI(this);
-		// --------------------------------------------------------
-
-		// --------------------------------------------------------
-		// create the QuestGUI questPanel tab
-		questPanel = new QuestGUI(this);
-		// --------------------------------------------------------
-
-		// create the TabbedPane
+		// create the TabbedPane (starts out empty)
 		tabs = new JTabbedPane();
-		tabs.addTab("Map", mapPanel);
-		tabs.addTab("Inventory", inventoryPanel);
-		tabs.addTab("Stats", statsPanel);
-		tabs.addTab("Combat", combatPanel);
-		tabs.addTab("Quests", questPanel);
 		tabs.addFocusListener(this);
 		tabs.setLocation(0, 0);
 		tabs.setSize(X_DIM, Y_DIM + 60);
@@ -505,6 +425,66 @@ public class GameEngine implements ActionListener, FocusListener,
 		// view main menu (also plays music)
 		viewMainMenu();
 	}
+	
+	/**
+	 * A constructor for creating all the layers(tabs) of the game.
+	 * Map, Combat, Stats, Inventory, and Quest panels are
+	 * create here and added to the JFrame.
+	 */
+	public void createGameLayers()
+	{
+		// TABS
+
+		// --------------------------------------------------------
+		// create the GridGui mapPanel tab
+		mapPanel = new GridGUI(this);
+		// --------------------------------------------------------
+
+		// --------------------------------------------------------
+		// create the CombatGUI combatPanel tab
+		combatPanel = new CombatGUI(this);
+		// --------------------------------------------------------
+
+		// --------------------------------------------------------
+		// create the InventoryGUI inventoryPanel tab
+		inventoryPanel = new InventoryGUI(this);
+		// --------------------------------------------------------
+
+		// --------------------------------------------------------
+		// create the StatsGUI statsPanel tab
+		statsPanel = new StatsGUI(this);
+		// --------------------------------------------------------
+
+		// --------------------------------------------------------
+		// create the QuestGUI questPanel tab
+		questPanel = new QuestGUI(this);
+		// --------------------------------------------------------
+		
+		tabs.addTab("Map", mapPanel);
+		tabs.addTab("Inventory", inventoryPanel);
+		tabs.addTab("Stats", statsPanel);
+		tabs.addTab("Combat", combatPanel);
+		tabs.addTab("Quests", questPanel);
+	}
+	
+	public void deleteGameLayers() {
+		// delete all components to the in-game (tabs)
+		mapPanel = null;
+		combatPanel = null;
+		inventoryPanel = null;
+		statsPanel = null;
+		questPanel = null;
+		tabs.removeAll();		
+	}
+	
+	/**
+	 * Creates the GameObjects class that holds all necessary information
+	 * for serialization of the game.
+	 */
+	public void createGameObjects()
+	{
+		GO = new GameObjects();
+	}
 
 	/**
 	 * Creates each GridObject according to the number of rows and columns in
@@ -547,23 +527,95 @@ public class GameEngine implements ActionListener, FocusListener,
 		// remove each of the quests
 		((QuestGUI) questPanel).removeAllQuests();
 	}
+	
+	/**
+	 * Creates a demo list of characters
+	 */
+	public void createCharacters() {
+		// combatPanel constructor
+		characters = new ArrayList<Entity>(); // currentHealth, totalHealth,
+												// attack, defense, speed
+		Entity mario = new Entity(PlayerID, Player, "Mario", "", true, null,
+				30, 30, 30, 30, 12, 10, 10, 5, 1);
+		Entity luigi = new Entity(PlayerID, PlayerOutline, "Luigi", "", true,
+				null, 30, 30, 30, 30, 10, 11, 9, 5, 1);
+		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null,
+				15, 15, 50, 50, 10, 10, 15, 5, 1);
+		Ability cure = new Ability("Healing Mushroom", 1, 0, 20, 8);
+		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
+		luigi.abilities.add(fireball);
+		mario.abilities.add(fireball);
+		toad.abilities.add(cure);
+		characters.add(mario);
+		characters.add(luigi);
+		characters.add(toad);
+	}
+	
+	public void deleteCharacters() {
+		characters = null;
+	}
+	
+	/**
+	 * Creates a demo list of items
+	 */
+	public void createItemBackpack() {
+		// initialize array list of items
+		itemsInBackpack = new ArrayList<Item>();
+		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
+				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
+				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
+		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
+				"Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
+		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
+				"Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
+		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
+				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
+				5, 0));
+
+		// initailize the list
+		itemList = new JList<Item>(getItemArray());
+		itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		itemList.setSelectedIndex(0);
+		itemList.addListSelectionListener((ListSelectionListener) this);
+	}
+	
+	public void deleteItemBackpack() {
+		itemsInBackpack = null;
+	}
+	
+	public void getGameObjects()
+	{
+		
+	}
+	
+	public void setGameObjects()
+	{
+		
+	}
 
 	/**
 	 * A function to start a new game. This is not the function to start the
 	 * next level!
 	 */
 	public void newGame() {
+		// temporarily view the loading screen
+		viewLoadingScreen();
+		
 		// choose player
 		// TODO
+		
+		// load demo characters and items
+		deleteCharacters();
+		createCharacters();
+		deleteItemBackpack();
+		createItemBackpack();
 
 		// restore all player's health and magic
 		restoreAllCharacters();
-
-		// choose maps/levels
-		// TODO
-
-		// temporarily view the loading screen
-		viewLoadingScreen();
+		
+		// create the game's layers (map, combat, stats...)
+		createGameLayers();
 
 		// delete old mapPanel and make a new empty one
 		deleteGridObjects();
@@ -580,6 +632,9 @@ public class GameEngine implements ActionListener, FocusListener,
 		questsActive = 0;
 		questsFailed = 0;
 
+		// choose maps/levels
+		// TODO
+		
 		// load a new map
 		loadMap();
 
@@ -596,10 +651,16 @@ public class GameEngine implements ActionListener, FocusListener,
 	public void endGame() {
 		// reset clock
 		klok.pause();
+		
+		// temporarily view the loading screen
+		viewLoadingScreen();
 
-		// delete board, quests
+		// delete board, quests, characters, and items
 		deleteGridObjects();
 		deleteQuestList();
+		deleteItemBackpack();
+		deleteCharacters();
+		deleteGameLayers();
 
 		// clear game variables
 		resetStatistics();
@@ -618,7 +679,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void quitProgram() {
 		// gracefully exit the entire game
-		System.exit(1);
+		System.exit(0);
 	}
 
 	/**
@@ -648,6 +709,246 @@ public class GameEngine implements ActionListener, FocusListener,
 		// resume clock ticking if they were viewing the Map
 		if (tabs.getSelectedIndex() == 0)
 			klok.run(Clock.FOREVER);
+	}
+	
+	/**
+	 * Saves to file, the current game in progress.
+	 */
+	public void saveGame() {
+		// pauses the clock
+		klok.pause();
+
+		// pauses Music
+		stopMusic();
+
+		// show fade grid
+		setGridFade(true);
+		
+		// name a file to save to
+		// open file chooser and load file
+		JFileChooser jfc = new JFileChooser();
+		jfc.setMultiSelectionEnabled(false);
+		jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		jfc.setSelectedFile(new File("MySavedGame.rpg"));
+		int path = jfc.showSaveDialog(window);
+		
+        if (path == JFileChooser.APPROVE_OPTION)
+        {        	
+        	File file = jfc.getSelectedFile();
+        	if(file.getName().endsWith(".rpg"))
+        	{
+        		// create GO
+        		createGameObjects();
+        		
+        		// give all serializable objects to GO
+        		GO.setBoard(board);
+        		GO.setCharacters(characters);
+        		GO.setItems(itemsInBackpack);
+        		GO.setQuests(quests);
+        		
+        		// save the GO object
+        		FileOutputStream fos = null;
+        		ObjectOutputStream oos = null;
+        		try {
+        			fos = new FileOutputStream(file);
+					oos = new ObjectOutputStream(fos);
+					oos.writeObject(GO);
+					
+					// save successful
+					printInfo("The game was saved.");
+					
+				} catch (IOException e) 
+				{
+					printError(e.getMessage());
+					e.printStackTrace();
+				}
+        		finally
+        		{
+        			try {
+        				if(fos != null)
+        					fos.close();
+        				
+        				if(oos != null)
+        					oos.close();
+					} catch (IOException e) {
+						printError(e.getMessage());
+						e.printStackTrace();
+					}
+        			
+        		}
+        	}
+        	else if(!file.getName().endsWith(".rpg"))
+        	{
+        		// wrong file extension
+        		printError("The file must end with '.rpg'");
+        	}
+        }
+        else
+        {
+        	// bad selection
+        	printError("The game was not saved.");
+        }
+		
+        // resumes Music
+        startMusic();
+
+        // hide grid fade
+        setGridFade(false);
+
+        // resume clock ticking if they were viewing the Map
+        if (tabs.getSelectedIndex() == 0)
+        	klok.run(Clock.FOREVER);
+	}
+
+	/**
+	 * Loads from file, a game in progress.
+	 */
+	public void loadGame() {
+		boolean loaded = false;
+		
+		// open file chooser and load file
+		JFileChooser jfc = new JFileChooser();
+		jfc.setMultiSelectionEnabled(false);
+		jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		
+		// temporarily view the loading screen
+		viewLoadingScreen();
+		
+		int path = jfc.showOpenDialog(window);		
+		
+        if (path == JFileChooser.APPROVE_OPTION)
+        {
+        	File file = jfc.getSelectedFile();
+        	if(file.getName().endsWith(".rpg"))
+        	{
+        		// read the GO object
+        		FileInputStream fis = null;
+        		ObjectInputStream ois = null;
+        		try {
+        			fis = new FileInputStream(file);
+					ois = new ObjectInputStream(fis);
+					GO = (GameObjects) ois.readObject();
+					
+					// load successful
+					loaded = true;
+					
+				} catch (IOException | ClassNotFoundException e) 
+				{
+					printError(e.getMessage());
+					e.printStackTrace();
+				}
+        		finally
+        		{
+        			try {
+        				if(fis != null)
+        					fis.close();
+        				
+        				if(ois != null)
+        					ois.close();
+					} catch (IOException e) {
+						printError(e.getMessage());
+						e.printStackTrace();
+					}
+        			
+        		}
+        	}
+        	else if(!file.getName().endsWith(".rpg"))
+        	{
+        		// wrong file extension
+        		printError("The file must end with '.rpg'");
+        	}
+        }
+        
+        if(loaded)
+        {
+        	// load all parameters and objects
+        	board = GO.getBoard();
+        	quests = GO.getQuests();
+        	characters = GO.getCharacters();
+        	itemsInBackpack = GO.getItems();
+        	
+        	BROWS = board.length;
+        	BCOLS = board[0].length;
+        	
+        	// create the game's layers (map, combat, stats...)
+    		createGameLayers();
+        	
+        	// search for player's position and exit position
+        	// add gridobjects to gridgui
+        	for(int i=0; i<BROWS; i++)
+        		for(int j=0; j<BCOLS; j++)
+        		{
+        			if(board[i][j].isExit())
+        			{
+        				erow = i;
+        				ecol = j;
+        			}
+        			if(board[i][j].isPlayer())
+        			{
+        				prow = i;
+        				pcol = j;
+        			}
+        			((GridGUI) mapPanel).addGridObject(i, j); // place on grid panel
+        		}    
+        	
+        	// place quests on the panel
+        	for(QuestObject q : quests)
+        		((QuestGUI) questPanel).addQuest(q);
+        	questsCompleted = quests.size() - 1;
+        	questsActive = 1;
+        	questsFailed = 0;
+        	questsTotal = quests.size();
+        	
+        	// initailize the item list
+    		itemList = new JList<Item>(getItemArray());
+    		itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    		itemList.setSelectedIndex(0);
+    		itemList.addListSelectionListener((ListSelectionListener) this);
+    		
+        	// game loaded successfully!
+        	viewMapPanel();
+        	
+        	// update map view
+        	movePlayerVision();
+        }
+        else
+        {
+        	// go back to the menu
+        	viewMainMenu();
+        }
+	}
+
+	/**
+	 * Loads from file, the next map for this game.
+	 */
+	public void loadMap() {
+		// delete old map and make a new empty one
+		deleteGridObjects();
+		createGridObjects();
+
+		// load a new map
+		randomizeBoard();
+		repositionPlayer(prowStart, pcolStart);
+		((GridGUI) mapPanel).repositionScrollBarsToPlayer();
+		movePlayerVision(); // for fog, if enabled
+
+		// update the old quest status, if there was one
+		if (questsCompleted != 0) {
+			updateQuestStatus(questsTotal - 1, "Complete!", highlightColor);
+		}
+
+		// reset level statistics
+		resetStatistics();
+
+		// add new quest to messageGUI
+		addQuest(
+				questsTotal,
+				GlowingGem,
+				"Find the Gem!",
+				"Try to find the rare glowing gem in this level. Watch out for lava monsters!",
+				"Started");
+
+		questsTotal++;
 	}
 
 	/**
@@ -883,6 +1184,9 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * Forces player to view the Loading Screen
 	 */
 	public void viewLoadingScreen() {
+		// pause clock
+		klok.pause();
+		
 		loadingScreen.setVisible(true);
 		animationScreen.setVisible(false);
 		gameover.setVisible(false);
@@ -996,7 +1300,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	}
 
 	/**
-	 * Removes all warps from the mapPanel, and replaces them grass
+	 * Removes all warps from the mapPanel
 	 * 
 	 * @return void
 	 */
@@ -1033,7 +1337,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		if (prow != 0 && board[prow - 1][pcol].isMonster())
 			board[prow - 1][pcol].setObject(i);
 
-		if (pcol != BCOLS && board[prow][pcol + 1].isMonster())
+		if (pcol != BCOLS - 1 && board[prow][pcol + 1].isMonster())
 			board[prow][pcol + 1].setObject(i);
 
 		if (pcol != 0 && board[prow][pcol - 1].isMonster())
@@ -1113,7 +1417,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		// Grass)
 		if (board[prow][pcol].isRandomEncounter()) {
 			Random rand = new Random();
-			double r = rand.nextDouble(); // 0.0 to 1.0
+			double r = (((double)rand.nextInt(100))+0.01) / 100.0; // 0.01 to 1.00
 			if (r <= percentChanceOfEncounter) // % chance of random encounter
 			{
 				// A surprise encounter happens!
@@ -1124,11 +1428,24 @@ public class GameEngine implements ActionListener, FocusListener,
 		encounters += monsterCount; // count the number
 
 		if (monsterCount > 0) {
+			// battle animation
+			try {
+				setBorderToGridObject(true,prow,pcol);
+				board[prow][pcol].repaint();
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// Auto-generated catch block
+				printError(""+e.getMessage());
+			}
+			
 			// populate enemies team with the number of monsters we ran into
 			initializeCombat();
 
 			// go to combatPanel tab
 			viewCombatPanel();
+			
+			// remove border
+			setBorderToGridObject(false,prow,pcol);
 
 		}
 
@@ -1211,26 +1528,25 @@ public class GameEngine implements ActionListener, FocusListener,
 	}
 
 	/**
-	 * Check if the player stepped on an item.
-	 * 
+	 * Check if the player stepped on an item. If so, it will
+	 * add the item to their inventory and give them a message.
 	 * @param i
 	 */
 	public void checkForItem(RPGObject i) {
-		// This function should be improved to look at Entity attributes,
-		// and not just an id number. TODO
-
-		if (i != null) {
-			itemsCollected++;
-
-			// Is it a special item? (When picked up, it pops an information
-			// box.)
-			if (i.id == BagID) {
-				// show a popup
-				((GridGUI) mapPanel).setPointsLabel("Bags: " + itemsCollected);
+		if(i != null && i instanceof Item) {
+			
+			if(i.getID() == BagID || i.getID() == ChestID)
+			{
+				// get a random item from the master list
+				// TODO
 			}
-
-			// add item to inventory
-			// TODO
+			else
+			{
+				// add item to inventory
+				itemsInBackpack.add((Item)i);
+				itemsCollected++;
+				printInfo("You found a(n) "+((Item)i).getItemName()+"!\nIt was placed in your inventory.");
+			}
 		}
 		return;
 	}
@@ -1430,11 +1746,8 @@ public class GameEngine implements ActionListener, FocusListener,
 			checkForTrap(pickup);
 			checkForWarp();
 			checkForExit();
-			checkForEnemies(); // starts combat if needed
 		} else // bumped into something
 		{
-			checkForEnemies();// starts combat if needed
-
 			// show hint if they bumped a hole
 			if (showHintsEnabled && board[prow + x][pcol + y].isHole())
 				printInfo("You can hop over holes by\nholding down the left-shift key.");
@@ -1453,7 +1766,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * @return void
 	 */
 	public void movePlayerVision() {
-		makeExitGlow();
+
 		if (fogOfWar) // only works on if fog is enabled
 		{
 			for (int i = 0; i < BROWS; i++) {
@@ -1465,44 +1778,45 @@ public class GameEngine implements ActionListener, FocusListener,
 							&& j < pcol + playerVisionRange
 							&& j > pcol - playerVisionRange) {
 						// inside vision range
-						board[i][j].setFog(EmptyID);
+						board[i][j].setFog(null);
 						board[i][j].setVisible(true);
 					} else if (i == prow + playerVisionRange
 							&& j < pcol + playerVisionRange
 							&& j > pcol - playerVisionRange) {
 						// edge of lower vision
-						board[i][j].setFog(FogBottomID);
+						board[i][j].setFog(FogBottom);
 						board[i][j].setVisible(true);
 					} else if (i == prow - playerVisionRange
 							&& j < pcol + playerVisionRange
 							&& j > pcol - playerVisionRange) {
 						// edge of upper vision
-						board[i][j].setFog(FogTopID);
+						board[i][j].setFog(FogTop);
 						board[i][j].setVisible(true);
 					} else if (j == pcol + playerVisionRange
 							&& i < prow + playerVisionRange
 							&& i > prow - playerVisionRange) {
 						// edge of right-side vision
-						board[i][j].setFog(FogRightID);
+						board[i][j].setFog(FogRight);
 						board[i][j].setVisible(true);
 					} else if (j == pcol - playerVisionRange
 							&& i < prow + playerVisionRange
 							&& i > prow - playerVisionRange) {
 						// edge of left-side vision
-						board[i][j].setFog(FogLeftID);
+						board[i][j].setFog(FogLeft);
 						board[i][j].setVisible(true);
 					} else if (mappingEnabled && board[i][j].isVisible()) {
 						// was previously seen, but now out of range
-						board[i][j].setFog(FogCenterID);
+						board[i][j].setFog(FogCenter);
 						board[i][j].setVisible(true);
 					} else // out of vision range
 					{
-						board[i][j].setFog(EmptyID);
+						board[i][j].setFog(null);
 						board[i][j].setVisible(false);
 					}
 				}
 			}
 		}
+        makeExitGlow();
 	} // end of movePlayerVision()
 
 	public void moveEnemies() {
@@ -1526,6 +1840,21 @@ public class GameEngine implements ActionListener, FocusListener,
 						// get their behavior type
 						String type = ((Entity) board[i][j].object)
 								.getBehaviorType();
+// if Random, then assign a permanent Behavior for that object
+	            		if( type.equalsIgnoreCase("Random"))
+	            		{
+	            			Random rand = new Random();
+	            			switch(rand.nextInt(5))
+	            			{
+	            			case 0: type = "Aggressive"; break;
+	            			case 1: type = "Defensive"; break;
+	            			case 2: type = "Speedy"; break;
+	            			case 3: type = "Coward"; break;
+	            			case 4: type = "Tricky"; break;
+	            			default: type = ""; break;
+	            			}
+	            			((Entity)board[i][j].object).setBehaviorType(type);
+	            		}
 
 						if (type.equalsIgnoreCase("Aggressive")) // chase player
 																	// on sight,
@@ -1628,8 +1957,6 @@ public class GameEngine implements ActionListener, FocusListener,
 					}
 				}
 			}
-			// check around for enemies again
-			checkForEnemies();
 		}
 	}
 
@@ -1652,6 +1979,15 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 	}
 
+	/**
+	 * Gives you the coordinate direction (Eg [-1,0]) that the current location
+	 * would have to move in order to get closer to the target location.
+	 * @param currentRow
+	 * @param currentCol
+	 * @param targetRow
+	 * @param targetCol
+	 * @return
+	 */
 	public int[] getDirectionToLocation(int currentRow, int currentCol,
 			int targetRow, int targetCol) {
 		int[] direction = { 0, 0 };
@@ -1692,7 +2028,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			for (int i = 0; i < BROWS; i++) {
 				for (int j = 0; j < BCOLS; j++) {
 					board[i][j].setVisible(!f);
-					board[i][j].setFog(0);
+					board[i][j].setFog(null);
 				}
 			}
 		}
@@ -1710,41 +2046,41 @@ public class GameEngine implements ActionListener, FocusListener,
 			for (int i = 0; i < BROWS; i++) {
 				for (int j = 0; j < BCOLS; j++) {
 					if (!onOff)
-						board[i][j].setFog(0);
+						board[i][j].setFog(null);
 					else
-						board[i][j].setFog(FogCenterID);
+						board[i][j].setFog(FogCenter);
 				}
 			}
 		}
 	}
+	
+	/**
+	 * Adds a simple line border to the grid object at the given
+	 * location, of [row,col], if possible.
+	 * @param border
+	 * @param x
+	 * @param y
+	 */
+	public void setBorderToGridObject(boolean border, int r, int c)
+	{
+		if(board != null && c < BCOLS && r < BROWS)
+		{
+			if(border)
+				board[r][c].setBorder(BorderFactory.createLineBorder(highlightColor, 4));
+			else
+				board[r][c].setBorder(null);
+		}
+	}
 
 	public void makeExitGlow() {
-		if (fogOfWar) // only works on if fog is enabled
+		if (fogOfWar && exitGlowEnabled) // only works on if fog & exitGlow is enabled
 		{
 			for (int i = 0; i < BROWS; i++) {
 				for (int j = 0; j < BCOLS; j++) {
-					// if its inside of the player's vision range, then set
-					// visible
-					if (i < erow + 2 && i > erow - 2 && j < ecol + 2
-							&& j > ecol - 2) {
+					// if its inside of the  range, then set visible
+					if (i <= erow + 1 && i >= erow - 1 && j <= ecol + 1 && j >= ecol - 1) {
 						// inside vision range
-						board[i][j].setFog(EmptyID);
-						board[i][j].setVisible(true);
-					} else if (i == erow + 2 && j < ecol + 2 && j > ecol - 2) {
-						// edge of lower vision
-						board[i][j].setFog(FogBottomID);
-						board[i][j].setVisible(true);
-					} else if (i == erow - 2 && j < ecol + 2 && j > ecol - 2) {
-						// edge of upper vision
-						board[i][j].setFog(FogTopID);
-						board[i][j].setVisible(true);
-					} else if (j == ecol + 2 && i < erow + 2 && i > erow - 2) {
-						// edge of right-side vision
-						board[i][j].setFog(FogRightID);
-						board[i][j].setVisible(true);
-					} else if (j == ecol - 2 && i < erow + 2 && i > erow - 2) {
-						// edge of left-side vision
-						board[i][j].setFog(FogLeftID);
+						board[i][j].setFog(null);
 						board[i][j].setVisible(true);
 					}
 				}
@@ -1790,7 +2126,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				else if (temp == 7) {
 					board[i][j].resetObject(new Terrain(DirtID, Dirt, false,
 							true, false), new Entity(LavaMonsterID,
-							LavaMonster, "LavaMonster", "Aggressive", false,
+							LavaMonster, "LavaMonster", "Random", false,
 							null, 10, 10, 10, 10, 5, 5, 5, 5, 1), null);
 					numOfMonsters++;
 				}
@@ -1844,7 +2180,7 @@ public class GameEngine implements ActionListener, FocusListener,
 					temp = rand.nextInt(6); // 0 - 5
 					if (temp >= 4)
 						board[i][j].resetObject(new Terrain(GrassID, Grass,
-								false, true, false), null, new NonEntity(
+								false, true, true), null, new NonEntity(
 								TallGrassID, TallGrass, false, false, false,
 								false));
 					else if (temp == 3)
@@ -1889,16 +2225,16 @@ public class GameEngine implements ActionListener, FocusListener,
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent Trigger) {
-		// if the user clicks on a menu button
-
+	public void actionPerformed(final ActionEvent Trigger) {
+		// if the user clicks on a menu button	     
+		   
 		if (Trigger.getSource() == newItem) {
-			int answer = printYesNoQuestion("Are you sure you want\nto start a new mapPanel?");
+			int answer = printYesNoQuestion("Are you sure you want\nto start a new game?");
 			if (answer == 0)
 				newGame();
 		} else if (Trigger.getSource() == saveItem) {
 			// save the game
-			printError("Save unsuccessful!");
+			saveGame();
 		} else if (Trigger.getSource() == quitItem) {
 			int answer = printYesNoQuestion("Are you sure you want\nto quit? Any progress made\nbe lost.");
 			if (answer == 0)
@@ -1929,7 +2265,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			if (fogOfWar) {
 				setFog(false);
 				fogOfWar = false;
-				mappingEnabled = false; // mapPanelping is useless without fog
+				mappingEnabled = false; // mapping is useless without fog
 				enableMappingItem.setEnabled(false);
 			} else {
 				setFog(true);
@@ -2005,6 +2341,9 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		// move enemies on the map if possible
 		moveEnemies();
+		
+		// check around for enemies again
+		checkForEnemies();
 
 		return false;
 	}
@@ -2126,52 +2465,7 @@ public class GameEngine implements ActionListener, FocusListener,
 					+ MAXIMUMSIZE + "!");
 	}
 
-	/**
-	 * Saves to file, the current game in progress.
-	 */
-	public void saveGame() {
-		// TODO
-	}
-
-	/**
-	 * Loads from file, a game in progress.
-	 */
-	public void loadGame() {
-		// TODO
-	}
-
-	/**
-	 * Loads from file, the next map for this game.
-	 */
-	public void loadMap() {
-		// delete old map and make a new empty one
-		deleteGridObjects();
-		createGridObjects();
-
-		// load a new map
-		randomizeBoard();
-		repositionPlayer(prowStart, pcolStart);
-		((GridGUI) mapPanel).repositionScrollBarsToPlayer();
-		movePlayerVision(); // for fog, if enabled
-
-		// update the old quest status, if there was one
-		if (questsCompleted != 0) {
-			updateQuestStatus(questsTotal - 1, "Complete!", highlightColor);
-		}
-
-		// reset level statistics
-		resetStatistics();
-
-		// add new quest to messageGUI
-		addQuest(
-				questsTotal,
-				GlowingGem,
-				"Find the Gem!",
-				"Try to find the rare glowing gem in this level. Watch out for lava monsters!",
-				"Started");
-
-		questsTotal++;
-	}
+	
 
 	public void initializeCombat() {
 		enemies = initializeEnemies(0);

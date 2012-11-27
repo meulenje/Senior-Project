@@ -12,6 +12,7 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.border.EtchedBorder;
@@ -24,10 +25,9 @@ import javax.swing.border.EtchedBorder;
  * @author Austin
  * @version 10/31/2012
  */
-@SuppressWarnings("serial")
 public class QuestObject extends JPanel implements ActionListener{
 
-	private GameEngine GE;
+	private static final long serialVersionUID = 1L;
 	
 	private JLabel imageLabel;
 	private JLabel statusLabel;
@@ -41,10 +41,9 @@ public class QuestObject extends JPanel implements ActionListener{
 	protected String status;
 	protected String statistics;
 	
-	public QuestObject(GameEngine g, int id, ImageIcon i, String t, String m, String s)
+	public QuestObject(GameEngine GE, int id, ImageIcon i, String t, String m, String s)
 	{
 		// receive parameters
-		GE = g;
 		this.id = id;
 		image = i;
 		title = t;
@@ -129,7 +128,9 @@ public class QuestObject extends JPanel implements ActionListener{
 		if(source == viewStats)
 		{
 			// show the stats in a popup menu
-			GE.printInfo(statistics);
+			// found some information to print
+			JOptionPane.showMessageDialog(viewStats, statistics, "Quest Information",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
 		
 	}

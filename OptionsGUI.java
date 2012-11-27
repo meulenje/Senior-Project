@@ -13,9 +13,9 @@ import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
-@SuppressWarnings("serial")
 public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 
+	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to engine
 	
 	// gui parts
