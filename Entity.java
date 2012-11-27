@@ -99,25 +99,36 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 */
 	public void setEquippedItem(Item item) 
 	{
-		if(!item.isConsumable())
+		if(item!=null)
 		{
-			// remove old item and modifiers, if possible
-			
-			// apply modifiers to the entity, if possible
-			this.equippedItem = item;
+			if(!item.isConsumable())
+			{
+				
+				this.equippedItem = item;
+				
+			}
 		}
-		else
-		{
-			// apply modifiers to the entity but do not replace equipped item
-			maxHealth += item.getMaxHealth();
-			setCurrentHealth(currentHealth += item.getCurrentHealth());
-			maxMana += item.getMaxMana();
-			setCurrentMana(currentMana += item.getCurrentMana());
-			attack += item.getAttack();
-			defense += item.getDefense();
-			speed += item.getSpeed();
+		else{
+			this.equippedItem = null;
 		}
+		
 	}
+	
+	public void useItem(Item item)
+	{
+		if(item.isConsumable())
+		{
+		// apply modifiers to the entity but do not replace equipped item
+					maxHealth += item.getMaxHealth();
+					setCurrentHealth(currentHealth += item.getCurrentHealth());
+					maxMana += item.getMaxMana();
+					setCurrentMana(currentMana += item.getCurrentMana());
+					attack += item.getAttack();
+					defense += item.getDefense();
+					speed += item.getSpeed();
+		}		
+	}
+
 
 	/**
 	 * @param attack

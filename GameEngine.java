@@ -241,10 +241,11 @@ public class GameEngine implements ActionListener, FocusListener,
 	ArrayList<Entity> characters;
 	// end combatPanel engine fields
 
-	// InventoryGUI variables
-	private JList<Item> itemList = new JList<Item>(); // list to h
-	private ArrayList<Item> itemsInBackpack; // array inventory items
-	private int index = 0; // index to track selected character
+	// InventoryGUI variables	
+	protected DefaultListModel<Item> itemListModel = new DefaultListModel<Item>();
+	protected JList itemList = new JList(itemListModel); // list to h		
+	private int characterIndex = 0; // index to track selected character
+	private int itemIndex = 0; 
 
 	// Level up variables
 	protected int base = 10;
@@ -559,29 +560,24 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * Creates a demo list of items
 	 */
 	public void createItemBackpack() {
-		// initialize array list of items
-		itemsInBackpack = new ArrayList<Item>();
-		itemsInBackpack.add(new Item(MushroomID, Mushroom, "Mushroom",
-				"Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, Rock, "Rock",
-				"Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-		itemsInBackpack.add(new Item(RockID, Bag, "Magic Powder",
-				"Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
-		itemsInBackpack.add(new Item(RockID, GlowingGem, "Gem",
-				"Increases Max Mana by 20 MP", false, 0, 0, 20, 0, 0, 0, 0));
-		itemsInBackpack.add(new Item(SpikeID, Spike, "Spike Shield",
-				"Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5,
-				5, 0));
+		// inventoryPanel
+				// initialize items		
+				addItem(new Item(MushroomID, Mushroom, "Mushroom", "Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
+				addItem(new Item(RockID, Rock, "Rock", "Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
+				addItem(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 30, 0, 0, 0, 0, 0));
+				addItem(new Item(RockID, GlowingGem, "Gem", "Increases Max Mana by 10 MP", false, 0, 0, 10, 0, 0, 5, 0));
+				addItem(new Item(SpikeID, Spike, "Spike Shield", "Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5, 5, 0));
+				
+				
+				// initailize the list			    
+				itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				itemList.setSelectedIndex(0);
+				itemList.addListSelectionListener((ListSelectionListener) this);
 
-		// initailize the list
-		itemList = new JList<Item>(getItemArray());
-		itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		itemList.setSelectedIndex(0);
-		itemList.addListSelectionListener((ListSelectionListener) this);
 	}
 	
 	public void deleteItemBackpack() {
-		itemsInBackpack = null;
+		itemListModel.clear();
 	}
 	
 	public void getGameObjects()
@@ -743,7 +739,7 @@ public class GameEngine implements ActionListener, FocusListener,
         		// give all serializable objects to GO
         		GO.setBoard(board);
         		GO.setCharacters(characters);
-        		GO.setItems(itemsInBackpack);
+        		GO.setItems((Item[]) itemListModel.toArray());
         		GO.setQuests(quests);
         		
         		// save the GO object
@@ -865,7 +861,12 @@ public class GameEngine implements ActionListener, FocusListener,
         	board = GO.getBoard();
         	quests = GO.getQuests();
         	characters = GO.getCharacters();
-        	itemsInBackpack = GO.getItems();
+        	Item [] toItemList = GO.getItems();
+        	int z = 0;
+        	while(toItemList[z] != null){
+        		addItem(toItemList[z]);
+        		z++;
+        	}
         	
         	BROWS = board.length;
         	BCOLS = board[0].length;
@@ -898,13 +899,7 @@ public class GameEngine implements ActionListener, FocusListener,
         	questsActive = 1;
         	questsFailed = 0;
         	questsTotal = quests.size();
-        	
-        	// initailize the item list
-    		itemList = new JList<Item>(getItemArray());
-    		itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    		itemList.setSelectedIndex(0);
-    		itemList.addListSelectionListener((ListSelectionListener) this);
-    		
+        	        	    		
         	// game loaded successfully!
         	viewMapPanel();
         	
@@ -1543,7 +1538,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			else
 			{
 				// add item to inventory
-				itemsInBackpack.add((Item)i);
+				addItem((Item)i);
 				itemsCollected++;
 				printInfo("You found a(n) "+((Item)i).getItemName()+"!\nIt was placed in your inventory.");
 			}
@@ -3021,61 +3016,77 @@ public class GameEngine implements ActionListener, FocusListener,
 	}
 
 	// inventory GUI methods
-	@Override
-	public void valueChanged(ListSelectionEvent arg0) {
-		((InventoryGUI) (inventoryPanel))
-				.updateBackpackLabel(getSelectedItem());
-	}
-
-	// return the string of the character that is selected
-	public Entity getSelectedCharacter() {
-		return characters.get(index);
-	}
-
-	// return Item at index
-	public Item getItem(int pIndex) {
-		return itemsInBackpack.get(pIndex);
-
-	}
-
-	// return the string of the item that is selected
-	public Item getSelectedItem() {
-		return getItem(itemList.getSelectedIndex());
-	}
-
-	// navigates to the previous character selection
-	public void navigateCharacter(String pNav) {
-		int size = characters.size();
-		// if navigating to previous character
-		if (pNav == "previous") {
-			index -= 1;
-			// if trying to navigate before first character, go to end
-			if (index < 0) {
-				index = size - 1;
-			}
+		@Override
+		public void valueChanged(ListSelectionEvent arg0) {
+			((InventoryGUI) (inventoryPanel))
+					.update();
 		}
-		// if navigating to next character
-		if (pNav == "next") {
-			index += 1;
-			// if no more characters in list, go to beginning
-			if (index >= size) {
-				index = 0;
+
+		// return the string of the character that is selected
+		public Entity getSelectedCharacter() {
+			return characters.get(characterIndex);
+		}
+		
+		// return the selected item
+		public Item getSelectedItem()
+		{			
+			int selectedItem = itemList.getSelectedIndex();
+			
+			//checks if item has recently been removed.
+			if(selectedItem == -1 && itemListModel.size() == 0 ){			
+				
+				return null;			
+			}
+			
+			else if(selectedItem == -1 && itemListModel.size() > 0 ){
+				itemList.setSelectedIndex(0);
+				return itemListModel.getElementAt(0);
+			}
+			else{
+				return itemListModel.getElementAt(itemList.getSelectedIndex());
 			}
 		}
 
-	}
+		// navigates to the previous character selection
+		public void navigateCharacter(String pNav) {
+			int size = characters.size();
+			// if navigating to previous character
+			if (pNav == "previous") {
+				characterIndex -= 1;
+				// if trying to navigate before first character, go to end
+				if (characterIndex < 0) {
+					characterIndex = size - 1;
+				}
+			}
+			// if navigating to next character
+			if (pNav == "next") {
+				characterIndex += 1;
+				// if no more characters in list, go to beginning
+				if (characterIndex >= size) {
+					characterIndex = 0;
+				}
+			}
 
-	// returns the item list
-	public JList<Item> getItemList() {
-		return this.itemList;
-	}
+		}
 
-	// returns an array of the list
-	public Item[] getItemArray() {
-		Item[] array = new Item[itemsInBackpack.size()];
-		itemsInBackpack.toArray(array);
-		return array;
-	}
+		// returns the item list
+		public JList<Item> getItemList() {
+			return this.itemList;
+		}
+			
+		//adds an item to the 
+		public void addItem(Item pItem)
+		{
+			itemListModel.add(itemIndex, pItem);
+			itemIndex ++;
+		}
+		//removes item from list once equipped
+		public void removeItem(int pIndex)
+		{		
+				itemListModel.remove(pIndex);
+				itemList.setSelectedIndex(0);
+				itemIndex --;						
+		}
 
 	// base = amount of experience required to level the first time
 	// factor = factor by with required exp will grow (multipication)

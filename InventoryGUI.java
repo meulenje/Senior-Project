@@ -7,9 +7,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoundedRangeModel;
 import javax.swing.ImageIcon;
@@ -31,18 +28,24 @@ import javax.swing.JToolBar;
  *
  */
 
-public class InventoryGUI extends JPanel implements ActionListener, KeyListener {
+public class InventoryGUI extends JPanel implements ActionListener {
 	
 	private static final long serialVersionUID = 1L;
+	
 	private GameEngine GE; // link back to game engine
 	
 	//gui components:
 	
 	private JPanel centerPanel; //panel to group everything but character selector
+	private JPanel itemSelected; // which item is selected
+	private JPanel buttonGroup; //group use and equip buttons
 	private JPanel rightCenterPanel; //panel to group paper doll and item display	
 	private JPanel statsPanel; //panel for character stats, goes in character selector
-	private JPanel itemDisplay; //panel for displaying item
-	private JPanel paperDollPanel; //panel for characters equipped items 
+	private JPanel itemDisplay; //which item is selectied
+	private JPanel itemStatsPanel; // display item stats
+	private JPanel infoPanel; // item info panel 
+	private JPanel characterInfoPanel; // panel for character info
+	private JPanel characterStatsPanel; // panel to hold the stats of the character
 	private JPanel equippedSlotPanel; //panel for equipped items
 	
 	//SplitPane of: items in your backpack, and equipped items of selected character
@@ -55,12 +58,30 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
 	//toolbar components
 	private JButton nextCharacterButton; //next character selection 
 	private JButton previousCharacterButton; //previous character selection 
-	private JButton equiptButton; // button to equipt selected item    
+	private JButton equipButton; // button to equipt selected item  
+	private JButton unequipButton; // button to unequip item
+	private JButton useButton; //button for consumables
     private JLabel characterPicture; //character picture and name  
     private JLabel equippedImage; //image of equipped item    
     private JLabel equippedLabel; // name of equipped item
     private JLabel equippedDescription; // description of equipped item  
     private JLabel itemPicture; //item picture and name
+    private JLabel itemTitle; //title of item stats area
+    private JLabel itemAttack ;
+    private JLabel itemDefense;
+    private JLabel itemCurrentHP;
+    private JLabel itemMaxHP ;	
+    private JLabel itemCurrentMana;
+    private JLabel itemMaxMana;
+    private JLabel itemSpeed;    
+    private JLabel characterTitle; // title of character stats area
+    private JLabel characterAttack ;
+    private JLabel characterDefense;
+    private JLabel characterCurrentHP;
+    private JLabel characterMaxHP ;	
+    private JLabel characterCurrentMana;
+    private JLabel characterMaxMana;
+    private JLabel characterSpeed;
     private JProgressBar healthBar; 
     private JProgressBar magicBar;
     private JProgressBar expBar;
@@ -92,28 +113,37 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
         //Selected Item display
         //==================
         
-        //equipt button
-        equiptButton = new JButton("EQUIPT");
-        equiptButton.addActionListener(this);
+        //item equip
+        equipButton = new JButton("EQUIP");
+        unequipButton = new JButton("UNEQUIP");
+        useButton = new JButton("USE");
+        equipButton.addActionListener(this);
+        unequipButton.addActionListener(this);
+        useButton.addActionListener(this);
         
-        JPanel title = new JPanel();
+        JLabel itemEquipTitle = new JLabel("SELECTED:", JLabel.CENTER);
+        itemSelected = new JPanel();
+        itemSelected.setLayout(new BorderLayout());
         itemDisplay = new JPanel();    
-        itemDisplay.setLayout(new BorderLayout());
-        title.setLayout(new BorderLayout());
-        title.add(new JLabel("SELECTED ITEM: ", JLabel.CENTER),BorderLayout.NORTH); 
-        title.add(itemDisplay, BorderLayout.CENTER);
+        itemDisplay.setLayout(new BorderLayout());        
+        itemSelected.add(itemEquipTitle, BorderLayout.NORTH); 
+        itemSelected.add(itemDisplay, BorderLayout.CENTER);
         itemPicture = new JLabel();
-        itemDisplay.add(itemPicture, BorderLayout.WEST);
-        itemDisplay.add(equiptButton, BorderLayout.EAST);
+        itemDisplay.add(itemPicture, BorderLayout.CENTER);
+        buttonGroup = new JPanel(); 
+        buttonGroup.setLayout(new GridLayout());
+        buttonGroup.add(equipButton);
+        buttonGroup.add(useButton);        
+        itemDisplay.add(buttonGroup,BorderLayout.EAST);
         itemDisplay.setBorder(BorderFactory.createLineBorder(Color.black));       
-             
-        
+                     
         //==================
         //add extra panels to align
         //==================
   
         centerPanel = new JPanel();
-        centerPanel.setLayout(new BorderLayout());        
+        centerPanel.setLayout(new BorderLayout());          
+        
         rightCenterPanel = new JPanel();
         rightCenterPanel.setLayout(new BorderLayout());
         
@@ -121,8 +151,10 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
         //paperDollPanel
         //==================
         
-        paperDollPanel = new JPanel();
-        paperDollPanel.setLayout(new BorderLayout());
+        infoPanel = new JPanel();
+        infoPanel.setLayout(new BorderLayout());
+        characterInfoPanel = new JPanel();
+        characterInfoPanel.setLayout(new BorderLayout());
         equippedSlotPanel = new JPanel();
         equippedSlotPanel.setLayout(new BorderLayout());        
         equippedSlotPanel.setBorder(BorderFactory.createLineBorder(Color.black));        
@@ -142,7 +174,8 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
         //equipped area
         JLabel equipTitle = new JLabel("EQUIPPED:", JLabel.CENTER);        
         top.add(equipTitle, BorderLayout.NORTH);
-        top.add(equippedSlotPanel, BorderLayout.CENTER);      
+        top.add(equippedSlotPanel, BorderLayout.CENTER); 
+        top.add(unequipButton,BorderLayout.EAST);
        	left.add(equippedLabel);
         left.add(equippedImage);        
         right.add(equippedDescription);
@@ -150,36 +183,83 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
         equippedSlotPanel.add(left, BorderLayout.WEST);
         equippedSlotPanel.add(right, BorderLayout.CENTER);
         
-        paperDollPanel.add(top, BorderLayout.SOUTH);
+        //==================
+        //item stats panel
+        //==================
+        itemStatsPanel = new JPanel();
+        itemStatsPanel.setLayout(new GridLayout(8,1));
         
+        itemTitle = new JLabel("-ITEM STATS-");
+        itemAttack = new JLabel();
+        itemDefense = new JLabel();
+        itemCurrentHP = new JLabel();
+        itemMaxHP = new JLabel();	
+        itemCurrentMana= new JLabel();
+        itemMaxMana = new JLabel();
+        itemSpeed = new JLabel();
+        itemStatsPanel.add(itemTitle);
+        itemStatsPanel.add(itemAttack);
+        itemStatsPanel.add(itemDefense);
+        itemStatsPanel.add(itemCurrentHP);
+        itemStatsPanel.add(itemCurrentMana);
+        itemStatsPanel.add(itemSpeed);
+        itemStatsPanel.add(itemMaxHP);       
+        itemStatsPanel.add(itemMaxMana);
+                
+        infoPanel.add(top,BorderLayout.NORTH);
+        infoPanel.add(centerPanel, BorderLayout.SOUTH);
+        infoPanel.add(itemStatsPanel, BorderLayout.WEST);
+        infoPanel.add(characterInfoPanel, BorderLayout.EAST);
+        
+      //==================
+        //character stats panel
+        //==================
+        
+        characterStatsPanel = new JPanel();
+        characterStatsPanel.setLayout(new GridLayout(8,1));
+        
+        characterTitle = new JLabel("-CHARACTER STATS-");
+        characterAttack = new JLabel();
+        characterDefense = new JLabel();
+        characterCurrentHP = new JLabel();
+        characterMaxHP = new JLabel();	
+        characterCurrentMana= new JLabel();
+        characterMaxMana = new JLabel();
+        characterSpeed = new JLabel();
+        characterStatsPanel.add(characterTitle);
+        characterStatsPanel.add(characterAttack);
+        characterStatsPanel.add(characterDefense);
+        characterStatsPanel.add(characterCurrentHP);
+        characterStatsPanel.add(characterCurrentMana);
+        characterStatsPanel.add(characterSpeed);
+        characterStatsPanel.add(characterMaxHP);       
+        characterStatsPanel.add(characterMaxMana);
+        
+        characterInfoPanel.add(characterStatsPanel, BorderLayout.CENTER);
       //==================
         //item inventory list
         //==================
         
-        itemScrollPane = new JScrollPane(GE.getItemList()); // add the items to the JScrollPane           
-        updateBackpackLabel(GE.getItem(0));// this just selects the first item from the list
-        updateCharacterStatsBars(GE.getSelectedCharacter());
+        itemScrollPane = new JScrollPane(GE.getItemList()); // add the JList that displays items         
+        itemScrollPane.requestFocus(); // enable arrow keys to navigate items     
+        update();
 
                         
-        //group together
-        centerPanel.add(itemScrollPane, BorderLayout.WEST); 
-        centerPanel.add(rightCenterPanel, BorderLayout.NORTH);
-        rightCenterPanel.add(paperDollPanel,BorderLayout.NORTH);
-        rightCenterPanel.add(title, BorderLayout.CENTER);
+        //group together        
+        centerPanel.add(rightCenterPanel, BorderLayout.CENTER);        
+        rightCenterPanel.add(itemSelected, BorderLayout.CENTER);
                        
         // apply sizing to components
 	    toolBar.setPreferredSize(new Dimension(600,50));
-        paperDollPanel.setPreferredSize(new Dimension(300,300));
+        infoPanel.setPreferredSize(new Dimension(300,300));
         itemDisplay.setPreferredSize(new Dimension(600,50));
         itemScrollPane.setPreferredSize(new Dimension(200,200));   
         
         //Add components to the inventory panel    
                 
         this.add(toolBar, BorderLayout.NORTH);         
-        
-      	this.add(centerPanel);
-      	this.addKeyListener(this);  // This class has its own key listeners.
-        this.setFocusable(true);    // Allow panel to get focus
+        this.add(itemScrollPane, BorderLayout.WEST);
+      	this.add(infoPanel, BorderLayout.CENTER);
                	  
     }
 	
@@ -248,12 +328,63 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
         
     }
 	
+	//update everything
 	protected void update()
 	{
+				
 		updateCharacterLabel(GE.getSelectedCharacter());
 		updateCharacterStatsBars(GE.getSelectedCharacter());
 		updateCharacterEquipped(GE.getSelectedCharacter());
+		
+		//update item stats
+		itemAttack.setText("ATTACK:    " + Integer.toString(GE.getSelectedItem().getAttack()));
+        itemDefense.setText("DEFENSE:    " + Integer.toString(GE.getSelectedItem().getDefense()));
+        itemCurrentHP.setText("HEALING:    " + Integer.toString(GE.getSelectedItem().getCurrentHealth()));
+        itemCurrentMana.setText("MANA:    " + Integer.toString(GE.getSelectedItem().getCurrentMana()));
+        itemSpeed.setText("SPEED:    "+ Integer.toString(GE.getSelectedItem().getSpeed()));
+        itemMaxHP.setText("MAX HEALTH:    " + Integer.toString(GE.getSelectedItem().getMaxHealth()));        
+        itemMaxMana.setText("MAX MANA:    " +Integer.toString(GE.getSelectedItem().getMaxMana()));
+       
+        //update character stats
+        characterAttack.setText("ATTACK:    " + Integer.toString(GE.getSelectedCharacter().getAttack()));
+        characterDefense.setText("DEFENSE:    " + Integer.toString(GE.getSelectedCharacter().getDefense()));
+        characterCurrentHP.setText("HEALING:    " + Integer.toString(GE.getSelectedCharacter().getCurrentHealth()));
+        characterCurrentMana.setText("MANA:    " + Integer.toString(GE.getSelectedCharacter().getCurrentMana()));
+        characterSpeed.setText("SPEED:    "+ Integer.toString(GE.getSelectedCharacter().getSpeed()));
+        characterMaxHP.setText("MAX HEALTH:    " + Integer.toString(GE.getSelectedCharacter().getMaxHealth()));        
+        characterMaxMana.setText("MAX MANA:    " +Integer.toString(GE.getSelectedCharacter().getMaxMana()));
+		
+		if(GE.getSelectedCharacter().getEquipped() == null){
+			unequipButton.setEnabled(false);
+		}
+		else{
+			unequipButton.setEnabled(true);
+		}
+		if(GE.itemListModel.size() != 0){
+			updateBackpackLabel(GE.getSelectedItem());
+				
+			if(GE.getSelectedItem().isConsumable())
+			{				
+				equipButton.setEnabled(false);
+				useButton.setEnabled(true);
+			}
+			else{
+				if(GE.getSelectedCharacter().getEquipped() == null){
+					equipButton.setEnabled(true);					
+				}
+				else{ equipButton.setEnabled(false);}
+				useButton.setEnabled(false);
+			}
+		}
+		else{
+			itemPicture.setIcon(null);
+			itemPicture.setText(null);
+			equipButton.setEnabled(false);
+			useButton.setEnabled(false);			
+		}
+		
 	}
+		
         
     //Brings up the selected image
     protected void updateBackpackLabel (Item item) 
@@ -304,11 +435,11 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
     	healthBarModel = healthBar.getModel();
     	healthBarModel.setMaximum(entity.getMaxHealth());
     	expBarModel = expBar.getModel();
-    	expBarModel.setMaximum(entity.getMaxHealth());
+    	expBarModel.setMaximum((int)GE.getExpNeeded(entity));
     	magicBarModel = magicBar.getModel();
     	magicBarModel.setMaximum(entity.getMaxMana());
 	 	healthBarModel.setValue(GE.getSelectedCharacter().getCurrentHealth());
-    	expBar.setValue(GE.getSelectedCharacter().getCurrentHealth()); //TODO: magic and expierence progress bars only use health
+    	expBar.setValue(GE.getSelectedCharacter().getExp()); 
 	 	magicBar.setValue(GE.getSelectedCharacter().getCurrentMana()); 
 
     }
@@ -321,71 +452,43 @@ public class InventoryGUI extends JPanel implements ActionListener, KeyListener 
 		if(arg0.getSource() == previousCharacterButton)
 		{
 			GE.navigateCharacter("previous");
-			updateCharacterLabel(GE.getSelectedCharacter());
-			updateCharacterStatsBars(GE.getSelectedCharacter());
-			updateCharacterEquipped(GE.getSelectedCharacter());
+			update();
 		}
 		
 		//if next character
 		if(arg0.getSource() == nextCharacterButton)
 		{
 			GE.navigateCharacter("next");
-			updateCharacterLabel(GE.getSelectedCharacter());
-			updateCharacterStatsBars(GE.getSelectedCharacter());
-			updateCharacterEquipped(GE.getSelectedCharacter());
+			update();
 		}
 		
-		//equipt button is pressed
-		if(arg0.getSource() == equiptButton)
+		//equip button is pressed
+		if(arg0.getSource() == equipButton)
 		{
-			GE.getSelectedCharacter().setEquippedItem(GE.getSelectedItem());
-			updateCharacterEquipped(GE.getSelectedCharacter());
+			if(GE.getSelectedCharacter().getEquipped() == null){
+				GE.getSelectedCharacter().setEquippedItem(GE.getSelectedItem());
+				GE.removeItem(GE.itemList.getSelectedIndex());		
+				update();
+			}
+			else{
+			}
+			
 		}
-	}
-
-	@Override
-	public void keyPressed(KeyEvent k)
-	{
-		int key = k.getKeyCode();
-
-        if (key == 73 ) // 'i'
-        {
-        	// shortcut to "Inventory Tab"
-        	GE.viewInventoryPanel();
-        }
-        else if (key == 67 ) // 'c'
-        {
-        	// shortcut to "Combat Tab"
-        	GE.viewCombatPanel();
-        }
-        else if (key == 77) // 'm'
-        {
-        	// shortcut to "Map Tab"
-        	GE.viewMapPanel();
-        }
-        else if (key == 83) // 's'
-        {
-        	// shortcut to "Stats Tab"
-        	GE.viewStatsPanel();
-        }
-        else if (key == 81) // 'q'
-        {
-        	// shortcut to "Quest Tab"
-        	GE.viewQuestPanel();
-        }
-        else if(key == 27) // ESC to pause game
-			GE.pauseGame();
-	}
-
-	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
 		
-	}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
+		//unequip button is pressed
+		if(arg0.getSource() == unequipButton)
+		{
+			GE.addItem(GE.getSelectedCharacter().getEquipped());
+			GE.getSelectedCharacter().setEquippedItem(null);
+			update();
+		}
 		
+		//use button is preseed
+		if(arg0.getSource() == useButton)
+		{
+			GE.getSelectedCharacter().useItem(GE.getSelectedItem());
+			GE.removeItem(GE.itemList.getSelectedIndex());
+			update();
+		}
 	}
 }

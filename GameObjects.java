@@ -22,14 +22,14 @@ public class GameObjects implements Serializable {
 	private GridObject[][] board; // the board/map
 	private ArrayList<QuestObject> quests; // list of quest messages
 	private ArrayList<Entity> characters; // list of characters
-	private ArrayList<Item> items; // array inventory items
+	private Item [] items; // array inventory items
 	
 	public GameObjects()
 	{		
 		setBoard(new GridObject[1][1]);
 		setQuests(new ArrayList<QuestObject>());
 		setCharacters(new ArrayList<Entity>());
-		setItems(new ArrayList<Item>());
+		//setItems();
 	}
 
 	public GridObject[][] getBoard() {
@@ -56,11 +56,11 @@ public class GameObjects implements Serializable {
 		this.characters = characters;
 	}
 
-	public ArrayList<Item> getItems() {
+	public Item[] getItems() {
 		return items;
 	}
 
-	public void setItems(ArrayList<Item> items) {
+	public void setItems(Item [] items) {		
 		this.items = items;
 	}
 }
