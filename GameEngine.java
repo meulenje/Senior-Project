@@ -564,7 +564,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				// initialize items		
 				addItem(new Item(MushroomID, Mushroom, "Mushroom", "Gives you 30 HP!", true, 0, 30, 0, 0, 0, 0, 0));
 				addItem(new Item(RockID, Rock, "Rock", "Increases defense by 10", false, 0, 0, 0, 0, 0, 10, 0));
-				addItem(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 30, 0, 0, 0, 0, 0));
+				addItem(new Item(RockID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
 				addItem(new Item(RockID, GlowingGem, "Gem", "Increases Max Mana by 10 MP", false, 0, 0, 10, 0, 0, 5, 0));
 				addItem(new Item(SpikeID, Spike, "Spike Shield", "Increases attack by 5 and defense by 5", false, 0, 0, 0, 0, 5, 5, 0));
 				
@@ -828,7 +828,7 @@ public class GameEngine implements ActionListener, FocusListener,
 					// load successful
 					loaded = true;
 					
-				} catch (IOException | ClassNotFoundException e) 
+				} catch (Exception e) 
 				{
 					printError(e.getMessage());
 					e.printStackTrace();
@@ -2538,6 +2538,15 @@ public class GameEngine implements ActionListener, FocusListener,
 						.getName());
 				((CombatGUI) combatPanel).itemTargets.addItem(target.getName());
 			}
+			
+			((CombatGUI) combatPanel).loadItems();
+			
+			if(((CombatGUI)combatPanel).items.getItemCount() == 0){
+				((CombatGUI)combatPanel).itemButton.setEnabled(false);
+			}else{
+				((CombatGUI)combatPanel).itemButton.setEnabled(true);
+			}
+			
 		} else {
 			((CombatGUI) combatPanel).update();
 			((CombatGUI) combatPanel).endCombat(combatResult, accumulatedExp);
@@ -2593,12 +2602,32 @@ public class GameEngine implements ActionListener, FocusListener,
 		((CombatGUI) combatPanel).update();
 		checkForGameOver();
 	}
+	
+	public String randomBehavior(){
+		ArrayList<String> behaviors = new ArrayList<String>();
+		
+		behaviors.add("Aggressive");
+		behaviors.add("Defensive");
+		behaviors.add("Speedy");
+		behaviors.add("Coward");
+		behaviors.add("Tricky");
+		behaviors.add("Boss");
+		
+		int random = randomNumberGenerator.nextInt(6);
+		
+		return behaviors.get(random);
+	}
 
 	public void monsterTurn(Entity m) {
 
 		String behavior = m.getBehaviorType();
 		Entity attackTarget = null;
 		int healTarget;
+		
+		//Random
+		if (behavior.equals("Random")){
+			behavior = randomBehavior();
+		}
 		
 		//Aggressive
 		if (behavior.equals("Aggressive")) {
@@ -2612,8 +2641,11 @@ public class GameEngine implements ActionListener, FocusListener,
 			
 			int action = randomNumberGenerator.nextInt(2);
 			
-			if(action == 0 && m.hasHealingAbility()){
+			//heal
+			if(action == 0 && shouldHeal(m, enemies)){
 				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
+			
+			//attack
 			}else{
 				executeAttack(m, attackTarget);
 			}
@@ -2628,17 +2660,18 @@ public class GameEngine implements ActionListener, FocusListener,
 			int action = randomNumberGenerator.nextInt(3);
 			
 			//heal
-			if(action == 0 && m.hasHealingAbility()){
-				healTarget = enemies.indexOf(m);
+			if(action == 0 && shouldHeal(m, enemies)){
+				healTarget = enemies.indexOf(findWeakestEnemy());
 				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
 			
 			//flee
 			}else if(action == 1){
 				//monster flee
-				executeAttack(m, attackTarget);
+				executeFlee(m);
 				
 			//attack
 			}else{
+				attackTarget = findRandomCharacter();
 				executeAttack(m, attackTarget);
 			}
 			
@@ -2649,7 +2682,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			int action = randomNumberGenerator.nextInt(3);
 			
 			//heal
-			if(action == 0 && m.hasHealingAbility()){
+			if(action == 0 && shouldHeal(m, enemies)){
 				healTarget = enemies.indexOf(findWeakestEnemy());
 				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
 			
@@ -2669,7 +2702,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			int action = randomNumberGenerator.nextInt(3);
 			
 			//heal
-			if(action == 0 && m.hasHealingAbility()){
+			if(action == 0 && shouldHeal(m, enemies)){
 				healTarget = enemies.indexOf(findWeakestEnemy());
 				executeAbility(m, healTarget, characters, enemies, m.findHealingAbility());
 			
@@ -2700,6 +2733,28 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 
 		return target;
+	}
+	
+	//returns true if the entity has a healing ability and there are targets to heal
+	private boolean shouldHeal(Entity monster, ArrayList<Entity> collection){
+		boolean returnVal = false;
+		
+		if(healableTargetExists(collection) && monster.hasHealingAbility()){
+			returnVal = true;
+		}
+		
+		return returnVal;
+	}
+	
+	//check if there are any entities in this collection that are hurt
+	private boolean healableTargetExists(ArrayList<Entity> collection){
+		boolean returnVal = false;
+		for(Entity e : collection){
+			if(e.getCurrentHealth() < e.getMaxHealth()){
+				returnVal = true;
+			}
+		}
+		return returnVal;
 	}
 
 	// find enemy with the lowest health
@@ -2745,7 +2800,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			return attackTarget;
 		}
 
-	public void playerTurn(String action, int target) {
+	public void playerTurn(String action, int target, Item item) {
 
 		actor = turnStack.pop();
 
@@ -2756,8 +2811,8 @@ public class GameEngine implements ActionListener, FocusListener,
 			executeAttack(actor, combatants.get(target));
 		}
 
-		else if (action.equals("Wait")) {
-			event = actor.getName() + " waits.";
+		else if (action.equals("Item")) {
+			executeItem(actor, combatants.get(target), item);
 		}
 
 		else if (action.equals("Flee")) {
@@ -2788,6 +2843,12 @@ public class GameEngine implements ActionListener, FocusListener,
 
 	}
 
+	private void executeFlee(Entity a){
+		a.setExp(0);
+		String s = (a.getName() + " has fled from battle!");
+		((CombatGUI) combatPanel).appendStatus(s);
+	}
+	
 	public void executeAttack(Entity source, Entity target) {
 		int calculatedDamage = 0;
 		int attackVal = source.getAttack() + randomNumberGenerator.nextInt(6);
@@ -2806,6 +2867,12 @@ public class GameEngine implements ActionListener, FocusListener,
 		target.setCurrentHealth(netHealth);
 		String s = (source.getName() + "'s attack hit " + target.getName()
 				+ " for " + calculatedDamage + " damage!");
+		((CombatGUI) combatPanel).appendStatus(s);
+	}
+	
+	public void executeItem(Entity source, Entity target, Item item){
+		target.useItem(item);
+		String s = source.getName() + " used " + item.getItemName() + " on " + target.getName() + "!";
 		((CombatGUI) combatPanel).appendStatus(s);
 	}
 
@@ -2930,7 +2997,7 @@ public class GameEngine implements ActionListener, FocusListener,
 
 		for (int i = 1; i <= numberOfEnemies; i++) {
 			m = new Entity(LavaMonsterID, LavaMonster, "Lava Monster",
-					"Tricky", false, null, 10, 10, 10, 10, 10, 10, 1, 5, 1);
+					"Random", false, null, 10, 10, 10, 10, 10, 10, 1, 5, 1);
 			m.setExp(6);
 			Ability mend = new Ability("Mending Flame", 1, 0, 0, 5);
 			Ability flameLash = new Ability("Flame Lash", 0, 0, 0, 5);
@@ -2991,9 +3058,9 @@ public class GameEngine implements ActionListener, FocusListener,
 		ArrayList<Entity> newArray = new ArrayList<Entity>();
 
 		for (Entity e : entities) {
-			if (e.alive()) {
+			if (e.alive() && (e.getExp() != 0)) {
 				newArray.add(e);
-			} else {
+			} else if(!e.alive()){
 				((CombatGUI) combatPanel).appendStatus(e.getName()
 						+ " was slain!");
 				accumulatedExp += e.getExp();
@@ -3013,6 +3080,18 @@ public class GameEngine implements ActionListener, FocusListener,
 		}
 
 		return newArray;
+	}
+	
+	public Item getItemByName(String name){
+		Item returnVal = null;
+		
+		for(int i=0; i<itemListModel.size(); i++){
+			if(itemListModel.get(i).getItemName().equals(name)){
+				returnVal = itemListModel.get(i);
+			}
+		}
+		
+		return returnVal;
 	}
 
 	// inventory GUI methods

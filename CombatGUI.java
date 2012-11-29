@@ -71,7 +71,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	private JButton attackButton;
 	private JButton fleeButton;
 	private JButton abilityButton;
-	private JButton itemButton;
+	public JButton itemButton;
 	private JButton submitAttackButton;
 	private JButton cancelAttackButton;
 	private JButton submitAbilityButton;
@@ -147,7 +147,6 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 
 		itemButton = new JButton("Item");
 		itemButton.addActionListener(this);
-		itemButton.setEnabled(false); // DELETE ME
 		actionMenu.add(itemButton);
 
 		fleeButton = new JButton("Flee");
@@ -286,6 +285,9 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 
 		// reset the view to normal for player's turn
 		switchToPlayerTurn();
+		
+		//loadItems
+		loadItems();
 
 		// erase the status box
 		status.setText("");
@@ -310,6 +312,10 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	 * Populates the enemy's team on the CombatGUI
 	 */
 	public void populateEnemyTeam() {
+		
+		enemySide.removeAll();
+		enemies.removeAll(enemies);
+		
 		for (Entity c : GE.enemies) {
 			CombatObject temp = new CombatObject(GE, c, GE.Grass);
 			temp.manaBar.setVisible(false);
@@ -319,6 +325,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	}
 
 	public void update() {
+		
 		for (CombatObject obj : enemies){
 			obj.setHealthBar();
 			obj.setManaBar();
@@ -329,6 +336,16 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			obj.setManaBar();
 		}
 		
+	}
+	
+	public void loadItems(){
+		Item[] array = new Item[GE.itemListModel.size()];
+		GE.itemListModel.copyInto(array);
+		for(Item i : array){
+			if(i.isConsumable()){
+				this.items.addItem(i.getItemName());
+			}
+		}
 	}
 
 	public void cleanEnemies() {
@@ -482,7 +499,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			viewAttackMenu();
 		} else if (a.getSource() == fleeButton) {
 			action = 2; // remember what they chose
-			GE.playerTurn("Flee", 0);
+			GE.playerTurn("Flee", 0, null);
 			viewStatusPanel();
 		} else if (a.getSource() == abilityButton) {
 			action = 3; // remember what they chose
@@ -497,7 +514,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 				|| a.getSource() == submitItemButton) {
 			// execute the specified action
 			if (action == 1) // attack
-				GE.playerTurn("Attack", attackTargets.getSelectedIndex());
+				GE.playerTurn("Attack", attackTargets.getSelectedIndex(), null);
 			else if (action == 3){
 				
 				Ability ability = GE.turnStack.peek().getAbilityByName(abilities.getSelectedItem().toString());
@@ -505,12 +522,14 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 					appendStatus("You do not have enough mana for this ability!");
 				}else{
 					GE.playerTurn(abilities.getSelectedItem().toString(),
-						abilityTargets.getSelectedIndex());
+						abilityTargets.getSelectedIndex(), null);
 				}
 			}
-			else if (action == 4)
-				appendStatus("Action=" + action + " You used an item!");
-
+			else if (action == 4){
+				Item item = GE.getItemByName(items.getSelectedItem().toString());
+				GE.playerTurn("Item",
+					itemTargets.getSelectedIndex(), item);
+			}
 			// look at status panel
 			viewStatusPanel();
 		} else if (a.getSource() == cancelAttackButton
@@ -557,12 +576,14 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			
 			//combat will display one more status update
 			else if (GE.combatOver) {
+				enemySide.removeAll();
 				GE.endCombat(GE.characters, GE.accumulatedExp, GE.combatResult);
 				combatOver = true;
 				
 			} else {
 				viewActionMenu();
 				Entity next = GE.turnStack.peek();
+				populateEnemyTeam();
 				cleanEnemies();
 				GE.setupTurn(next, GE.combatants);
 			}
