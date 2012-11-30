@@ -36,6 +36,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
     private JSlider playerVisionRange; //3
     private JSlider monsterGridSpeed; //2
     private JSlider percentChanceOfEncounter; //0.05
+    private JSlider clockSpeed;
 	
 	public OptionsGUI(GameEngine tempEngine)
 	{
@@ -105,10 +106,20 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		// ------
 		
 		// Difficulty options
-		JPanel difficult = new JPanel(new GridLayout(3,2,5,15));
+		JPanel difficult = new JPanel(new GridLayout(4,2,5,15));
 		difficult.setBorder(new TitledBorder(BorderFactory.createLineBorder(GE.highlightColor),
 				"Game Difficulty", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
 		difficult.setOpaque(false);
+		clockSpeed = new JSlider(100,1000);
+	    clockSpeed.setSnapToTicks(true);
+	    clockSpeed.setMinorTickSpacing(50);
+	    clockSpeed.setMajorTickSpacing(100);
+	    clockSpeed.setPaintTicks(true);
+	    clockSpeed.setPaintLabels(true);
+	    clockSpeed.setOpaque(false);
+	    difficult.add(new JLabel("Clock Speed (milliseconds)", JLabel.RIGHT));
+	    difficult.add(clockSpeed);
+		
 		playerVisionRange = new JSlider(1,10);
 		playerVisionRange.setSnapToTicks(true);
 		playerVisionRange.setMinorTickSpacing(1);
@@ -185,6 +196,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		foregroundColor.setBackground(GE.foregroundColor);
 		highlightColor.setBackground(GE.highlightColor);
 		
+		clockSpeed.setValue(GE.clockSpeed);
 		playerVisionRange.setValue(GE.playerVisionRange);
 	    monsterGridSpeed.setValue(GE.monsterGridSpeed);
 	    percentChanceOfEncounter.setValue((int)(GE.percentChanceOfEncounter*100));
@@ -206,6 +218,8 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		GE.foregroundColor = foregroundColor.getBackground();
 		GE.highlightColor = highlightColor.getBackground();
 		
+		GE.clockSpeed = clockSpeed.getValue();
+		GE.klok.setRate(GE.clockSpeed);
 		GE.playerVisionRange = playerVisionRange.getValue();
 	    GE.monsterGridSpeed = monsterGridSpeed.getValue();
 	    GE.percentChanceOfEncounter = ((double) percentChanceOfEncounter.getValue())/100.0;
@@ -232,6 +246,8 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	    GE.playerVisionRange = 3;
 	    GE.warpingEnabled = true;
 	    GE.clearStatsPerLevel = false;
+	    GE.clockSpeed = 1000; // 1 second
+	    GE.klok.setRate(GE.clockSpeed);
 	    GE.monsterGridSpeed = 2; // monster moves after X seconds
 	    GE.percentChanceOfEncounter = 0.05; // % chance of battle 
 	    

@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
  */
 public class NonEntity extends RPGObject implements Comparable<NonEntity>{
 
+	private static final long serialVersionUID = 1L;
 	protected boolean pushable;
 	protected boolean trap;
 	protected boolean hole;

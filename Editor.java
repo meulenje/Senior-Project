@@ -7,16 +7,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener; 
 import java.awt.event.MouseEvent; 
 import java.awt.event.MouseListener; 
-import java.awt.event.MouseMotionListener; 
-import java.io.BufferedReader; 
-import java.io.BufferedWriter; 
-import java.io.DataInputStream; 
-import java.io.File; 
-import java.io.FileInputStream; 
-import java.io.FileNotFoundException; 
+import java.awt.event.MouseMotionListener;
+import java.io.BufferedWriter;  
+import java.io.File;  
 import java.io.FileWriter; 
 import java.io.IOException; 
-import java.io.InputStreamReader; 
 import java.util.ArrayList; 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -608,21 +603,7 @@ public class Editor implements ActionListener, MouseListener, MouseMotionListene
 		}else if (e.getSource() == newMap){ 
 
 		}else if (e.getSource() == load){  /* TODO File select */ 
-			try { 
-
-				FileInputStream fstream = new FileInputStream("save.txt"); 
-				DataInputStream in = new DataInputStream(fstream); 
-				BufferedReader br = new BufferedReader(new InputStreamReader(in)); 
-				String strLine = br.readLine(); 
-				String[] mapSize = strLine.split(" ");                            // Acquires number of rows and columns 
-
-
-
-			} catch (FileNotFoundException e1) { 
-				e1.printStackTrace(); 
-			} catch (IOException e1) { 
-				e1.printStackTrace(); 
-			} 
+			
 
 		}else if (e.getSource() == save){ 
 

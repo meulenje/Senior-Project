@@ -111,7 +111,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		else if(source == editorButton)
 		{
 			// start the map editor
-			Editor e = new Editor();
+			new Editor();
 		}
 		else if(source == quitButton)
 		{
@@ -143,7 +143,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		}
 		else if(keyCode == 52 || keyCode == 77 || keyCode == 69) // 4,m,e = Map Editor
 		{
-			Editor e = new Editor();
+			new Editor();
 		}
 		else if(keyCode == 53 || keyCode == 81 || keyCode == 27) // 5,q,ESC = Quit
 		{

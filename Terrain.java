@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
  */
 public class Terrain extends RPGObject implements Comparable<Terrain>{
 
+	private static final long serialVersionUID = 1L;
 	protected boolean exit;
 	protected boolean walkable;
 	protected boolean encounter;

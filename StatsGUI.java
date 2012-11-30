@@ -5,8 +5,9 @@ import java.awt.event.*;
 import java.util.*;
 
 public class StatsGUI extends JPanel implements ActionListener, KeyListener {
-
+	
 	private static final long serialVersionUID = 1L;
+
 	private GameEngine GE;
 	
 	protected JPanel TopBar;
@@ -20,44 +21,49 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 	protected JProgressBar expBar;
 	
 	protected JPanel mainFrame;
-	protected JTextArea charName;
+	protected JLabel charName;
 	protected JLabel picture;
 	
-	protected JPanel HealthPanel;
-	protected JTextArea HealthLabel;
-	protected JTextArea HealthAmount;
+	protected JPanel statsStuff;
+	protected JPanel attributeNames;
+	protected JPanel attributeNumbers;
+	protected JPanel buttons;
+	protected JPanel confirmReset;
+	
+	protected JLabel HealthLabel;
+	protected JLabel HealthAmount;
 	protected JProgressBar HealthBar;
 	protected JButton HealthUp;
 	protected JButton HealthDown;
 	
-	protected JPanel ManaPanel;
-	protected JTextArea ManaLabel;
-	protected JTextArea ManaAmount;
+	protected JLabel ManaLabel;
+	protected JLabel ManaAmount;
 	protected JProgressBar ManaBar;
 	protected JButton ManaUp;
 	protected JButton ManaDown;
 	
-	protected JTextArea AttackLabel;
-	protected JTextArea AttackAmount;
+	protected JLabel AttackLabel;
+	protected JLabel AttackAmount;
 	protected JButton AttackUp;
 	protected JButton AttackDown;
 	
-	protected JTextArea DefenseLabel;
-	protected JTextArea DefenseAmount;
+	protected JLabel DefenseLabel;
+	protected JLabel DefenseAmount;
 	protected JButton DefenseUp;
 	protected JButton DefenseDown;
 	
-	protected JTextArea SpeedLabel;
-	protected JTextArea SpeedAmount;
+	protected JLabel SpeedLabel;
+	protected JLabel SpeedAmount;
 	protected JButton SpeedUp;
 	protected JButton SpeedDown;
 	
 	protected JPanel AbilitiesPanel;
 	protected JLabel AbilitiesLabel;
+	protected JTextArea AbilitiesDescription;
 	protected JScrollPane AbilitiesBox;
 	protected ArrayList<JLabel> Abilities;
 	
-	protected JTextArea PointsLeft;
+	protected JLabel PointsLeft;
 	protected JButton Confirm;
 	protected JButton Reset;
 	
@@ -85,11 +91,11 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		for (int i = 0; i < GE.characters.size(); i++){
 			GE.characters.get(i).setLevelUpPoints(5);
 		}
-		modifiedHealth = TheCharacter.getMaxHealth();
-		modifiedAttack = TheCharacter.getAttack();
-		modifiedMana = TheCharacter.getMaxMana();
-		modifiedDefense = TheCharacter.getAttack();
-		modifiedSpeed = TheCharacter.getSpeed();
+		modifiedHealth = 0;
+		modifiedAttack = 0;
+		modifiedMana = 0;
+		modifiedDefense = 0;
+		modifiedSpeed = 0;
 		pointsLeft = TheCharacter.getLevelUpPoints();
 		
 		this.setLayout(new BorderLayout());
@@ -98,11 +104,12 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		ScrollBar.setFloatable(false);
 		TopBar = new JPanel();
 		TopBar.setLayout(new BorderLayout());
+		TopBar.setPreferredSize(new Dimension(600,100));
 		
 	    ScrollBar.setLayout(new GridLayout(0,4));
-		charName = new JTextArea(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
-		charName.setEditable(false);
-        picture = new JLabel();
+	    ScrollBar.setPreferredSize(new Dimension(600,50));
+		charName = new JLabel(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
+        picture = new JLabel("",JLabel.CENTER);
         picture.setIcon(TheCharacter.getImage());
         previousCharacterButton = new JButton("Previous");   
         previousCharacterButton.addActionListener(this);
@@ -122,19 +129,25 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		expBar.setValue(expPercent);
 		expBar.setStringPainted(true);
 		expBar.setString("" + TheCharacter.getExp() + "/" + GE.getExpNeeded(TheCharacter));
+		PointsLeft = new JLabel("Points Left: " + TheCharacter.getLevelUpPoints());
 		expPanel.add(expLabel, BorderLayout.WEST);
 		expPanel.add(expBar, BorderLayout.CENTER);
+		expPanel.add(PointsLeft, BorderLayout.EAST);
+		
 		
 		TopBar.add(ScrollBar, BorderLayout.NORTH);
 		TopBar.add(expPanel, BorderLayout.SOUTH);
 		
         this.add(TopBar, BorderLayout.NORTH);
         
-		mainFrame = new JPanel (new GridLayout(6,4));
+		mainFrame = new JPanel (new BorderLayout());
+		statsStuff = new JPanel (new BorderLayout());
+		attributeNames = new JPanel (new GridLayout(5,1,50,50));
+		attributeNumbers = new JPanel (new GridLayout(5,1,50,50));
+		buttons = new JPanel (new GridLayout(5,2,0,50));
+		confirmReset = new JPanel (new BorderLayout());
 		
-		HealthPanel = new JPanel(new GridLayout(3,1));
-		HealthLabel = new JTextArea("Health: ");
-		HealthLabel.setEditable(false);
+		HealthLabel = new JLabel("Health: ");
 		info1 = "" + TheCharacter.getCurrentHealth();
 		info2 = "" + TheCharacter.getMaxHealth();
 		HealthBar = new JProgressBar(0);
@@ -142,8 +155,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		HealthBar.setBackground(Color.white);
 		HealthBar.setStringPainted(true);
 		HealthBar.setString(info1 + "/" + info2);
-		HealthAmount = new JTextArea("" + GE.characters.get(position).getMaxHealth());
-		HealthAmount.setEditable(false);
+		HealthAmount = new JLabel("" + GE.characters.get(position).getMaxHealth());
 		HealthUp = new JButton("+");
 		HealthUp.addActionListener(this);
 		HealthUp.setEnabled(false);
@@ -151,15 +163,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		HealthDown.addActionListener(this);
 		HealthDown.setEnabled(false);
 		
-		HealthPanel.add(HealthLabel);
-		HealthPanel.add(HealthBar);
-		mainFrame.add(HealthPanel);
-		mainFrame.add(HealthAmount);
-		mainFrame.add(HealthUp);
-		mainFrame.add(HealthDown);
-		
-		ManaPanel = new JPanel(new GridLayout(3,1));
-		ManaLabel = new JTextArea("Mana: ");
+		ManaLabel = new JLabel("Mana: ");
 		info1 = "" + TheCharacter.getCurrentMana();
 		info2 = "" + TheCharacter.getMaxMana();
 		ManaBar = new JProgressBar(0);
@@ -167,9 +171,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		ManaBar.setBackground(Color.white);
 		ManaBar.setStringPainted(true);
 		ManaBar.setString(info1 + "/" + info2);
-		ManaLabel.setEditable(false);
-		ManaAmount = new JTextArea("" + GE.characters.get(position).getMaxMana());
-		ManaAmount.setEditable(false);
+		ManaAmount = new JLabel("" + GE.characters.get(position).getMaxMana());
 		ManaUp = new JButton("+");
 		ManaUp.addActionListener(this);
 		ManaUp.setEnabled(false);
@@ -177,73 +179,39 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		ManaDown.addActionListener(this);
 		ManaDown.setEnabled(false);
 		
-		ManaPanel.add(ManaLabel);
-		ManaPanel.add(ManaBar);
-		mainFrame.add(ManaPanel);
-		mainFrame.add(ManaAmount);
-		mainFrame.add(ManaUp);
-		mainFrame.add(ManaDown);
-		
-		AttackLabel = new JTextArea("Attack: ");
-		AttackLabel.setEditable(false);
-		AttackAmount = new JTextArea("" + GE.characters.get(position).getAttack());
-		AttackAmount.setEditable(false);
+		AttackLabel = new JLabel("Attack: ");
+		AttackAmount = new JLabel("" + GE.characters.get(position).getAttack(), JLabel.CENTER);
 		AttackUp = new JButton("+");
 		AttackUp.addActionListener(this);
 		AttackUp.setEnabled(false);
 		AttackDown = new JButton("-");
 		AttackDown.addActionListener(this);
 		AttackDown.setEnabled(false);
-		
-		mainFrame.add(AttackLabel);
-		mainFrame.add(AttackAmount);
-		mainFrame.add(AttackUp);
-		mainFrame.add(AttackDown);
-		
-		DefenseLabel = new JTextArea("Defense: ");
-		DefenseLabel.setEditable(false);
-		DefenseAmount = new JTextArea("" + GE.characters.get(position).getDefense());
-		DefenseAmount.setEditable(false);
+				
+		DefenseLabel = new JLabel("Defense: ");
+		DefenseAmount = new JLabel("" + GE.characters.get(position).getDefense(), JLabel.CENTER);
 		DefenseUp = new JButton("+");
 		DefenseUp.addActionListener(this);
 		DefenseUp.setEnabled(false);
 		DefenseDown = new JButton("-");
 		DefenseDown.addActionListener(this);
 		DefenseDown.setEnabled(false);
-		
-		mainFrame.add(DefenseLabel);
-		mainFrame.add(DefenseAmount);
-		mainFrame.add(DefenseUp);
-		mainFrame.add(DefenseDown);
-		
-		SpeedLabel = new JTextArea("Speed: ");
-		SpeedLabel.setEditable(false);
-		SpeedAmount = new JTextArea("" + GE.characters.get(position).getDefense());
-		SpeedAmount.setEditable(false);
+				
+		SpeedLabel = new JLabel("Speed: ");
+		SpeedAmount = new JLabel("" + GE.characters.get(position).getSpeed(), JLabel.CENTER);
 		SpeedUp = new JButton("+");
 		SpeedUp.addActionListener(this);
 		SpeedUp.setEnabled(false);
 		SpeedDown = new JButton("-");
 		SpeedDown.addActionListener(this);
 		SpeedDown.setEnabled(false);
-		
-		mainFrame.add(SpeedLabel);
-		mainFrame.add(SpeedAmount);
-		mainFrame.add(SpeedUp);
-		mainFrame.add(SpeedDown);
-		
-		PointsLeft = new JTextArea("Points Left: " + TheCharacter.getLevelUpPoints());
-		PointsLeft.setEditable(false);
+				
 		Confirm = new JButton("Confirm");
 		Confirm.addActionListener(this);
 		Confirm.setEnabled(false);
 		Reset = new JButton("Reset");
 		Reset.addActionListener(this);
 		Reset.setEnabled(true);
-		
-		mainFrame.add(PointsLeft);
-		mainFrame.add(Confirm);
-		mainFrame.add(Reset);
 		
 		AbilitiesPanel = new JPanel();
 		AbilitiesLabel = new JLabel("Abilities:");
@@ -257,8 +225,47 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		for (int b = 0; b < Abilities.size(); b++){
 			AbilitiesBox.add(Abilities.get(b));
 		}
-		AbilitiesPanel.add(AbilitiesBox, BorderLayout.CENTER);
-		AbilitiesPanel.add(AbilitiesLabel, BorderLayout.NORTH);
+		AbilitiesDescription = new JTextArea("This is the Description Box");
+		AbilitiesDescription.setEditable(false);
+		
+		AbilitiesPanel.setPreferredSize(new Dimension(200, 500));
+		
+		AbilitiesPanel.add(AbilitiesBox, BorderLayout.NORTH);
+		AbilitiesPanel.add(AbilitiesDescription, BorderLayout.SOUTH);
+		
+		confirmReset.setPreferredSize(new Dimension(400, 100));
+		
+		attributeNames.add(HealthLabel);
+		attributeNames.add(ManaLabel);
+		attributeNames.add(AttackLabel);
+		attributeNames.add(DefenseLabel);
+		attributeNames.add(SpeedLabel);
+		
+		attributeNumbers.add(HealthBar);
+		attributeNumbers.add(ManaBar);
+		attributeNumbers.add(AttackAmount);
+		attributeNumbers.add(DefenseAmount);
+		attributeNumbers.add(SpeedAmount);
+		
+		buttons.add(HealthUp);
+		buttons.add(HealthDown);
+		buttons.add(ManaUp);
+		buttons.add(ManaDown);
+		buttons.add(AttackUp);
+		buttons.add(AttackDown);
+		buttons.add(DefenseUp);
+		buttons.add(DefenseDown);
+		buttons.add(SpeedUp);
+		buttons.add(SpeedDown);
+		statsStuff.add(attributeNames, BorderLayout.WEST);
+		statsStuff.add(attributeNumbers, BorderLayout.CENTER);
+		statsStuff.add(buttons, BorderLayout.EAST);
+		
+		confirmReset.add(Confirm, BorderLayout.EAST);
+		confirmReset.add(Reset, BorderLayout.WEST);
+		
+		mainFrame.add(statsStuff, BorderLayout.CENTER);
+		mainFrame.add(confirmReset, BorderLayout.SOUTH);
 		
 		this.add(mainFrame, BorderLayout.CENTER);
 		this.add(AbilitiesPanel, BorderLayout.EAST);
@@ -287,39 +294,38 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 			DefenseUp.setEnabled(true);
 			SpeedUp.setEnabled(true);
 		}
-		if (modifiedHealth == TheCharacter.getMaxHealth()){
+		if (modifiedHealth == 0){
 			HealthDown.setEnabled(false);
 		}
 		else {
 			HealthDown.setEnabled(true);
 		}
-		if (modifiedMana == TheCharacter.getMaxMana()){
+		if (modifiedMana == 0){
 			ManaDown.setEnabled(false);
 		}
 		else {
 			ManaDown.setEnabled(true);
 		}
-		if (modifiedAttack == TheCharacter.getAttack()){
+		if (modifiedAttack == 0){
 			AttackDown.setEnabled(false);
 		}
 		else {
 			AttackDown.setEnabled(true);
 		}
-		if (modifiedDefense == TheCharacter.getDefense()){
+		if (modifiedDefense == 0){
 			DefenseDown.setEnabled(false);
 		}
 		else {
 			DefenseDown.setEnabled(true);
 		}
-		if (modifiedSpeed == TheCharacter.getSpeed()){
+		if (modifiedSpeed == 0){
 			SpeedDown.setEnabled(false);
 		}
 		else {
 			SpeedDown.setEnabled(true);
 		}
-		if (TheCharacter.getMaxHealth() == modifiedHealth && TheCharacter.getMaxMana() == modifiedMana && 
-				TheCharacter.getAttack() == modifiedAttack && TheCharacter.getDefense() == modifiedDefense 
-				&& TheCharacter.getSpeed() == modifiedSpeed	&& pointsLeft == 0){
+		if (modifiedHealth == 0 && modifiedMana == 0 && modifiedAttack == 0 && modifiedDefense == 0 
+				&& modifiedSpeed == 0 && pointsLeft == 0){
 				Confirm.setEnabled(false);
 				Reset.setEnabled(false);
 		}
@@ -328,20 +334,23 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 			Reset.setEnabled(true);
 		}
 		info1 = "" + TheCharacter.getCurrentHealth();
-		info2 = "" + TheCharacter.getMaxHealth();
+		int hold = TheCharacter.getMaxHealth() + modifiedHealth;
+		info2 = "" + hold;
 		HealthBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getCurrentMana();
-		info2 = "" + TheCharacter.getMaxMana();
+		hold = TheCharacter.getMaxMana() + modifiedMana;
+		info2 = "" + hold;
 		ManaBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getExp();
 		info2 = "" + GE.getExpNeeded(TheCharacter);
 		expBar.setString(info1 + "/" + info2);
 		charName.setText(TheCharacter.getName() + " Level: " + TheCharacter.getLevel());
-		HealthAmount.setText("" + modifiedHealth);
-		ManaAmount.setText("" + modifiedMana);
-		AttackAmount.setText("" + modifiedAttack);
-		DefenseAmount.setText("" + modifiedDefense);
-		SpeedAmount.setText("" + modifiedSpeed);
+		hold = TheCharacter.getAttack() + modifiedAttack;
+		AttackAmount.setText("" + hold);
+		hold = TheCharacter.getDefense() + modifiedDefense;
+		DefenseAmount.setText("" + hold);
+		hold = TheCharacter.getSpeed() + modifiedSpeed;
+		SpeedAmount.setText("" + hold);
 		PointsLeft.setText("Pointe Left: " + pointsLeft);
 		int healthPercent = (int) (((double)TheCharacter.getCurrentHealth() / (double)TheCharacter.getMaxHealth()) * 100);
 		HealthBar.setValue(healthPercent);
@@ -407,11 +416,11 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 	}
 	
 	public void reset(){
-		modifiedHealth = TheCharacter.getMaxHealth();
-		modifiedMana = TheCharacter.getMaxMana();
-		modifiedAttack = TheCharacter.getAttack();
-		modifiedDefense = TheCharacter.getDefense();
-		modifiedSpeed = TheCharacter.getSpeed();
+		modifiedHealth = 0;
+		modifiedMana = 0;
+		modifiedAttack = 0;
+		modifiedDefense = 0;
+		modifiedSpeed = 0;
 		pointsLeft = TheCharacter.getLevelUpPoints();
 		update();
 	}
@@ -419,16 +428,14 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 	public int confirm(){
 		int result = GE.printYesNoQuestion("Confirm stat allocation?");
 		if (result == 0){
-			TheCharacter.setCurrentHealth(modifiedHealth - TheCharacter.getMaxHealth()
-					+ TheCharacter.getCurrentHealth());
-			TheCharacter.setMaxHealth(modifiedHealth);
-			TheCharacter.setCurrentMana(modifiedMana - TheCharacter.getMaxMana()
-					+ TheCharacter.getCurrentMana());
-			TheCharacter.setMaxMana(modifiedMana);
-			TheCharacter.setAttack(modifiedAttack);
-			TheCharacter.setDefense(modifiedDefense);
-			TheCharacter.setSpeed(modifiedSpeed);
+			TheCharacter.setMaxHealth(TheCharacter.getBaseHealth() + modifiedHealth);
+			TheCharacter.setMaxMana(TheCharacter.getBaseMana() + modifiedMana);
+			TheCharacter.setAttack(TheCharacter.getBaseAttack() + modifiedAttack);
+			TheCharacter.setDefense(TheCharacter.getBaseDefense() + modifiedDefense);
+			TheCharacter.setSpeed(TheCharacter.getBaseSpeed() + modifiedSpeed);
 			TheCharacter.setLevelUpPoints(pointsLeft);
+			GE.restoreCharacter(TheCharacter.getName());
+			reset();
 			update();
 			return result;
 		}

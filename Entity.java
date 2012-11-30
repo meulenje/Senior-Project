@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
  */
 public class Entity extends RPGObject implements Comparable<Entity> {
 
+	private static final long serialVersionUID = 1L;
 	private int maxHealth;
 	private int currentHealth;
 	private int maxMana;
@@ -128,7 +129,31 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 					speed += item.getSpeed();
 		}		
 	}
-
+	
+	public int getBaseHealth()
+	{
+		return this.maxHealth;
+	}
+	
+	public int getBaseMana()
+	{
+		return this.maxMana;
+	}
+	
+	public int getBaseAttack()
+	{
+		return this.attack;
+	}
+	
+	public int getBaseDefense()
+	{
+		return this.defense;
+	}
+	
+	public int getBaseSpeed()
+	{
+		return this.speed;
+	}
 
 	/**
 	 * @param attack

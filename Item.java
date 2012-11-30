@@ -4,6 +4,7 @@ import javax.swing.ImageIcon;
 
 public class Item extends RPGObject implements Comparable<Item>{
 		
+	private static final long serialVersionUID = 1L;
 	private String name; //name of item
 	private String description; //description of item
 	private boolean consumable; // if it is used, does it get thrown out

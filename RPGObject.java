@@ -23,6 +23,9 @@ public abstract class RPGObject implements Serializable {
 	private static final long serialVersionUID = 1L;
 	protected int id;
 	protected ImageIcon image;
+	protected String triggertype;
+	protected boolean onTopTrigger;
+	protected int triggerState;
 	
 	public String toString()
 	{
