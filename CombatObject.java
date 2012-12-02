@@ -10,12 +10,8 @@ import javax.swing.*;
 public class CombatObject extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	
 	private GameEngine GE;
-
 	protected Entity entity;
-	private int objectWidth = 50;
-	private int objectHeight = 50;
 
 	// gui parts
 	protected JProgressBar healthBar;
@@ -48,7 +44,7 @@ public class CombatObject extends JPanel implements ActionListener {
 		healthBar.setForeground(Color.RED);
 		healthBar.setBackground(Color.WHITE);
 		healthBar.setBorderPainted(true);
-		healthBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
+		//healthBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
 		healthBar.setStringPainted(true);
 		setHealthBar();
 
@@ -57,12 +53,13 @@ public class CombatObject extends JPanel implements ActionListener {
 		manaBar.setForeground(Color.BLUE);
 		manaBar.setBackground(Color.WHITE);
 		manaBar.setBorderPainted(true);
-		manaBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
+		//manaBar.setMaximumSize(new Dimension(GE.C_WIDTH, 15));
 		manaBar.setStringPainted(true);
 		setManaBar();
 		
 		//panel to hold bars
 		barPanel = new JPanel();
+		//barPanel.setPreferredSize(new Dimension(GE.C_WIDTH, 30));
 		barPanel.setLayout(new GridLayout(2, 1));
 		barPanel.add(healthBar);
 		barPanel.add(manaBar);
@@ -81,37 +78,24 @@ public class CombatObject extends JPanel implements ActionListener {
 		layer.add(foreground, JLayeredPane.PALETTE_LAYER); // 100 (above 0)
 		layer.setLayout(new BorderLayout());
 		layer.setOpaque(false); // non-transparent
-		layer.setSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT));
+		layer.setSize(GE.C_WIDTH, GE.C_HEIGHT);
 
 		imagePanel = new JPanel();
-		imagePanel.setLayout(new GridLayout(1, 2));
+		imagePanel.setLayout(new GridLayout(0,4));
 		imagePanel.setOpaque(false); // transparent background
-		imagePanel
-				.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT + 15));
-		imagePanel.add(layer, BorderLayout.CENTER);
-		imagePanel.add(barPanel, BorderLayout.SOUTH);
+		imagePanel.setPreferredSize(new Dimension(GE.C_WIDTH, GE.C_HEIGHT + 15));
+		imagePanel.add(new JLabel(""));
+		imagePanel.add(layer);
+		imagePanel.add(barPanel);
+		imagePanel.add(new JLabel(""));
 
 		setForeground();
 		setBackground(bg);
 
-		// pack all together into wrapping JPanel
-		JPanel wrapper = new JPanel();
-		wrapper.setOpaque(false);
-		wrapper.setLayout(new BorderLayout());
-		wrapper.setPreferredSize(new Dimension(objectWidth, objectHeight));
-		wrapper.add(name, BorderLayout.NORTH);
-		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 1)),
-				BorderLayout.WEST);
-		wrapper.add(imagePanel, BorderLayout.CENTER);
-		wrapper.add(Box.createRigidArea(new Dimension(GE.C_WIDTH, 1)),
-				BorderLayout.EAST);
-		wrapper.add(
-				Box.createRigidArea(new Dimension(objectWidth, GE.C_HEIGHT)),
-				BorderLayout.SOUTH);
-
-		// set wrapper to main panel
-		this.add(wrapper, BorderLayout.CENTER);
-		this.add(Box.createGlue(), BorderLayout.SOUTH);
+		// pack to main panel
+		this.add(name, BorderLayout.NORTH);
+		this.add(imagePanel, BorderLayout.CENTER);
+		this.add(Box.createGlue(), BorderLayout.EAST);
 		setCurrentTurn(false);
 	}
 
@@ -123,10 +107,9 @@ public class CombatObject extends JPanel implements ActionListener {
 	public void setCurrentTurn(boolean flag) {
 		if (flag) {
 			currentTurn = true;
-			imagePanel
-					.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+			this.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 		} else {
-			imagePanel.setBorder(null);
+			this.setBorder(null);
 			currentTurn = false;
 		}
 	}
@@ -139,10 +122,10 @@ public class CombatObject extends JPanel implements ActionListener {
 	public void setCurrentTarget(boolean flag) {
 		if (flag) {
 			currentTarget = true;
-			imagePanel.setBorder(BorderFactory.createLineBorder(Color.CYAN, 4));
+			this.setBorder(BorderFactory.createLineBorder(Color.CYAN, 4));
 		} else {
 			currentTarget = false;
-			imagePanel.setBorder(null);
+			this.setBorder(null);
 		}
 	}
 
@@ -181,8 +164,7 @@ public class CombatObject extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
-
+		// Auto-generated method stub
 	}
 
 } // end of CombatObject

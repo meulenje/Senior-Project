@@ -2,8 +2,8 @@ package rpg;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Toolkit;
 import javax.swing.*;
-
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,8 +42,12 @@ public class GameEngine implements ActionListener, FocusListener,
 	// Game Engine specific variables
 	protected final int MAXIMUMSIZE = 100; // Max board size for rows and
 											// columns
-	protected final int X_DIM = 600; // default frame window size
-	protected final int Y_DIM = 600;
+	protected int Window_Width = 600; // window size
+	protected int Window_Height = 600;
+	protected int X_DIM = 600; // default frame window size
+	protected int Y_DIM = 600;
+	protected int Panel_X = 0; // default panel location
+	protected int Panel_Y = 0;
 	protected final int C_WIDTH = 25; // object image size
 	protected final int C_HEIGHT = 25; // object image size
 	protected GridObject[][] board; // the maximum board size
@@ -52,10 +56,12 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected Sequencer musicStream; // a sequencer to play background music
 	protected Sequencer soundStream; // a sequencer to play sound effects
 	protected int clockSpeed = 1000; // time between ticks in milliseconds
+	protected boolean gameStarted = false;
+	protected boolean viewingMap = false;
 
 	// GridGUI specific variables
-	protected int BCOLS = 25; // board default column size
-	protected int BROWS = 25; // board default row size
+	protected int BCOLS = 40; // board default column size
+	protected int BROWS = 30; // board default row size
 	protected final int G_X_DIM = BCOLS * (C_WIDTH); // grid panel dimensions
 	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
 	protected int prow = 0; // player's row position
@@ -98,7 +104,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	// special Frame features
 	protected boolean musicEnabled = true;
 	protected boolean soundEnabled = true;
-	protected boolean windowResizeable = true;
+	protected boolean fullScreenMode = true;
 	protected Color backgroundColor = Color.black;
 	protected Color foregroundColor = Color.white;
 	protected Color highlightColor = Color.blue;
@@ -112,12 +118,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected boolean warpingEnabled = true;
 	protected boolean clearStatsPerLevel = false;
 	protected int monsterGridSpeed = 2; // monster moves after X seconds
-	protected double percentChanceOfEncounter = 0.10; // when entering a
-														// Encounterable space,
-														// there is a small
-														// chance the player
-														// will run into a
-														// monster
+	protected double percentChanceOfEncounter = 0.05;
 
 	// special Grid variables
 	protected int hops = 0; // # of jumps taken
@@ -179,6 +180,8 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected ImageIcon Book = new ImageIcon("images/Book.png");
 	protected ImageIcon InventoryIcon = new ImageIcon("images/InventoryIcon.jpg");
 	protected ImageIcon ListIcon = new ImageIcon("images/ListIcon.jpg");
+	protected ImageIcon MailIcon = new ImageIcon("images/MailIcon.jpg");
+	protected ImageIcon DrawIcon = new ImageIcon("images/DrawIcon.jpg");
 	protected ImageIcon RPGLogo = new ImageIcon("images/RPGLogo.png");
 	protected ImageIcon GameOverImage = new ImageIcon("images/GameOver.png");
 	protected ImageIcon FightImage = new ImageIcon("images/fight.gif");
@@ -211,13 +214,13 @@ public class GameEngine implements ActionListener, FocusListener,
 	private JCheckBoxMenuItem enableMappingItem;
 	protected JLayeredPane layers;
 	protected JPanel loadingScreen;
-	protected JPanel animationScreen;
+	protected JPanel ingameMenu;
 	protected JPanel gameover;
 	protected JPanel mainmenu;
 	protected JPanel options;
-	protected JTabbedPane tabs;
 	protected JPanel mapPanel;
 	protected JPanel combatPanel;
+	protected JTabbedPane tabMenu;
 	protected JPanel inventoryPanel;
 	protected JPanel statsPanel;
 	protected JPanel questPanel;
@@ -245,14 +248,14 @@ public class GameEngine implements ActionListener, FocusListener,
 
 	// InventoryGUI variables	
 	protected DefaultListModel<Item> itemListModel = new DefaultListModel<Item>();
-	protected JList itemList = new JList(itemListModel); // list to h		
+	protected JList<Item> itemList = new JList<Item>(itemListModel); // list to h		
 	private int characterIndex = 0; // index to track selected character
 	private int itemIndex = 0; 
 
 	// Level up variables
-	protected int base = 10;
-	protected int factor = 2;
-	protected int pointsPerLevel = 5;
+	protected int base = 12;
+	protected int factor = 3;
+	protected int pointsPerLevel = 3;
 	protected boolean hasLeveledUp = false;
 
 	/**
@@ -264,7 +267,28 @@ public class GameEngine implements ActionListener, FocusListener,
 		// program window
 		window = new JFrame("GVSU RPG Senior Project");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+		
+		// show window in full screen mode, if enabled
+		window.setLocation(0,0);
+		window.setResizable(false);
+		if(fullScreenMode)
+		{
+			window.setExtendedState(JFrame.MAXIMIZED_BOTH);
+			Window_Width = Toolkit.getDefaultToolkit().getScreenSize().width;
+			Window_Height = Toolkit.getDefaultToolkit().getScreenSize().height -90;
+			Panel_X = (Window_Width/2) - (X_DIM/2);
+			Panel_Y = 10;
+		}
+		else
+		{
+			window.setSize(new Dimension(X_DIM, Y_DIM));
+			Window_Width = X_DIM;
+			Window_Height = Y_DIM;
+			Panel_X = 0;
+			Panel_Y = 0;
+		}
+		
+		
 		// First menu contains "Quit" and "Reset"
 		menubar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
@@ -330,92 +354,71 @@ public class GameEngine implements ActionListener, FocusListener,
 		menubar.add(fileMenu);
 		menubar.add(optionsMenu);
 		menubar.add(actionsMenu);
-		menubar.add(Box.createHorizontalStrut(350));
+		menubar.add(Box.createHorizontalStrut(100));
 		menubar.add(time);
 		// place the menu bar
 		window.setJMenuBar(menubar);
 
-		// create the TabbedPane (starts out empty)
-		tabs = new JTabbedPane();
-		tabs.addFocusListener(this);
-		tabs.setLocation(0, 0);
-		tabs.setSize(X_DIM, Y_DIM + 60);
-
 		// --------------------------------------------------------
 		// make the main menu gui
 		mainmenu = new MainMenuGUI(this);
-		mainmenu.setLocation(0, 0);
-		mainmenu.setSize(X_DIM, Y_DIM + 60);
+		mainmenu.setLocation(0,0);
+		mainmenu.setSize(Window_Width, Window_Height);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// make the options gui
 		options = new OptionsGUI(this);
-		options.setLocation(0, 0);
-		options.setSize(X_DIM, Y_DIM + 60);
+		options.setLocation(Panel_X, Panel_Y);
+		options.setSize(X_DIM, Y_DIM +60);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// make the game over gui
 		gameover = new GameOverGUI(this);
-		gameover.setLocation(0, 0);
-		gameover.setSize(X_DIM, Y_DIM + 60);
+		gameover.setLocation(Panel_X, Panel_Y);
+		gameover.setSize(X_DIM, Y_DIM +60);
 		// --------------------------------------------------------
-
-		// --------------------------------------------------------
-		// make the animation screen
-		animationScreen = new JPanel();
-		animationScreen.setLayout(new BorderLayout());
-		animationScreen.setOpaque(false);
-		JLabel fightText = new JLabel("", JLabel.CENTER);
-		fightText.setIcon(new ImageIcon("images/fight.gif"));
-		animationScreen.add(fightText, BorderLayout.CENTER);
-		animationScreen.setLocation(0, 0);
-		animationScreen.setPreferredSize(new Dimension(X_DIM, Y_DIM + 60));
-		animationScreen.setSize(X_DIM, Y_DIM + 60);
-		// --------------------------------------------------------
-
+		
 		// --------------------------------------------------------
 		// make a loading screen
 		loadingScreen = new JPanel();
 		loadingScreen.setLayout(new BorderLayout());
 		loadingScreen.setBackground(backgroundColor);
-		JLabel loadingText = new JLabel("Loading...", JLabel.CENTER);
+		JLabel loadingText = new JLabel("Loading", JLabel.CENTER);
 		loadingText.setIcon(new ImageIcon("images/loading.gif"));
+		loadingText.setHorizontalTextPosition(JLabel.CENTER);
+		loadingText.setVerticalTextPosition(JLabel.BOTTOM);
 		loadingScreen.add(loadingText, BorderLayout.CENTER);
-		loadingScreen.setLocation(0, 0);
+		loadingScreen.setLocation(Panel_X, Panel_Y);
 		loadingScreen.setPreferredSize(new Dimension(X_DIM, Y_DIM + 60));
-		loadingScreen.setSize(X_DIM, Y_DIM + 60);
+		loadingScreen.setSize(X_DIM, Y_DIM +60);
 		// --------------------------------------------------------
 
 		// create layers panel
-		// 0 -- is for the GamePanels (Grid, Combat, etc)
+		// 0 -- is the map
+		// 10 -- is the combat
+		// 25 -- is the tabMenu
+		// 50 -- is the in-game menu
 		// 100 -- is for the MainMenu
 		// 125 -- is for the Options Menu
 		// 140 -- is for the GameOver Screen
-		// 150 -- is for the Animation Screen
 		// 200 -- is for the Loading Screen
 		layers = new JLayeredPane();
 		layers.setLayout(new BorderLayout());
-		layers.add(tabs);
 		layers.add(mainmenu);
 		layers.add(options);
 		layers.add(gameover);
-		layers.add(animationScreen);
 		layers.add(loadingScreen);
-		layers.setLayer(tabs, 0);
 		layers.setLayer(mainmenu, 100);
 		layers.setLayer(options, 125);
 		layers.setLayer(gameover, 140);
-		layers.setLayer(animationScreen, 150);
 		layers.setLayer(loadingScreen, 200);
 
 		// add the layers to the window
 		window.add(layers, BorderLayout.CENTER);
 
-		// show window in default size dimensions
-		window.setSize(new Dimension(X_DIM, Y_DIM));
-		window.setResizable(windowResizeable);
+		// pack
 		window.pack();
 		window.setVisible(true);
 
@@ -442,48 +445,85 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void createGameLayers()
 	{
-		// TABS
-
 		// --------------------------------------------------------
 		// create the GridGui mapPanel tab
 		mapPanel = new GridGUI(this);
+		mapPanel.setLocation(0,0);
+        mapPanel.setPreferredSize(new Dimension(Window_Width, Window_Height));
+		mapPanel.setSize(Window_Width, Window_Height);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// create the CombatGUI combatPanel tab
 		combatPanel = new CombatGUI(this);
+		combatPanel.setLocation(Panel_X,Panel_Y);
+		combatPanel.setSize(X_DIM, Y_DIM);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// create the InventoryGUI inventoryPanel tab
 		inventoryPanel = new InventoryGUI(this);
+		inventoryPanel.setLocation(Panel_X,Panel_Y);
+		inventoryPanel.setSize(X_DIM, Y_DIM);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// create the StatsGUI statsPanel tab
 		statsPanel = new StatsGUI(this);
+		statsPanel.setLocation(Panel_X,Panel_Y);
+		statsPanel.setSize(X_DIM, Y_DIM);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
 		// create the QuestGUI questPanel tab
 		questPanel = new QuestGUI(this);
+		questPanel.setLocation(Panel_X,Panel_Y);
+		questPanel.setSize(X_DIM, Y_DIM);
 		// --------------------------------------------------------
 		
-		tabs.addTab("Map", mapPanel);
-		tabs.addTab("Inventory", inventoryPanel);
-		tabs.addTab("Stats", statsPanel);
-		tabs.addTab("Combat", combatPanel);
-		tabs.addTab("Quests", questPanel);
+		// --------------------------------------------------------
+		// make the in-game menu screen
+		ingameMenu = new SubMenuGUI(this);
+		ingameMenu.setLocation((Window_Width/2)-100, (Window_Height/2)-200);
+		ingameMenu.setSize(200, 400);
+		// --------------------------------------------------------
+		
+		// --------------------------------------------------------
+		// make the tabs menu screen
+		tabMenu = new JTabbedPane();
+		tabMenu.setLocation(Panel_X, Panel_Y);
+		tabMenu.setSize(X_DIM, Y_DIM);
+		tabMenu.addTab("Items",inventoryPanel);
+		tabMenu.addTab("Stats",statsPanel);
+		tabMenu.addTab("Quests",questPanel);
+		// --------------------------------------------------------
+				
+		layers.add(mapPanel);
+		layers.add(tabMenu);
+		layers.add(ingameMenu);
+		layers.add(combatPanel);
+		layers.setLayer(mapPanel, 0);
+		layers.setLayer(combatPanel, 10);
+		layers.setLayer(tabMenu, 25);
+		layers.setLayer(ingameMenu, 50);
 	}
 	
 	public void deleteGameLayers() {
 		// delete all components to the in-game (tabs)
+		layers.remove(mapPanel);
+		layers.remove(combatPanel);
+		tabMenu.removeTabAt(0);
+		tabMenu.removeTabAt(1);
+		tabMenu.removeTabAt(2);
+		layers.remove(tabMenu);
+		layers.remove(ingameMenu);
+		tabMenu = null;
+		ingameMenu = null;
 		mapPanel = null;
 		combatPanel = null;
 		inventoryPanel = null;
 		statsPanel = null;
 		questPanel = null;
-		tabs.removeAll();		
 	}
 	
 	/**
@@ -551,9 +591,11 @@ public class GameEngine implements ActionListener, FocusListener,
 		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null,
 				15, 15, 50, 50, 10, 10, 15, 5, 1);
 		Ability cure = new Ability("Healing Mushroom", 1, 0, 20, 8);
-		Ability fireball = new Ability("Super Fireball", 0, 1, 5, 10);
+		Ability fireball = new Ability("Fireball", 0, 1, 5, 10);
+		Ability jump = new Ability("Jump", 0, 0, 5, 10);
 		luigi.abilities.add(fireball);
 		mario.abilities.add(fireball);
+		mario.abilities.add(jump);
 		toad.abilities.add(cure);
 		characters.add(mario);
 		characters.add(luigi);
@@ -589,7 +631,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	}
 	
 	public void deleteItemBackpack() {
-		itemListModel.clear();
+		//itemListModel.clear();
 	}
 	
 	public void getGameObjects()
@@ -609,6 +651,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	public void newGame() {
 		// temporarily view the loading screen
 		viewLoadingScreen();
+		gameStarted = true;
 		
 		// choose player
 		// TODO
@@ -659,6 +702,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	public void endGame() {
 		// reset clock
 		klok.pause();
+		gameStarted = false;
 		
 		// temporarily view the loading screen
 		viewLoadingScreen();
@@ -715,7 +759,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		setGridFade(false);
 
 		// resume clock ticking if they were viewing the Map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 	}
 	
@@ -804,7 +848,7 @@ public class GameEngine implements ActionListener, FocusListener,
         setGridFade(false);
 
         // resume clock ticking if they were viewing the Map
-        if (tabs.getSelectedIndex() == 0)
+        if (viewingMap)
         	klok.run(Clock.FOREVER);
 	}
 
@@ -870,6 +914,7 @@ public class GameEngine implements ActionListener, FocusListener,
         if(loaded)
         {
         	// load all parameters and objects
+        	gameStarted = true;
         	board = GO.getBoard();
         	quests = GO.getQuests();
         	characters = GO.getCharacters();
@@ -971,7 +1016,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void printError(String e) {
 		// pause time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.pause();
 
 		// found an error and is printing it according to the view
@@ -979,7 +1024,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				JOptionPane.ERROR_MESSAGE);
 
 		// resume time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 	}
 
@@ -990,7 +1035,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void printInfo(String s) {
 		// pause time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.pause();
 
 		// found some information to print
@@ -998,7 +1043,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				JOptionPane.INFORMATION_MESSAGE);
 
 		// resume time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 	}
 
@@ -1010,14 +1055,14 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public String printQuestion(String t) {
 		// pause time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.pause();
 
 		String r = JOptionPane.showInputDialog(window, t, "Question",
 				JOptionPane.QUESTION_MESSAGE);
 
 		// resume time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 
 		return r;
@@ -1032,14 +1077,14 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public int printYesNoQuestion(String b) {
 		// pause time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.pause();
 
 		int r = JOptionPane.showConfirmDialog(window, b, "Question",
 				JOptionPane.YES_NO_OPTION);
 
 		// resume time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 
 		return r;
@@ -1056,7 +1101,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public int printCustomQuestion(String question, Object[] choices) {
 		// pause time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.pause();
 
 		int r = JOptionPane.showOptionDialog(window, question, "Question",
@@ -1064,7 +1109,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				null, choices, choices[1]);
 
 		// resume time if on the map
-		if (tabs.getSelectedIndex() == 0)
+		if (viewingMap)
 			klok.run(Clock.FOREVER);
 
 		return r;
@@ -1075,13 +1120,19 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void viewQuestPanel() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(true);
-		tabs.setSelectedIndex(4);
-		questPanel.requestFocus();
+		
+		if(gameStarted)
+		{
+			tabMenu.setSelectedIndex(2);
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(true);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
 		klok.pause();
 	}
 
@@ -1090,13 +1141,20 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void viewCombatPanel() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(true);
-		tabs.setSelectedIndex(3);
+		
+		if(gameStarted)
+		{
+			mapPanel.setVisible(false);
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(true);
+		}
+		
 		combatPanel.requestFocus();
+		viewingMap = false;
 		klok.pause();
 	}
 
@@ -1105,13 +1163,19 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void viewInventoryPanel() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(true);
-		tabs.setSelectedIndex(1);
-		inventoryPanel.requestFocus();
+		
+		if(gameStarted)
+		{
+			tabMenu.setSelectedIndex(0);
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(true);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
 		klok.pause();
 
 		// update the view
@@ -1120,17 +1184,26 @@ public class GameEngine implements ActionListener, FocusListener,
 
 	public void viewStatsPanel() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(true);
-		tabs.setSelectedIndex(2);
-		statsPanel.requestFocus();
+		
+		if(gameStarted)
+		{
+			tabMenu.setSelectedIndex(1);
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(true);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
 		klok.pause();
 
 		// update the view
+		((StatsGUI) statsPanel).reset();
 		((StatsGUI) statsPanel).update();
+		((StatsGUI) statsPanel).cycle(1);
+		((StatsGUI) statsPanel).cycle(-1);
 	}
 
 	/**
@@ -1138,13 +1211,20 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void viewMapPanel() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(true);
-		tabs.setSelectedIndex(0);
+		
+		if(gameStarted)
+		{
+			mapPanel.setVisible(true);
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
 		mapPanel.requestFocus();
+		viewingMap = true;
 		klok.run(Clock.FOREVER);
 
 		// play overworld music
@@ -1156,37 +1236,75 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void viewMainMenu() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(true);
 		options.setVisible(false);
-		tabs.setVisible(false);
+		
+		if(gameStarted)
+		{
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
+		klok.pause();
 		mainmenu.requestFocus();
 
 		// play menu music
 		playMusic(menuTheme, true);
 	}
+	
+	public void viewSubMenu() {
+		loadingScreen.setVisible(false);
+		gameover.setVisible(false);
+		mainmenu.setVisible(false);
+		options.setVisible(false);
+		
+		if(gameStarted)
+		{
+			ingameMenu.setVisible(true);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
+		klok.pause();
+	}
 
 	public void viewOptions() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(true);
-		tabs.setVisible(false);
+		
+		if(gameStarted)
+		{
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
+		klok.pause();
 		options.requestFocus();
 	}
 
 	public void viewGameOverScreen() {
 		loadingScreen.setVisible(false);
-		animationScreen.setVisible(false);
 		gameover.setVisible(true);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(false);
-		options.requestFocus();
-
-		// pause clock
+		
+		if(gameStarted)
+		{
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
+		gameover.requestFocus();
+		viewingMap = false;
 		klok.pause();
 	}
 
@@ -1194,29 +1312,20 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * Forces player to view the Loading Screen
 	 */
 	public void viewLoadingScreen() {
-		// pause clock
-		klok.pause();
-		
 		loadingScreen.setVisible(true);
-		animationScreen.setVisible(false);
 		gameover.setVisible(false);
 		mainmenu.setVisible(false);
 		options.setVisible(false);
-		tabs.setVisible(false);
-	}
-
-	/**
-	 * Forces the player to see the Animation
-	 * 
-	 * This function will turn the Animation Screen back to being invisible once
-	 * the animation is done playing.
-	 * 
-	 * Do not set animationScreen to invisible, elsewhere.
-	 * 
-	 * @param view
-	 */
-	public void viewAnimationScreen(boolean flag) {
-		animationScreen.setVisible(flag);
+		
+		if(gameStarted)
+		{
+			ingameMenu.setVisible(false);
+			tabMenu.setVisible(false);
+			combatPanel.setVisible(false);
+		}
+		
+		viewingMap = false;
+		klok.pause();
 	}
 
 	/**
@@ -1273,8 +1382,6 @@ public class GameEngine implements ActionListener, FocusListener,
 			int result = printCustomQuestion("New Quest available!", options);
 			if (result == 0)
 				viewQuestPanel();
-			else
-				viewMapPanel();
 		} else
 			viewMapPanel();
 	}
@@ -1461,22 +1568,22 @@ public class GameEngine implements ActionListener, FocusListener,
 				printError(""+e.getMessage());
 			}
 			
-			
-			
 			// populate enemies
 			if(north)
-				initializeEnemies((Entity)board[prow-1][pcol].object);
+				enemies = initializeEnemies((Entity)board[prow-1][pcol].object);
 			else if(south)
-				initializeEnemies((Entity)board[prow+1][pcol].object);
+				enemies = initializeEnemies((Entity)board[prow+1][pcol].object);
 			else if(west)
-				initializeEnemies((Entity)board[prow][pcol-1].object);
+				enemies = initializeEnemies((Entity)board[prow][pcol-1].object);
 			else if(east)
-				initializeEnemies((Entity)board[prow][pcol+1].object);
+				enemies = initializeEnemies((Entity)board[prow][pcol+1].object);
 			else
-				initializeEnemies(null);			
+				enemies = initializeEnemies(null);
+			
+			// reset gui
+			((CombatGUI) combatPanel).resetCombatGUI();
 			
 			// start fight
-			((CombatGUI) combatPanel).resetCombatGUI();
 			initializeCombat();
 
 			// go to combatPanel tab
@@ -2162,6 +2269,9 @@ public class GameEngine implements ActionListener, FocusListener,
 							true, false), new Entity(LavaMonsterID,
 							LavaMonster, "LavaMonster", "Random", false,
 							null, 10, 10, 10, 10, 5, 5, 5, 5, 1), null);
+					((Entity) board[i][j].object).setExp(5);
+					((Entity) board[i][j].object).abilities.add(new Ability("Cure", 1, 0, 5, 10));
+					((Entity) board[i][j].object).abilities.add(new Ability("Smack", 0, 0, 5, 10));
 					numOfMonsters++;
 				}
 				// randomly make "beartraps"
@@ -2330,7 +2440,8 @@ public class GameEngine implements ActionListener, FocusListener,
 
 	@Override
 	public void focusGained(FocusEvent e) {
-		if (e.getSource() == tabs) {
+		/*
+		 if (e.getSource() == tabs) {
 			int tab = tabs.getSelectedIndex();
 			if (tab == 0) {
 				mapPanel.requestFocus();
@@ -2355,6 +2466,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			}
 		} else
 			klok.pause();
+		*/
 	}
 
 	@Override
@@ -2366,12 +2478,6 @@ public class GameEngine implements ActionListener, FocusListener,
 	public boolean event(int tick) {
 		// update the clock time on the JMenu
 		time.setText("Time: " + klok.currentTime);
-
-		// update grid gui health bar and name
-		((GridGUI) mapPanel).updatePlayerName(characters.get(0).getName());
-		int hp = (int) (((double) characters.get(0).getCurrentHealth() / (double) characters
-				.get(0).getMaxHealth()) * 100);
-		((GridGUI) mapPanel).updateHealthBar(hp);
 
 		// move enemies on the map if possible
 		moveEnemies();
@@ -2885,6 +2991,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	private void executeFlee(Entity a){
 		a.setExp(0);
 		String s = (a.getName() + " has fled from battle!");
+		enemies.remove(a);
 		((CombatGUI) combatPanel).appendStatus(s);
 	}
 	
@@ -3037,7 +3144,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		if(enemy != null)
 		{
 			for (int i = 1; i <= numberOfEnemies; i++) {
-				m = new Entity(-555, null, "enemy","", false, null,0,0,0,0,0,0,0,0,0);
+				m = new Entity(-555, null, "enemy","", false, null,1,1,1,1,1,1,1,1,1);
 				m.setAttack(enemy.getAttack());
 				m.setDefense(enemy.getDefense());
 				m.setSpeed(enemy.getSpeed());
@@ -3059,10 +3166,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		else
 		{
 			// randomly make a monster team with random behaviors TODO
-			for (int i = 1; i <= numberOfEnemies; i++) {
-				m = new Entity(0, PlayerOutline, "Ghost","Tricky", false, null,1,1,1,1,1,1,1,1,1);
-				monsterArray.add(m);
-			}
+			// TODO
+			printInfo("A monster would have appeared\nbut its not programmed yet.");
 		}
 		
 		return monsterArray;
@@ -3156,8 +3261,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	// inventory GUI methods
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
-			((InventoryGUI) (inventoryPanel))
-					.update();
+			((InventoryGUI) (inventoryPanel)).update();
 		}
 
 		// return the string of the character that is selected

@@ -244,7 +244,9 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 		southPanel.setLayout(new BorderLayout());
 		southPanel.setBorder(new LineBorder(Color.BLACK));
 		southPanel.add(Box.createHorizontalGlue());
-		southPanel.add(actionPanel);
+		southPanel.add(Box.createHorizontalGlue(), BorderLayout.WEST);
+		southPanel.add(actionPanel, BorderLayout.CENTER);
+		southPanel.add(Box.createHorizontalGlue(), BorderLayout.EAST);
 
 		// container for CombatObjects
 		characters = new ArrayList<CombatObject>();
@@ -311,11 +313,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	/**
 	 * Populates the enemy's team on the CombatGUI
 	 */
-	public void populateEnemyTeam() {
-		
-		enemySide.removeAll();
-		enemies.removeAll(enemies);
-		
+	public void populateEnemyTeam() {		
 		for (Entity c : GE.enemies) {
 			CombatObject temp = new CombatObject(GE, c, GE.Grass);
 			temp.manaBar.setVisible(false);
@@ -583,7 +581,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 			} else {
 				viewActionMenu();
 				Entity next = GE.turnStack.peek();
-				populateEnemyTeam();
+				//populateEnemyTeam();
 				cleanEnemies();
 				GE.setupTurn(next, GE.combatants);
 			}
@@ -594,41 +592,146 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 	@Override
 	public void keyPressed(KeyEvent k) {
 		int key = k.getKeyCode();
-
-		// if they hit "I" go to Inventory etc
-
-		if (key == 16) // left shift
-			GE.leftShift = true;
-
-		if (key == 32) // space bar
-			GE.spaceBar = true;
-
-		if (key == 73) // 'i'
+		
+		if(key == 65) // a
 		{
-			// shortcut to "Inventory Tab"
-			GE.viewInventoryPanel();
+			// enter attack panel
+			if(actionMenu.isVisible())
+			{
+				attackButton.doClick();
+			}
+		}
+		else if (key == 83) // s
+		{
+			// enter abilities panel
+			if(actionMenu.isVisible())
+			{
+				abilityButton.doClick();
+			}
+		}
+		else if(key == 68) // d
+		{
+			// enter items panel
+			if(actionMenu.isVisible())
+			{
+				itemButton.doClick();
+			}
+		}
+		else if(key == 87) // w
+		{
+			// enter flee attempt
+			if(actionMenu.isVisible())
+			{
+				fleeButton.doClick();
+			}
+		}				
+		else if (key == 40) // arrow down
+		{
+			if(actionAttack.isVisible())
+			{
+				if(attackTargets.getSelectedIndex() != attackTargets.getItemCount()-1)
+					attackTargets.setSelectedIndex(attackTargets.getSelectedIndex()+1);
+				else
+					attackTargets.setSelectedIndex(0);
+			}
+			else if(actionAbility.isVisible())
+			{
+				if(abilityTargets.getSelectedIndex() != abilityTargets.getItemCount()-1)
+					abilityTargets.setSelectedIndex(abilityTargets.getSelectedIndex()+1);
+				else
+					abilityTargets.setSelectedIndex(0);
+			}
+			else if(actionItem.isVisible())
+			{
+				if(itemTargets.getSelectedIndex() != itemTargets.getItemCount()-1)
+					itemTargets.setSelectedIndex(itemTargets.getSelectedIndex()+1);
+				else
+					itemTargets.setSelectedIndex(0);
+			}
 		} 
-		else if (key == 77) // 'm'
+		else if (key == 38) // arrow up
 		{
-			// shortcut to "Map Tab"
-			GE.viewMapPanel();
+			if(actionAttack.isVisible())
+			{
+				if(attackTargets.getSelectedIndex() != 0)
+					attackTargets.setSelectedIndex(attackTargets.getSelectedIndex()-1);
+				else
+					attackTargets.setSelectedIndex(attackTargets.getItemCount()-1);
+			}
+			else if(actionAbility.isVisible())
+			{
+				if(abilityTargets.getSelectedIndex() != 0)
+					abilityTargets.setSelectedIndex(abilityTargets.getSelectedIndex()-1);
+				else
+					abilityTargets.setSelectedIndex(abilityTargets.getItemCount()-1);
+			}
+			else if(actionItem.isVisible())
+			{
+				if(itemTargets.getSelectedIndex() != 0)
+					itemTargets.setSelectedIndex(itemTargets.getSelectedIndex()-1);
+				else
+					itemTargets.setSelectedIndex(itemTargets.getItemCount()-1);
+			}
 		} 
-		else if (key == 81) // 'q'
+		else if (key == 37) // arrow left
 		{
-			// shortcut to "Quest Tab"
-			GE.viewQuestPanel();
-		} else if (key == 40 || key == 83) // arrow down or 's'
+			if(actionAbility.isVisible())
+			{
+				if(abilities.getSelectedIndex() != abilities.getItemCount()-1)
+					abilities.setSelectedIndex(abilities.getSelectedIndex()+1);
+				else
+					abilities.setSelectedIndex(0);
+			}
+			else if(actionItem.isVisible())
+			{
+				if(items.getSelectedIndex() != items.getItemCount()-1)
+					items.setSelectedIndex(items.getSelectedIndex()+1);
+				else
+					items.setSelectedIndex(0);
+			}
+		}
+		else if (key == 39) // arrow right
 		{
-			GE.down = true;
-		} else if (key == 38 || key == 87) // arrow up or 'w'
+			if(actionAbility.isVisible())
+			{
+				if(abilities.getSelectedIndex() != 0)
+					abilities.setSelectedIndex(abilities.getSelectedIndex()-1);
+				else
+					abilities.setSelectedIndex(abilities.getItemCount()-1);
+			}
+			else if(actionItem.isVisible())
+			{
+				if(items.getSelectedIndex() != 0)
+					items.setSelectedIndex(items.getSelectedIndex()-1);
+				else
+					items.setSelectedIndex(items.getItemCount()-1);
+			}
+		}
+		else if(key == 8) // backspace
 		{
-			GE.up = true;
-		} else if (key == 37 || key == 65) // arrow left or 'a'
+			if(!actionMenu.isVisible() && !actionText.isVisible())
+			{
+				viewActionMenu();
+			}
+		}
+		else if(key == 10) // enter
 		{
-			GE.left = true;
-		} else if (key == 39 || key == 68) // arrow right or 'd'
-		{
-			GE.right = true;
+			if(actionAttack.isVisible())
+			{
+				submitAttackButton.doClick();
+			}
+			else if(actionAbility.isVisible())
+			{
+				submitAbilityButton.doClick();
+			}
+			else if(actionItem.isVisible())
+			{
+				submitItemButton.doClick();
+			}
+			else if(actionText.isVisible())
+			{
+				okButton.doClick();
+			}
 		}
 		else if(key == 27) // ESC to pause game
 			GE.pauseGame();

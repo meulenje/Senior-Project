@@ -8,12 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 
 /**
@@ -26,7 +28,7 @@ import javax.swing.JScrollPane;
  * 
  */
 
-public class GridGUI extends JPanel implements KeyListener, ActionListener {
+public class GridGUI extends JPanel implements KeyListener, ActionListener, MouseListener {
 
 	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to Engine
@@ -35,16 +37,15 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 	private JPanel gridPanel;
     private JPanel buttonPanel;
     private JScrollPane scrollPanel;
-    private JLabel pointsLabel;
-    private JLabel playerName;
-    private JProgressBar playerHealthBar;
     private JButton resetButton;
     private JButton upButton;
     private JButton downButton;
     private JButton leftButton;
     private JButton rightButton;
+    private JButton mapButton;
     private JButton inventoryButton;
     private JButton questsButton;
+    private JButton statsButton;
 	
 	public GridGUI(GameEngine tempEngine)
 	{
@@ -54,30 +55,28 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		// Build the Grid to hold the Objects
         gridPanel = new JPanel();
         gridPanel.setLayout(new GridLayout(GE.BROWS, GE.BCOLS, 0, 0));
-        gridPanel.setPreferredSize(new Dimension( GE.G_X_DIM , GE.G_Y_DIM ));
+        gridPanel.setPreferredSize(new Dimension( GE.G_X_DIM, GE.G_Y_DIM));
         gridPanel.setBackground(Color.BLACK);
         
         // Build the Glue Panel that fills in empty space
         JPanel extraPanel = new JPanel();
         extraPanel.setBorder(BorderFactory.createEmptyBorder());
         extraPanel.setBackground(Color.BLACK);
-        extraPanel.add(Box.createHorizontalGlue());
+        extraPanel.add(Box.createVerticalGlue());
         extraPanel.add(gridPanel);
         extraPanel.add(Box.createHorizontalGlue());
         
         // Build the ScrollPanel to allow scrolling
-        scrollPanel = new JScrollPane();
+        scrollPanel = new JScrollPane(extraPanel);
         scrollPanel.setViewportView(extraPanel);
         scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
        	scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM - 30));
-        
+        scrollPanel.setPreferredSize(new Dimension( GE.Window_Width, GE.Window_Height));
+        scrollPanel.addMouseListener(this); // listen for mouse clicks
         
         // Build the button panel
-        buttonPanel = new JPanel(new GridLayout());
-        buttonPanel.setPreferredSize(new Dimension( GE.X_DIM - 10, 50 ));
-        JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
-        JPanel statsPanel = new JPanel(new GridLayout(3,3,0,0));
+        buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.setPreferredSize(new Dimension( GE.Window_Width - 10, 50 ));       
 
         //JButtons and listeners
         resetButton = new JButton("Teleport");
@@ -90,49 +89,31 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         upButton.addActionListener(this);
         rightButton = new JButton(">");
         rightButton.addActionListener(this);
+               
+        // Build menu bar area
+        JPanel menuPanel = new JPanel(new GridLayout(0,4,0,0));
+        menuPanel.setPreferredSize(new Dimension(400,50));
         
-        // name and HP bar for player
-        playerName = new JLabel("", JLabel.RIGHT);
-        
-        playerHealthBar = new JProgressBar(0);
-        playerHealthBar.setForeground(Color.RED);
-        playerHealthBar.setBackground(Color.WHITE);
-        playerHealthBar.setBorderPainted(true);
-        
-        pointsLabel = new JLabel("", JLabel.RIGHT);
-        pointsLabel.setForeground(Color.BLUE);
-        
-        // Build stats bar area
-        statsPanel.add(playerName);
-        JLabel hp = new JLabel("HP:", JLabel.RIGHT);
-        hp.setForeground(Color.RED);
-        statsPanel.add(hp);
-        statsPanel.add(playerHealthBar);
-        statsPanel.add(pointsLabel);
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel(""));
-        statsPanel.add(new JLabel(""));
-        
-        // Build bag and journal shortcut buttons (inventory and quests)
-        JPanel bagPanel = new JPanel();
-        bagPanel.setLayout(new GridLayout(2,3));
-        
-        bagPanel.add(new JLabel(""));
-        inventoryButton = new JButton();
+        mapButton = new JButton("Map");
+        mapButton.addActionListener(this);
+        // mapButton.setIcon(GE.MapIcon);
+        menuPanel.add(mapButton);
+        inventoryButton = new JButton("Items");
         inventoryButton.addActionListener(this);
         inventoryButton.setIcon(GE.InventoryIcon);
-        bagPanel.add(inventoryButton);
-        bagPanel.add(new JLabel(""));
-        bagPanel.add(new JLabel(""));
-        questsButton = new JButton();
+        menuPanel.add(inventoryButton);
+        statsButton = new JButton("Stats");
+        statsButton.addActionListener(this);
+        statsButton.setIcon(GE.ListIcon);
+        menuPanel.add(statsButton);
+        questsButton = new JButton("Quests");
         questsButton.addActionListener(this);
-        questsButton.setIcon(GE.ListIcon);
-        bagPanel.add(questsButton);
-        bagPanel.add(new JLabel(""));
+        questsButton.setIcon(GE.MailIcon);
+        menuPanel.add(questsButton);
         
         // Build arrow button Area
+        JPanel arrowPanel = new JPanel(new GridLayout(2,3,0,0));
+        arrowPanel.setPreferredSize(new Dimension(200,50));
         arrowPanel.add(new JLabel(""));
         arrowPanel.add(upButton);
         arrowPanel.add(new JLabel(""));
@@ -141,15 +122,14 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         arrowPanel.add(rightButton);
         
         // group the HUD display, with health bars, and buttons
-        buttonPanel.add(statsPanel, BorderLayout.WEST);
-        buttonPanel.add(bagPanel); // empty panel in between
+        buttonPanel.add(menuPanel, BorderLayout.WEST);
+        buttonPanel.add(new JPanel(), BorderLayout.CENTER); // empty panel in between
         buttonPanel.add(arrowPanel, BorderLayout.EAST);
         
         
         // group the map pieces together
-        this.add(scrollPanel, BorderLayout.NORTH);
-        this.add(buttonPanel, BorderLayout.SOUTH);
-        this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 30));
+        this.add(scrollPanel, BorderLayout.CENTER);
+        //this.add(buttonPanel, BorderLayout.SOUTH);
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
 
@@ -211,35 +191,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
 		scrollPanel.getVerticalScrollBar().setValue(x);
 	}
 	
-	/**
-	 * A simple label near the player's name
-	 * @param points
-	 */
-	public void setPointsLabel(String points)
-	{
-		pointsLabel.setText(points);
-	}
-	
-	/**
-	 * sets the player's name on the GridGUI
-	 * @param name
-	 */
-	public void updatePlayerName(String name)
-	{
-		// update player's name next to HP bar
-		playerName.setText(name);
-	}
-	
-	/**
-	 * sets the player's health on the GridGUI
-	 * @param value
-	 */
-	public void updateHealthBar(int value)
-	{
-		// update player health bar and name
-		playerHealthBar.setValue(value);
-	}
-	
 	@Override
 	public void keyPressed(final KeyEvent k)
 	{
@@ -260,36 +211,43 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         }
         else if (key == 67 ) // 'c'
         {
-        	// shortcut to "Combat Tab"
-        	GE.viewCombatPanel();
+        	
         }
         else if (key == 81) // 'q'
         {
         	// shortcut to "Quest Tab"
         	GE.viewQuestPanel();
         }
-        else if (key == 40 || key == 83) // arrow down or 's'
+        else if (key == 83) // 's'
+        {
+        	// shortcut to stats tab
+        	GE.viewStatsPanel();
+        }
+        else if (key == 40) // arrow down
 		{
         	GE.down = true;
         	GE.movePlayer(1,0);
 		}
-		else if (key == 38 || key == 87) // arrow up or 'w'
+		else if (key == 38) // arrow up
 		{
 			GE.up = true;
 			GE.movePlayer(-1,0);
 		}
-		else if (key == 37 || key == 65) // arrow left or 'a'
+		else if (key == 37) // arrow left
 		{
 			GE.left = true;
 			GE.movePlayer(0,-1);
 		}
-		else if (key == 39 || key == 68) // arrow right or 'd'
+		else if (key == 39) // arrow right
 		{
 			GE.right = true;
 			GE.movePlayer(0,1);
 		}
-		else if(key == 27) // ESC to pause game
-			GE.pauseGame();
+		else if(key == 27) // ESC to open in-game menu
+		{
+			// in game menu
+			GE.viewSubMenu();			
+		}
         
         GE.keysPushed++;
 	}
@@ -342,6 +300,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         {
         	GE.printError("What did you do?!");
         }
+        else if(ae.getSource() == mapButton)
+        {
+        	// return to map
+        	GE.viewMapPanel();
+        }
         else if(ae.getSource() == inventoryButton)
         {
         	// jump to inventory panel
@@ -351,6 +314,11 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         {
         	// jump to quests panel
         	GE.viewQuestPanel();
+        }
+        else if(ae.getSource() == statsButton)
+        {
+        	// jump to stats panel
+        	GE.viewStatsPanel();
         }
         
         else if(ae.getSource() == upButton)
@@ -373,5 +341,41 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener {
         	// increment the players coordinates
         	GE.movePlayer(0,1);
         }
+	}
+
+
+	@Override
+	public void mouseClicked(MouseEvent m) {
+		// view map if they click on it.
+		if(GE.viewingMap != true)
+			GE.viewMapPanel();		
+	}
+
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		//  Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		//  Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		//  Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		//  Auto-generated method stub
+		
 	}
 } // end of GridGUI

@@ -12,11 +12,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
+public class OptionsGUI extends JPanel implements ActionListener, KeyListener, ChangeListener{
 
 	private static final long serialVersionUID = 1L;
 	private GameEngine GE; // link back to engine
+	private boolean unsavedChange = false;
 	
 	// gui parts
 	private JButton saveButton;
@@ -26,7 +29,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	// gui options
 	private JCheckBox musicEnabled;
     private JCheckBox soundEnabled;
-    private JCheckBox windowResizeable;
+    private JCheckBox fullScreenMode;
 	private JCheckBox showHintsEnabled;
 	
     private JButton backgroundColor;
@@ -68,18 +71,22 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 				"Gameplay", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
 		boxes.setOpaque(false);
 		musicEnabled = new JCheckBox("Music");
+		musicEnabled.addChangeListener(this);
 		musicEnabled.setOpaque(false);
 		boxes.add(musicEnabled);
 		
 	    soundEnabled = new JCheckBox("SFX");
+	    soundEnabled.addChangeListener(this);
 	    soundEnabled.setOpaque(false);
 	    boxes.add(soundEnabled);
 	    
-	    windowResizeable = new JCheckBox("Full Screen");
-	    windowResizeable.setOpaque(false);
-	    boxes.add(windowResizeable);
+	    fullScreenMode = new JCheckBox("Full Screen");
+	    fullScreenMode.addChangeListener(this);
+	    fullScreenMode.setOpaque(false);
+	    boxes.add(fullScreenMode);
 	    
 		showHintsEnabled = new JCheckBox("Show Hints");
+		showHintsEnabled.addChangeListener(this);
 		showHintsEnabled.setOpaque(false);
 		boxes.add(showHintsEnabled);
 		// ------
@@ -111,6 +118,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 				"Game Difficulty", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
 		difficult.setOpaque(false);
 		clockSpeed = new JSlider(100,1000);
+		clockSpeed.addChangeListener(this);
 	    clockSpeed.setSnapToTicks(true);
 	    clockSpeed.setMinorTickSpacing(50);
 	    clockSpeed.setMajorTickSpacing(100);
@@ -121,6 +129,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	    difficult.add(clockSpeed);
 		
 		playerVisionRange = new JSlider(1,10);
+		playerVisionRange.addChangeListener(this);
 		playerVisionRange.setSnapToTicks(true);
 		playerVisionRange.setMinorTickSpacing(1);
 		playerVisionRange.setMajorTickSpacing(1);
@@ -131,6 +140,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		difficult.add(playerVisionRange);
 		
 	    monsterGridSpeed = new JSlider(1,10);
+	    monsterGridSpeed.addChangeListener(this);
 	    monsterGridSpeed.setSnapToTicks(true);
 	    monsterGridSpeed.setMinorTickSpacing(1);
 	    monsterGridSpeed.setMajorTickSpacing(1);
@@ -141,6 +151,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	    difficult.add(monsterGridSpeed);
 	    
 	    percentChanceOfEncounter = new JSlider(0,100);
+	    percentChanceOfEncounter.addChangeListener(this);
 	    percentChanceOfEncounter.setSnapToTicks(true);
 	    percentChanceOfEncounter.setMinorTickSpacing(5);
 	    percentChanceOfEncounter.setMajorTickSpacing(25);
@@ -163,6 +174,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		
 		saveButton = new JButton("Apply Changes");
 		saveButton.addActionListener(this);
+		saveButton.setEnabled(false);
 		buttonPanel.add(saveButton);
 		
 		exitButton = new JButton("Close");
@@ -189,7 +201,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	{
 		musicEnabled.setSelected(GE.musicEnabled);
 	    soundEnabled.setSelected(GE.soundEnabled);
-	    windowResizeable.setSelected(GE.windowResizeable);
+	    fullScreenMode.setSelected(GE.fullScreenMode);
 		showHintsEnabled.setSelected(GE.showHintsEnabled);
 		
 		backgroundColor.setBackground(GE.backgroundColor);
@@ -200,6 +212,9 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		playerVisionRange.setValue(GE.playerVisionRange);
 	    monsterGridSpeed.setValue(GE.monsterGridSpeed);
 	    percentChanceOfEncounter.setValue((int)(GE.percentChanceOfEncounter*100));
+	    
+	    unsavedChange = false;
+	    saveButton.setEnabled(false);
 	}
 	
 	/**
@@ -211,7 +226,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	{
 		GE.musicEnabled = musicEnabled.isSelected();
 	    GE.soundEnabled = soundEnabled.isSelected();
-	    GE.windowResizeable = windowResizeable.isSelected();
+	    GE.fullScreenMode = fullScreenMode.isSelected();
 		GE.showHintsEnabled = showHintsEnabled.isSelected();
 		
 		GE.backgroundColor = backgroundColor.getBackground();
@@ -236,16 +251,12 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 	{
 		GE.musicEnabled = true;
 	    GE.soundEnabled = true;
-	    GE.windowResizeable = true;
+	    GE.fullScreenMode = true;
 	    GE.backgroundColor = Color.black;
 		GE.foregroundColor = Color.white;
 		GE.highlightColor = Color.blue;
 	    GE.showHintsEnabled = false;
-	    GE.fogOfWar = false;
-	    GE.mappingEnabled = false;
 	    GE.playerVisionRange = 3;
-	    GE.warpingEnabled = true;
-	    GE.clearStatsPerLevel = false;
 	    GE.clockSpeed = 1000; // 1 second
 	    GE.klok.setRate(GE.clockSpeed);
 	    GE.monsterGridSpeed = 2; // monster moves after X seconds
@@ -272,28 +283,49 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 		else if(source == exitButton)
 		{
 			// go back to main menu
-			GE.viewMainMenu();
+			if(unsavedChange)
+			{
+				// are you sure?
+				Object[] choice = {"Save","Discard"};
+				int r = GE.printCustomQuestion("There are unsaved changes.\n\nWhat do you want to\ndo with these changes?", choice);
+				if(r == 0)
+				{
+					saveChanges();
+				}
+				GE.viewMainMenu();
+			}
+			else
+				GE.viewMainMenu();
 		}
 		else if(source == backgroundColor)
 		{
 			Color temp = JColorChooser.showDialog(null, "Choose a Background Color", GE.backgroundColor);
 			
 			if(temp != null)
+			{
 				backgroundColor.setBackground(temp);
+				unsavedChange = true;
+			}
 		}
 		else if(source == foregroundColor)
 		{
 			Color temp = JColorChooser.showDialog(null, "Choose a Foreground Color", GE.foregroundColor);
 			
 			if(temp != null)
+			{
 				foregroundColor.setBackground(temp);
+				unsavedChange = true;
+			}
 		}
 		else if(source == highlightColor)
 		{
 			Color temp = JColorChooser.showDialog(null, "Choose a Highlighting Color", GE.highlightColor);
 			
 			if(temp != null)
+			{
 				highlightColor.setBackground(temp);
+				unsavedChange = true;
+			}
 		}
 	}
 
@@ -310,14 +342,40 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener{
 
 	@Override
 	public void keyReleased(KeyEvent k) {
-		// TODO Auto-generated method stub
-		
+		// Auto-generated method stub
 	}
 
 	@Override
 	public void keyTyped(KeyEvent k) {
-		// TODO Auto-generated method stub
-		
+		// Auto-generated method stub
 	}
 
+	@Override
+	public void stateChanged(ChangeEvent c) {
+		if((c.getSource() == musicEnabled)
+		|| (c.getSource() == soundEnabled)
+		|| (c.getSource() == fullScreenMode)
+		|| (c.getSource() == showHintsEnabled)
+		|| (c.getSource() == clockSpeed)
+		|| (c.getSource() == playerVisionRange)
+		|| (c.getSource() == monsterGridSpeed)
+		|| (c.getSource() == percentChanceOfEncounter))
+		{
+			if(GE.musicEnabled != musicEnabled.isSelected() ||
+					GE.soundEnabled != soundEnabled.isSelected() ||
+					GE.fullScreenMode != fullScreenMode.isSelected() ||
+					GE.backgroundColor != backgroundColor.getBackground() ||
+					GE.foregroundColor != foregroundColor.getBackground() ||
+					GE.highlightColor != highlightColor.getBackground() ||
+					GE.showHintsEnabled != showHintsEnabled.isSelected() ||
+					GE.playerVisionRange != playerVisionRange.getValue() ||
+					GE.clockSpeed != clockSpeed.getValue() ||
+					GE.monsterGridSpeed != monsterGridSpeed.getValue() ||
+					GE.percentChanceOfEncounter != percentChanceOfEncounter.getValue())
+			{
+				unsavedChange = true;
+				saveButton.setEnabled(true);
+			}
+		}
+	}
 }
