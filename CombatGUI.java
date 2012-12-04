@@ -617,7 +617,7 @@ public class CombatGUI extends JPanel implements ActionListener, KeyListener {
 				itemButton.doClick();
 			}
 		}
-		else if(key == 87) // w
+		else if(key == 70) // f
 		{
 			// enter flee attempt
 			if(actionMenu.isVisible())

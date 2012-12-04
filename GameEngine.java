@@ -44,7 +44,7 @@ public class GameEngine implements ActionListener, FocusListener,
 											// columns
 	protected int Window_Width = 600; // window size
 	protected int Window_Height = 600;
-	protected int X_DIM = 600; // default frame window size
+	protected int X_DIM = 600; // default frame size
 	protected int Y_DIM = 600;
 	protected int Panel_X = 0; // default panel location
 	protected int Panel_Y = 0;
@@ -105,6 +105,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected boolean musicEnabled = true;
 	protected boolean soundEnabled = true;
 	protected boolean fullScreenMode = true;
+	protected int opacityLevel = 0; 
 	protected Color backgroundColor = Color.black;
 	protected Color foregroundColor = Color.white;
 	protected Color highlightColor = Color.blue;
@@ -118,7 +119,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected boolean warpingEnabled = true;
 	protected boolean clearStatsPerLevel = false;
 	protected int monsterGridSpeed = 2; // monster moves after X seconds
-	protected double percentChanceOfEncounter = 0.05;
+	protected double percentChanceOfEncounter = 0.0;
 
 	// special Grid variables
 	protected int hops = 0; // # of jumps taken
@@ -214,6 +215,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	private JCheckBoxMenuItem enableMappingItem;
 	protected JLayeredPane layers;
 	protected JPanel loadingScreen;
+	protected JPanel opacityScreen;
 	protected JPanel ingameMenu;
 	protected JPanel gameover;
 	protected JPanel mainmenu;
@@ -369,8 +371,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		// --------------------------------------------------------
 		// make the options gui
 		options = new OptionsGUI(this);
-		options.setLocation(Panel_X, Panel_Y);
-		options.setSize(X_DIM, Y_DIM +60);
+		options.setLocation(0, 0);
+		options.setSize(Window_Width, Window_Height);
 		// --------------------------------------------------------
 
 		// --------------------------------------------------------
@@ -378,6 +380,15 @@ public class GameEngine implements ActionListener, FocusListener,
 		gameover = new GameOverGUI(this);
 		gameover.setLocation(Panel_X, Panel_Y);
 		gameover.setSize(X_DIM, Y_DIM +60);
+		// --------------------------------------------------------
+		
+		// --------------------------------------------------------
+		// make an opacityScreen (translucent) screen
+		opacityScreen = new JPanel(new BorderLayout());
+		opacityScreen.setBackground(new Color(0,0,0,opacityLevel));
+		opacityScreen.setLocation(0, 0);
+		opacityScreen.setPreferredSize(new Dimension(Window_Width, Window_Height));
+		opacityScreen.setSize(Window_Width, Window_Height);
 		// --------------------------------------------------------
 		
 		// --------------------------------------------------------
@@ -403,16 +414,19 @@ public class GameEngine implements ActionListener, FocusListener,
 		// 100 -- is for the MainMenu
 		// 125 -- is for the Options Menu
 		// 140 -- is for the GameOver Screen
+		// 190 -- is for the Opacity Screen
 		// 200 -- is for the Loading Screen
 		layers = new JLayeredPane();
 		layers.setLayout(new BorderLayout());
 		layers.add(mainmenu);
 		layers.add(options);
 		layers.add(gameover);
+		//layers.add(opacityScreen);
 		layers.add(loadingScreen);
 		layers.setLayer(mainmenu, 100);
 		layers.setLayer(options, 125);
 		layers.setLayer(gameover, 140);
+		//layers.setLayer(opacityScreen, 190);
 		layers.setLayer(loadingScreen, 200);
 
 		// add the layers to the window
@@ -488,6 +502,19 @@ public class GameEngine implements ActionListener, FocusListener,
 		ingameMenu.setSize(200, 400);
 		// --------------------------------------------------------
 		
+		JLabel iLabel = new JLabel("Items");
+		iLabel.setIcon(InventoryIcon);
+		iLabel.setIconTextGap(5);
+		iLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+		JLabel sLabel = new JLabel("Stats");
+		sLabel.setIcon(ListIcon);
+		sLabel.setIconTextGap(5);
+		sLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+		JLabel qLabel = new JLabel("Quests");
+		qLabel.setIcon(MailIcon);
+		qLabel.setIconTextGap(5);
+		qLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+		
 		// --------------------------------------------------------
 		// make the tabs menu screen
 		tabMenu = new JTabbedPane();
@@ -496,6 +523,9 @@ public class GameEngine implements ActionListener, FocusListener,
 		tabMenu.addTab("Items",inventoryPanel);
 		tabMenu.addTab("Stats",statsPanel);
 		tabMenu.addTab("Quests",questPanel);
+		tabMenu.setTabComponentAt(0, iLabel);
+		tabMenu.setTabComponentAt(1, sLabel);
+		tabMenu.setTabComponentAt(2, qLabel);
 		// --------------------------------------------------------
 				
 		layers.add(mapPanel);
@@ -513,8 +543,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		layers.remove(mapPanel);
 		layers.remove(combatPanel);
 		tabMenu.removeTabAt(0);
-		tabMenu.removeTabAt(1);
-		tabMenu.removeTabAt(2);
+		tabMenu.removeTabAt(0);
+		tabMenu.removeTabAt(0);
 		layers.remove(tabMenu);
 		layers.remove(ingameMenu);
 		tabMenu = null;

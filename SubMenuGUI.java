@@ -44,8 +44,8 @@ public class SubMenuGUI extends JPanel implements ActionListener {
 		menuItems = new JButton("Items",GE.InventoryIcon);
 		menuStats = new JButton("Stats",GE.ListIcon);
 		menuQuests = new JButton("Quests",GE.MailIcon);
-		menuSave = new JButton("Save",GE.DrawIcon);
-		menuQuit = new JButton("Quit",GE.XSpace);
+		menuSave = new JButton("Save Game",GE.DrawIcon);
+		menuQuit = new JButton("Quit Game",GE.XSpace);
 		
 		menuItems.addActionListener(this);
 		menuStats.addActionListener(this);

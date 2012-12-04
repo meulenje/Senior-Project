@@ -130,6 +130,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		expBar.setStringPainted(true);
 		expBar.setString("" + TheCharacter.getExp() + "/" + GE.getExpNeeded(TheCharacter));
 		PointsLeft = new JLabel("Points Left: " + TheCharacter.getLevelUpPoints());
+		PointsLeft.setForeground(GE.highlightColor);
 		expPanel.add(expLabel, BorderLayout.WEST);
 		expPanel.add(expBar, BorderLayout.CENTER);
 		expPanel.add(PointsLeft, BorderLayout.EAST);
@@ -225,7 +226,8 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		for (int b = 0; b < Abilities.size(); b++){
 			AbilitiesBox.add(Abilities.get(b));
 		}
-		AbilitiesDescription = new JTextArea("This is the Description Box");
+		AbilitiesDescription = new JTextArea("");
+		AbilitiesDescription.setSize(200, 300);
 		AbilitiesDescription.setEditable(false);
 		
 		AbilitiesPanel.setPreferredSize(new Dimension(200, 500));
@@ -339,6 +341,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		HealthBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getCurrentMana();
 		hold = TheCharacter.getMaxMana() + modifiedMana;
+		hold = TheCharacter.getMaxMana() + modifiedMana;
 		info2 = "" + hold;
 		ManaBar.setString(info1 + "/" + info2);
 		info1 = "" + TheCharacter.getExp();
@@ -351,7 +354,7 @@ public class StatsGUI extends JPanel implements ActionListener, KeyListener {
 		DefenseAmount.setText("" + hold);
 		hold = TheCharacter.getSpeed() + modifiedSpeed;
 		SpeedAmount.setText("" + hold);
-		PointsLeft.setText("Pointe Left: " + pointsLeft);
+		PointsLeft.setText("Points Left: " + pointsLeft);
 		int healthPercent = (int) (((double)TheCharacter.getCurrentHealth() / (double)TheCharacter.getMaxHealth()) * 100);
 		HealthBar.setValue(healthPercent);
 		int manaPercent = (int) (((double)TheCharacter.getCurrentMana() / (double)TheCharacter.getMaxMana()) * 100);

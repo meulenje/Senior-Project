@@ -40,6 +40,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
     private JSlider monsterGridSpeed; //2
     private JSlider percentChanceOfEncounter; //0.05
     private JSlider clockSpeed;
+    private JSlider opacityLevel;
 	
 	public OptionsGUI(GameEngine tempEngine)
 	{
@@ -57,6 +58,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
         op.setPreferredSize(new Dimension(GE.X_DIM - 10,GE.Y_DIM));
         op.setBackground(GE.foregroundColor);
         TitledBorder tb = new TitledBorder("Options");
+        tb.setTitleJustification(2);
 		tb.setTitleColor(GE.backgroundColor);
 		tb.setBorder(BorderFactory.createLineBorder(GE.backgroundColor));
 		tb.setTitlePosition(2);
@@ -113,9 +115,9 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 		// ------
 		
 		// Difficulty options
-		JPanel difficult = new JPanel(new GridLayout(4,2,5,15));
+		JPanel difficult = new JPanel(new GridLayout(5,2,5,15));
 		difficult.setBorder(new TitledBorder(BorderFactory.createLineBorder(GE.highlightColor),
-				"Game Difficulty", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
+				"Game Settings", 0, 0, new Font("Verdana", Font.PLAIN, 16), GE.highlightColor));
 		difficult.setOpaque(false);
 		clockSpeed = new JSlider(100,1000);
 		clockSpeed.addChangeListener(this);
@@ -161,6 +163,17 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 	    difficult.add(new JLabel("% Chance of Random Battles", JLabel.RIGHT));
 	    difficult.add(percentChanceOfEncounter);
 		
+	    opacityLevel = new JSlider(0,100);
+	    opacityLevel.addChangeListener(this);
+	    opacityLevel.setSnapToTicks(true);
+	    opacityLevel.setMinorTickSpacing(5);
+	    opacityLevel.setMajorTickSpacing(25);
+	    opacityLevel.setPaintTicks(true);
+	    opacityLevel.setPaintLabels(true);
+	    opacityLevel.setOpaque(false);
+	    difficult.add(new JLabel("Brightness", JLabel.RIGHT));
+	    difficult.add(opacityLevel);
+	    
 	    op.add(boxes, BorderLayout.CENTER);
 	    op.add(colors, BorderLayout.EAST);
 	    op.add(difficult, BorderLayout.NORTH);
@@ -186,7 +199,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 		buttonPanel.add(restoreButton);		
 		
 		JPanel buttons = new JPanel();
-		buttons.setPreferredSize(new Dimension(GE.Y_DIM -10, 50));
+		buttons.setPreferredSize(new Dimension(GE.Window_Width -10, 50));
 		buttons.setOpaque(false);
 		buttons.add(buttonPanel, BorderLayout.CENTER);
 		this.add(buttons, BorderLayout.SOUTH);
@@ -212,6 +225,7 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 		playerVisionRange.setValue(GE.playerVisionRange);
 	    monsterGridSpeed.setValue(GE.monsterGridSpeed);
 	    percentChanceOfEncounter.setValue((int)(GE.percentChanceOfEncounter*100));
+	    opacityLevel.setValue(100 - GE.opacityLevel);
 	    
 	    unsavedChange = false;
 	    saveButton.setEnabled(false);
@@ -238,6 +252,8 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 		GE.playerVisionRange = playerVisionRange.getValue();
 	    GE.monsterGridSpeed = monsterGridSpeed.getValue();
 	    GE.percentChanceOfEncounter = ((double) percentChanceOfEncounter.getValue())/100.0;
+	    GE.opacityLevel = 100 - opacityLevel.getValue();
+	    GE.opacityScreen.setBackground(new Color(0,0,0,GE.opacityLevel));
 	    
 	    update();
 	    GE.printInfo("Save successful!");   

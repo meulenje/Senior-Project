@@ -66,7 +66,7 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 		editorButton.addActionListener(this);
 		buttonPanel.add(editorButton);
 		
-		quitButton = new JButton("Quit");
+		quitButton = new JButton("Exit");
 		quitButton.addActionListener(this);
 		buttonPanel.add(quitButton);
 		

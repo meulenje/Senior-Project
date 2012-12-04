@@ -209,10 +209,6 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Mous
         	// shortcut to "Inventory Tab"
         	GE.viewInventoryPanel();
         }
-        else if (key == 67 ) // 'c'
-        {
-        	
-        }
         else if (key == 81) // 'q'
         {
         	// shortcut to "Quest Tab"
@@ -226,27 +222,37 @@ public class GridGUI extends JPanel implements KeyListener, ActionListener, Mous
         else if (key == 40) // arrow down
 		{
         	GE.down = true;
-        	GE.movePlayer(1,0);
+        	if(GE.viewingMap)
+        		GE.movePlayer(1,0);
 		}
 		else if (key == 38) // arrow up
 		{
 			GE.up = true;
-			GE.movePlayer(-1,0);
+			if(GE.viewingMap)
+				GE.movePlayer(-1,0);
 		}
 		else if (key == 37) // arrow left
 		{
 			GE.left = true;
-			GE.movePlayer(0,-1);
+			if(GE.viewingMap)
+				GE.movePlayer(0,-1);
 		}
 		else if (key == 39) // arrow right
 		{
 			GE.right = true;
-			GE.movePlayer(0,1);
+			if(GE.viewingMap)
+				GE.movePlayer(0,1);
 		}
 		else if(key == 27) // ESC to open in-game menu
 		{
-			// in game menu
-			GE.viewSubMenu();			
+			if(!GE.ingameMenu.isVisible())
+			{
+				// in game menu
+				GE.viewSubMenu();
+			}
+			else
+				GE.viewMapPanel();
+						
 		}
         
         GE.keysPushed++;
