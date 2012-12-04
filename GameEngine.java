@@ -620,13 +620,16 @@ public class GameEngine implements ActionListener, FocusListener,
 				null, 30, 30, 30, 30, 10, 11, 9, 5, 1);
 		Entity toad = new Entity(PlayerID, Mushroom, "Toad", "", true, null,
 				15, 15, 50, 50, 10, 10, 15, 5, 1);
-		Ability cure = new Ability("Healing Mushroom", 1, 0, 20, 8);
+		Ability healingShroom = new Ability("Healing Mushroom", 1, 0, 20, 8);
 		Ability fireball = new Ability("Fireball", 0, 1, 5, 10);
 		Ability jump = new Ability("Jump", 0, 0, 5, 10);
-		luigi.abilities.add(fireball);
-		mario.abilities.add(fireball);
-		mario.abilities.add(jump);
-		toad.abilities.add(cure);
+		fireball.setLevel(2);
+		healingShroom.setLevel(2);
+		jump.setLevel(1);
+		luigi.addAbility(fireball);
+		mario.addAbility(fireball);
+		mario.addAbility(jump);
+		toad.addAbility(healingShroom);
 		characters.add(mario);
 		characters.add(luigi);
 		characters.add(toad);
@@ -914,7 +917,7 @@ public class GameEngine implements ActionListener, FocusListener,
 					// load successful
 					loaded = true;
 					
-				} catch (IOException | ClassNotFoundException e) 
+				} catch (Exception e) 
 				{
 					printError(e.getMessage());
 					e.printStackTrace();
@@ -3232,6 +3235,15 @@ public class GameEngine implements ActionListener, FocusListener,
 									.getName()
 									+ " has reached level "
 									+ character.getLevel() + "!");
+							ArrayList<String> learnedAbilities = character.unlockAbilities();
+							if(learnedAbilities.size() > 0){
+								for(String name : learnedAbilities){
+									((CombatGUI) combatPanel).appendStatus(character
+											.getName()
+											+ " has learned "
+											+ name + "!");
+								}
+							}
 						}
 					}
 				}

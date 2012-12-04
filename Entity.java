@@ -32,6 +32,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
     private int level;
 	private int levelUpPoints;
 	ArrayList<Ability> abilities = new ArrayList<Ability>();
+	ArrayList<Ability> fullAbilities = new ArrayList<Ability>();
 
 	private Item equippedItem; // for now they may only have one equipped item
 								// at a time
@@ -60,6 +61,35 @@ public class Entity extends RPGObject implements Comparable<Entity> {
         this.behaviorType = behaviorType;
 	}
 
+	/**Adds ability to entity. If character is high enough level,
+	 * unlocks the ability
+	 * @param a
+	 */
+	public void addAbility(Ability a){
+		this.fullAbilities.add(a);
+		if(a.getLevel() <= this.getLevel()){
+			a.unlock();
+			this.abilities.add(a);
+		}
+	}
+	
+	/**Called after character levels up to unlock new abilities
+	 * if characters level is high enough.
+	 * @return
+	 * returns String arraylist of newly learned ability names
+	 */
+	public ArrayList<String> unlockAbilities(){
+		ArrayList<String> unlockedAbilityNames = new ArrayList<String>();
+		for(Ability a : this.fullAbilities){
+			if((a.getLevel() <= this.getLevel()) && a.isLocked()){
+				a.unlock();
+				this.abilities.add(a);
+				unlockedAbilityNames.add(a.getName());
+			}
+		}
+		return unlockedAbilityNames;
+	}
+	
 	public boolean hasHealingAbility() {
 		boolean returnVal = false;
 		if (!this.abilities.isEmpty()) {

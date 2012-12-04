@@ -6,6 +6,9 @@ public class Ability implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	private String name;
+	private String description;
+	private boolean locked;
+	private int level;
 	
 	//0=damage, 1=heal
 	private int type;
@@ -22,6 +25,8 @@ public class Ability implements Serializable{
 		this.setScope(scope);
 		this.setModifier(modifier);
 		this.setCost(cost);
+		this.lock();
+		this.setLevel(1);
 	}
 
 	String getName() {
@@ -70,6 +75,34 @@ public class Ability implements Serializable{
 
 	void setCost(int cost) {
 		this.cost = cost;
+	}
+
+	protected String getDescription() {
+		return description;
+	}
+
+	protected void setDescription(String description) {
+		this.description = description;
+	}
+
+	protected boolean isLocked() {
+		return locked;
+	}
+
+	protected void lock() {
+		this.locked = true;
+	}
+	
+	protected void unlock() {
+		this.locked = false;
+	}
+
+	protected int getLevel() {
+		return level;
+	}
+
+	protected void setLevel(int level) {
+		this.level = level;
 	}
 }
 
