@@ -3047,6 +3047,13 @@ public class GameEngine implements ActionListener, FocusListener,
 		String s = (source.getName() + "'s attack hit " + target.getName()
 				+ " for " + calculatedDamage + " damage!");
 		((CombatGUI) combatPanel).appendStatus(s);
+		
+		//update cumulative global variables
+		if(source.isPlayer){
+			damageDealt += calculatedDamage;
+		}else{
+			damageTaken += calculatedDamage;
+		}
 	}
 	
 	public void executeItem(Entity source, Entity target, Item item){
@@ -3090,6 +3097,14 @@ public class GameEngine implements ActionListener, FocusListener,
 				result = (source.getName() + "'s " + ability.getName()
 						+ " hit " + enemies.get(targetID).getName() + " for "
 						+ calculatedDamage + " damage!");
+				
+
+				//update cumulative global variables
+				if(source.isPlayer){
+					damageDealt += calculatedDamage;
+				}else{
+					damageTaken += calculatedDamage;
+				}
 			}
 
 			// splash
@@ -3117,6 +3132,14 @@ public class GameEngine implements ActionListener, FocusListener,
 					e.setCurrentHealth(e.getCurrentHealth() - calculatedDamage);
 					result = (source.getName() + "'s " + ability.getName()
 							+ " hit all enemies for " + calculatedDamage + " damage!");
+					
+
+					//update cumulative global variables
+					if(source.isPlayer){
+						damageDealt += calculatedDamage;
+					}else{
+						damageTaken += calculatedDamage;
+					}
 				}
 			}
 
@@ -3139,8 +3162,13 @@ public class GameEngine implements ActionListener, FocusListener,
 				result = (combatants.get(targetID).getName()
 						+ " was healed for " + amountHealed + " damage by "
 						+ source.getName() + "'s " + ability.getName() + "!");
+				
 			}
-
+			
+			//update cumulative global variables
+			if(source.isPlayer){
+				damageHealed += amountHealed;
+			}
 		}
 
 		source.setCurrentMana(source.getCurrentMana() - ability.getCost());
@@ -3213,11 +3241,13 @@ public class GameEngine implements ActionListener, FocusListener,
 		if (result == 0) {
 			// code to handle running away
 			// remove defeated enemies from grid
+			fightsFled++;
 			removeDefeatedEnemies(null);
 			returnVal = true;
 		} else {
 			if (result == 1) {
 				playMusic(victory, false); // fanfare
+				fightsWon++;
 				for (Entity character : characters) {
 					if (character.alive()) {
 						character.setExp(character.getExp() + experience);
@@ -3253,6 +3283,7 @@ public class GameEngine implements ActionListener, FocusListener,
 
 				returnVal = true;
 			} else {
+				fightsLost++;
 				returnVal = false;
 			}
 		}
@@ -3269,6 +3300,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			} else if(!e.alive()){
 				((CombatGUI) combatPanel).appendStatus(e.getName()
 						+ " was slain!");
+				kills++;
 				accumulatedExp += e.getExp();
 			}
 		}
