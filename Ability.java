@@ -28,6 +28,11 @@ public class Ability implements Serializable{
 		this.lock();
 		this.setLevel(1);
 	}
+	
+	public String toString()
+	{
+		return name;
+	}
 
 	String getName() {
 		return name;

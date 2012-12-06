@@ -124,43 +124,40 @@ public class MainMenuGUI extends JPanel implements ActionListener, KeyListener{
 	@Override
 	public void keyPressed(KeyEvent k)
 	{
-		int keyCode = k.getKeyCode();
-		
-		// debugging purposes (displays key input number
-		key.setText(""+keyCode);
+		int keyCode = k.getKeyCode();		
 		
 		// shortcut keys to certain actions
-		if(keyCode == 49 || keyCode == 78 || keyCode == 10) // 1,n,ENTER = newGame
+		if(keyCode == 49 || keyCode == 78 ) // 1,n,ENTER = newGame
 		{
-			GE.newGame();
+			newButton.doClick();
 		}
 		else if(keyCode == 50 || keyCode == 76) // 2 or l = loadGame
 		{
-			GE.loadGame();
+			loadButton.doClick();
 		}
 		else if(keyCode == 51 || keyCode == 79) // 3 or o = options
 		{
-			// TODO
+			optionsButton.doClick();
 		}
-		else if(keyCode == 52 || keyCode == 77 || keyCode == 69) // 4,m,e = Map Editor
+		else if(keyCode == 52 || keyCode == 77) // 4,m = Map Editor
 		{
-			new Editor();
+			editorButton.doClick();
 		}
-		else if(keyCode == 53 || keyCode == 81 || keyCode == 27) // 5,q,ESC = Quit
+		else if(keyCode == 53 || keyCode == 69) // 5,e = exit
 		{
-			GE.quitProgram();
+			quitButton.doClick();
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent k) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 		
 	}
 
 	@Override
 	public void keyTyped(KeyEvent k) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 		
 	}
 

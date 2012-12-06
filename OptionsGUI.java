@@ -350,10 +350,19 @@ public class OptionsGUI extends JPanel implements ActionListener, KeyListener, C
 	{
 		int keyCode = k.getKeyCode();
 		
-		// debugging helper
-		exitButton.setText("KeyCode = "+keyCode);
-		
 		// shortcut keys to certain actions
+		if(keyCode == 65) // a
+		{
+			saveButton.doClick();
+		}
+		else if(keyCode == 67) // c
+		{
+			exitButton.doClick();
+		}
+		else if(keyCode == 82) // r
+		{
+			restoreButton.doClick();
+		}
 	}
 
 	@Override

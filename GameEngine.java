@@ -21,6 +21,8 @@ import java.util.Random;
 import java.util.Stack;
 import javax.sound.midi.*;
 import javax.swing.JFrame;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -34,7 +36,7 @@ import javax.swing.event.ListSelectionListener;
  * 
  */
 public class GameEngine implements ActionListener, FocusListener,
-		ClockListener, ListSelectionListener {
+		ClockListener, ListSelectionListener, ChangeListener {
 
 	// Game Objects
 	private GameObjects GO;
@@ -60,7 +62,7 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected boolean viewingMap = false;
 
 	// GridGUI specific variables
-	protected int BCOLS = 40; // board default column size
+	protected int BCOLS = 30; // board default column size
 	protected int BROWS = 30; // board default row size
 	protected final int G_X_DIM = BCOLS * (C_WIDTH); // grid panel dimensions
 	protected final int G_Y_DIM = BROWS * (C_HEIGHT); // grid panel dimensions
@@ -95,11 +97,14 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected int WaterID = -3;
 	protected int BagID = 6;
 	protected int ChestID = 66;
+	protected int KeyID = 67;
 	protected int SpikeID = 7;
 	protected int MushroomID = 8;
 	protected int BeartrapID = 9;
 	protected int SpiralID = 10;
 	protected int SignID = 11;
+	protected int BombID = 21;
+	protected int BoomerangID = 22;
 
 	// special Frame features
 	protected boolean musicEnabled = true;
@@ -177,7 +182,10 @@ public class GameEngine implements ActionListener, FocusListener,
 	protected ImageIcon Sign = new ImageIcon("images/Sign.png");
 	protected ImageIcon Bag = new ImageIcon("images/Bag.png");
 	protected ImageIcon Chest = new ImageIcon("images/TreasureChest.png");
+	protected ImageIcon Key = new ImageIcon("images/Key.png");
 	protected ImageIcon Backpack = new ImageIcon("images/Backpack.png");
+	protected ImageIcon Bomb = new ImageIcon("images/Bomb.png");
+	protected ImageIcon Boomerang = new ImageIcon("images/LRWall.png");
 	protected ImageIcon Book = new ImageIcon("images/Book.png");
 	protected ImageIcon InventoryIcon = new ImageIcon("images/InventoryIcon.jpg");
 	protected ImageIcon ListIcon = new ImageIcon("images/ListIcon.jpg");
@@ -272,7 +280,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		
 		// show window in full screen mode, if enabled
 		window.setLocation(0,0);
-		window.setResizable(false);
+		//window.setResizable(false);
 		if(fullScreenMode)
 		{
 			window.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -378,8 +386,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		// --------------------------------------------------------
 		// make the game over gui
 		gameover = new GameOverGUI(this);
-		gameover.setLocation(Panel_X, Panel_Y);
-		gameover.setSize(X_DIM, Y_DIM +60);
+		gameover.setLocation(0, 0);
+		gameover.setSize(Window_Width, Window_Height);
 		// --------------------------------------------------------
 		
 		// --------------------------------------------------------
@@ -518,6 +526,7 @@ public class GameEngine implements ActionListener, FocusListener,
 		// --------------------------------------------------------
 		// make the tabs menu screen
 		tabMenu = new JTabbedPane();
+		tabMenu.addChangeListener(this);
 		tabMenu.setLocation(Panel_X, Panel_Y);
 		tabMenu.setSize(X_DIM, Y_DIM);
 		tabMenu.addTab("Items",inventoryPanel);
@@ -542,10 +551,6 @@ public class GameEngine implements ActionListener, FocusListener,
 		// delete all components to the in-game (tabs)
 		layers.remove(mapPanel);
 		layers.remove(combatPanel);
-		tabMenu.removeTabAt(0);
-		tabMenu.removeTabAt(0);
-		tabMenu.removeTabAt(0);
-		layers.remove(tabMenu);
 		layers.remove(ingameMenu);
 		tabMenu = null;
 		ingameMenu = null;
@@ -1628,38 +1633,52 @@ public class GameEngine implements ActionListener, FocusListener,
 	 * Checks the player's current position to see if they are standing over any
 	 * traps.
 	 */
-	public void checkForTrap(RPGObject i) {
-		if (i != null && board[prow][pcol].isTrap()) {
-			// check for beartrap
-			if (i.id == BeartrapID) {
-				// keep track of how many
-				traps++;
-
-				// inflict 10% damage of totalHealth to all players
-				for (Entity e : characters)
-					e.setCurrentHealth(e.getCurrentHealth()
-							- (int) ((double) e.getMaxHealth() * 0.1));
-			}
-			// check for whirlwind
-			else if (i.id == SpiralID) {
-				// keep track of how many
-				traps++;
-
-				// sends the player to a random location on the map!
-				boolean playerWasWarped = false;
-
-				while (!playerWasWarped) {
-					Random r = new Random();
-					int x = r.nextInt(BROWS); // 0 to MAX row
-					int y = r.nextInt(BCOLS); // 0 to MAX column
-
-					// make sure its a valid location. (empty!)
-					if (board[x][y].isEmptySpace()) {
-						repositionPlayer(x, y);
-						movePlayerVision();
-						((GridGUI) mapPanel).repositionScrollBarsToPlayer();
-						playerWasWarped = true;
+	public void checkForTrap() {
+		boolean flag = false;
+		if (board[prow][pcol].isTrap()) {
+			if(board[prow][pcol].accessory.id == ChestID)
+			{
+				// check for key in inventory
+				for(Entity g : characters)
+				{
+					if(g.getEquipped() !=null && g.getEquipped().id == KeyID)
+					{
+						// key found, now remove and open chest
+						printInfo("You use the key to unlock the chest...");
+						g.setEquippedItem(null);
+						Random r = new Random();
+						if(r.nextInt(10) == 0)
+						{
+							// rare item 10%
+							checkForItem((RPGObject)new Item(BombID, Bomb, "Bombs",
+									"Increases attack by 20", false, 0, 0, 0, 0, 20,
+									0, 0));
+							flag = true;
+						}
+						else if(r.nextInt(3) == 0)
+						{
+							// ok item 33%
+							checkForItem((RPGObject)new Item(BoomerangID, Boomerang, "Boomerang",
+									"Increases speed and MP by 10", false, 0, 0, 10, 0, 0,
+									0, 10));
+							flag = true;
+						}
+						else
+						{
+							// empty 57%
+							printInfo("The chest was empty...");
+							flag = true;
+						}
 					}
+				}
+				
+				if(!flag)
+				{
+					printInfo("The chest is locked.");
+				}
+				else
+				{
+					board[prow][pcol].accessory = null;
 				}
 			}
 		}
@@ -1706,19 +1725,10 @@ public class GameEngine implements ActionListener, FocusListener,
 	 */
 	public void checkForItem(RPGObject i) {
 		if(i != null && i instanceof Item) {
-			
-			if(i.getID() == BagID || i.getID() == ChestID)
-			{
-				// get a random item from the master list
-				// TODO
-			}
-			else
-			{
-				// add item to inventory
-				addItem((Item)i);
-				itemsCollected++;
-				printInfo("You found a(n) "+((Item)i).getItemName()+"!\nIt was placed in your inventory.");
-			}
+			// add item to inventory
+			addItem((Item)i);
+			itemsCollected++;
+			printInfo("You found a(n) "+((Item)i).getItemName()+"!\nIt was placed in your inventory.");			
 		}
 		return;
 	}
@@ -1915,7 +1925,7 @@ public class GameEngine implements ActionListener, FocusListener,
 			((GridGUI) mapPanel).repositionScrollBarsToPlayer();
 			movePlayerVision();
 			checkForItem(pickup);
-			checkForTrap(pickup);
+			checkForTrap();
 			checkForWarp();
 			checkForExit();
 		} else // bumped into something
@@ -2273,6 +2283,8 @@ public class GameEngine implements ActionListener, FocusListener,
 		// randomly build a testing grid with rocks, holes, grass, and monsters
 		Random rand = new Random();
 		boolean doorPlaced = false;
+		boolean chestPlaced = false;
+		boolean keyPlaced = false;
 		boolean warpAPlaced = false;
 		boolean warpBPlaced = false;
 		boolean spiralPlaced = true;
@@ -2307,14 +2319,18 @@ public class GameEngine implements ActionListener, FocusListener,
 					((Entity) board[i][j].object).abilities.add(new Ability("Smack", 0, 0, 5, 10));
 					numOfMonsters++;
 				}
-				// randomly make "beartraps"
-				else if (temp == 12) {
-					board[i][j]
-							.resetObject(new Terrain(DirtID, Dirt, false, true,
-									false), new NonEntity(BeartrapID, Beartrap,
-									false, true, false, false), new NonEntity(
-									TallGrassID, TallGrass, false, false,
-									false, false));
+				// randomly make a chest
+				else if (!chestPlaced && (temp == 44 || (i == 0 && j == 0))) {
+					board[i][j].resetObject(new Terrain(GrassID, Grass, false, true,
+									false), null, new NonEntity(ChestID, Chest, false, true, false, false));
+					chestPlaced = true;
+				}
+				// randomly make a key
+				else if (!keyPlaced && (temp == 45 || (i == BROWS-2 && j == BCOLS-2))) {
+					board[i][j].resetObject(new Terrain(GrassID, Grass, false, true,
+									false), new Item(KeyID, Key, "Key", "It could unlock something...", false, 0,0,0,0,0,0,0), 
+									null);
+					keyPlaced = true;
 				}
 				// randomly make "sign posts"
 				else if (temp == 11 && signs < 3) // only allow 3 per map
@@ -2519,6 +2535,26 @@ public class GameEngine implements ActionListener, FocusListener,
 		checkForEnemies();
 
 		return false;
+	}
+	
+	@Override
+	public void stateChanged(ChangeEvent sc) {
+		if(sc.getSource() == tabMenu && tabMenu != null)
+		{
+			int r = tabMenu.getSelectedIndex();
+			if(r == 0)
+			{
+				viewInventoryPanel();
+			}
+			else if(r == 1)
+			{
+				viewStatsPanel();
+			}
+			else if(r == 3)
+			{
+				viewQuestPanel();
+			}
+		}
 	}
 
 	/**
@@ -3279,7 +3315,7 @@ public class GameEngine implements ActionListener, FocusListener,
 				}
 
 				// remove defeated enemies from grid
-				removeDefeatedEnemies(null);
+				removeDefeatedEnemies((RPGObject) new Item(BagID, Bag, "Magic Powder", "Gives you 30 MP!", true, 0, 0, 0, 30, 0, 0, 0));
 
 				returnVal = true;
 			} else {

@@ -33,7 +33,7 @@ public class QuestGUI extends JPanel implements KeyListener {
 	{
 		GE = tempEngine; // link back to engine
 		
-		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 30));
+		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM-50));
         this.addKeyListener(this);  // This class has its own key listeners.
         this.setFocusable(true);    // Allow panel to get focus
         
@@ -45,7 +45,7 @@ public class QuestGUI extends JPanel implements KeyListener {
 		scrollPanel.setViewportView(listPanel);
 		scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM + 30));
+		scrollPanel.setPreferredSize(new Dimension( GE.X_DIM, GE.Y_DIM-50));
 		
 		// pack together
 		this.add(scrollPanel, BorderLayout.CENTER);

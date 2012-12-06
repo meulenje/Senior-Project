@@ -125,7 +125,6 @@ public class GridObject extends JLayeredPane {
     public boolean isConsumable()
     {
     	if(object!=null && object instanceof Item)
-    		if(((Item)object).isConsumable())
     			return true;
     	return false;
     }
@@ -191,6 +190,11 @@ public class GridObject extends JLayeredPane {
     	if(object!=null && object instanceof NonEntity)
     		if(((NonEntity)object).isTrap())
     			return true;
+    	
+    	if(accessory!=null && accessory instanceof NonEntity)
+    		if(((NonEntity)accessory).isTrap())
+    			return true;
+    	
     	return false;
     }
     

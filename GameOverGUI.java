@@ -27,7 +27,7 @@ public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 		GE = tempEngine; // link back to engine
 		
 		// create main menu gui
-		this.setPreferredSize(new Dimension(GE.X_DIM, GE.Y_DIM + 60));
+		this.setPreferredSize(new Dimension(GE.Window_Width, GE.Window_Height));
 		this.setBackground(GE.backgroundColor);
 		this.setLayout(new FlowLayout());
         this.addKeyListener(this);  // This class has its own key listeners.
@@ -35,7 +35,7 @@ public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 		
 		// show a logo image with text
 		JPanel imagePanel = new JPanel(new BorderLayout());
-		imagePanel.setPreferredSize(new Dimension(GE.Y_DIM - 10,400));
+		imagePanel.setPreferredSize(new Dimension(GE.Window_Width - 10,400));
 		imagePanel.setBackground(GE.foregroundColor);
 		JLabel titleText = new JLabel("", JLabel.CENTER);
 		titleText.setIcon(GE.GameOverImage);
@@ -55,13 +55,14 @@ public class GameOverGUI extends JPanel implements ActionListener, KeyListener{
 		buttonPanel.add(quitButton);
 		
 		JPanel box = new JPanel();
-		box.setPreferredSize(new Dimension(GE.Y_DIM -10, 240));
+		box.setPreferredSize(new Dimension(GE.Window_Width -10, 240));
 		box.setOpaque(false);
 		box.add(buttonPanel, BorderLayout.CENTER);
 		TitledBorder tb = new TitledBorder("Continue?");
 		tb.setTitleColor(GE.foregroundColor);
 		tb.setBorder(BorderFactory.createLineBorder(GE.foregroundColor));
-		tb.setTitlePosition(2);
+		tb.setTitlePosition(3);
+		tb.setTitleJustification(2);
 		tb.setTitleFont(new Font("sansserif",Font.BOLD,16));
 		box.setBorder(tb);
 		this.add(box, BorderLayout.SOUTH);

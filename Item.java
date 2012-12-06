@@ -16,7 +16,21 @@ public class Item extends RPGObject implements Comparable<Item>{
 	private int defense;
 	private int speed;
 	
-	//constructor to initialize item id, and whether it is consumable
+	/**
+	 * constructor to initialize item id, and whether it is consumable
+	 * @param pId
+	 * @param image
+	 * @param pName
+	 * @param pDes
+	 * @param pCon
+	 * @param maxHealth
+	 * @param currentHealth
+	 * @param maxMana
+	 * @param currentMana
+	 * @param attack
+	 * @param defense
+	 * @param speed
+	 */
 	public Item(int pId, ImageIcon image, String pName, String pDes, boolean pCon, int maxHealth, int currentHealth, int maxMana, int currentMana, int attack, int defense, int speed)
 	{
 		this.id = pId;

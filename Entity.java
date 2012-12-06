@@ -280,8 +280,8 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 *            the currentHealth to set
 	 */
 	public void setCurrentHealth(int currentHealth) {
-		if(currentHealth >= this.maxHealth)
-			this.currentHealth = this.maxHealth;
+		if(currentHealth >= this.getMaxHealth())
+			this.currentHealth = this.getMaxHealth();
 		else if(currentHealth <= 0)
 			this.currentHealth = 0;
 		else	
@@ -311,32 +311,32 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 		this.exp += exp;
 	}
 
-	int getMaxMana() {
+	public int getMaxMana() {
 		if(equippedItem != null)
 			return maxMana + equippedItem.getMaxMana();
 		return maxMana;
 	}
 
-	void setMaxMana(int maxMana) {
+	public void setMaxMana(int maxMana) {
 		this.maxMana = maxMana;
 	}
 
-	int getCurrentMana() {
+	public int getCurrentMana() {
 		if(equippedItem != null)
 			return currentMana + equippedItem.getCurrentMana();
 		return currentMana;
 	}
 
-	void setCurrentMana(int currentMana) {
-		if(currentMana >= this.maxMana)
-			this.currentMana = this.maxMana;
+	public void setCurrentMana(int currentMana) {
+		if(currentMana >= this.getMaxMana())
+			this.currentMana = this.getMaxMana();
 		else if(currentMana <= 0)
 			this.currentMana = 0;
 		else	
 			this.currentMana = currentMana;
 	}
 
-	int getLevelUpPoints() {
+	public int getLevelUpPoints() {
 		return levelUpPoints;
 	}
 
@@ -394,7 +394,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * enemies. Players are not affected by behaviors.
 	 * @return behaviorType
 	 */
-	String getBehaviorType()
+	public String getBehaviorType()
 	{
 		return this.behaviorType;
 	}
@@ -405,7 +405,7 @@ public class Entity extends RPGObject implements Comparable<Entity> {
 	 * enemies. Players are not affected by behaviors.
 	 * @param type
 	 */
-	void setBehaviorType(String type)
+	public void setBehaviorType(String type)
 	{
 		this.behaviorType = type;
 	}
